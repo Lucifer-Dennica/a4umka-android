@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/a4umka/MainActivity.kt
 package com.example.a4umka
 
 import android.os.Bundle
@@ -8,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.a4umka.ui.screens.HomeScreen
+import com.example.a4umka.navigation.NavGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +18,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    HomeScreen()
+                    NavGraph()
                 }
             }
         }
