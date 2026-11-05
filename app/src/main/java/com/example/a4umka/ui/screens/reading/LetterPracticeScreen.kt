@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LetterPracticeScreen(
     letter: String,
+    onExportClick: () -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -54,6 +56,7 @@ fun LetterPracticeScreen(
                         Icon(Icons.Default.Delete, contentDescription = "Очистить")
                     }
                     IconButton(onClick = {
+                        // Экспорт текущего рисунка (старый функционал)
                         val result = PdfExporter.exportLetter(
                             context = context,
                             letter = letter,
@@ -63,20 +66,22 @@ fun LetterPracticeScreen(
                             cursiveViewSize = cursiveSize
                         )
                         scope.launch {
-                            if (result != null) {
-                                snackbarHostState.showSnackbar("Сохранено: $result")
-                            } else {
-                                snackbarHostState.showSnackbar("Не удалось сохранить PDF")
-                            }
+                            if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
+                            else snackbarHostState.showSnackbar("Ошибка сохранения")
                         }
                     }) {
-                        Icon(Icons.Default.Save, contentDescription = "Сохранить в PDF")
+                        Icon(Icons.Default.Save, contentDescription = "Сохранить рисунок в PDF")
+                    }
+                    // Новая кнопка "Печать"
+                    IconButton(onClick = onExportClick) {
+                        Icon(Icons.Default.Print, contentDescription = "Сгенерировать лист прописей")
                     }
                 }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
+        // ... (остальной код Column с двумя LetterCanvas без изменений) ...
         Column(
             modifier = Modifier
                 .fillMaxSize()
