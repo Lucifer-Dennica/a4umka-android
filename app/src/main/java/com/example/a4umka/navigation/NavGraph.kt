@@ -10,15 +10,19 @@ import com.example.a4umka.ui.screens.CategoryScreen
 import com.example.a4umka.ui.screens.HomeScreen
 import com.example.a4umka.ui.screens.SettingsScreen
 import com.example.a4umka.ui.screens.TaskScreen
+import com.example.a4umka.ui.screens.reading.LetterPracticeScreen
+import com.example.a4umka.ui.screens.reading.ReadingAlphabetScreen
 
 object Routes {
     const val HOME = "home"
     const val SETTINGS = "settings"
     const val CATEGORY = "category/{categoryId}"
     const val TASK = "task/{categoryId}/{taskId}"
+    const val LETTER = "letter/{letter}"
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
+    fun letter(letter: String) = "letter/$letter"
 }
 
 @Composable
@@ -29,9 +33,7 @@ fun NavGraph() {
 
         composable(Routes.HOME) {
             HomeScreen(
-                onCategoryClick = { categoryId ->
-                    navController.navigate(Routes.category(categoryId))
-                },
+                onCategoryClick = { navController.navigate(Routes.category(it)) },
                 onSettingsClick = { navController.navigate(Routes.SETTINGS) }
             )
         }
@@ -43,13 +45,11 @@ fun NavGraph() {
         composable(
             route = Routes.CATEGORY,
             arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val categoryId = backStackEntry.arguments?.getString("categoryId").orEmpty()
+        ) { entry ->
+            val categoryId = entry.arguments?.getString("categoryId").orEmpty()
             CategoryScreen(
                 categoryId = categoryId,
-                onTaskClick = { taskId ->
-                    navController.navigate(Routes.task(categoryId, taskId))
-                },
+                onTaskClick = { taskId -> navController.navigate(Routes.task(categoryId, taskId)) },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -60,12 +60,35 @@ fun NavGraph() {
                 navArgument("categoryId") { type = NavType.StringType },
                 navArgument("taskId") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
-            val categoryId = backStackEntry.arguments?.getString("categoryId").orEmpty()
-            val taskId = backStackEntry.arguments?.getString("taskId").orEmpty()
-            TaskScreen(
-                categoryId = categoryId,
-                taskId = taskId,
+        ) { entry ->
+            val categoryId = entry.arguments?.getString("categoryId").orEmpty()
+            val taskId = entry.arguments?.getString("taskId").orEmpty()
+
+            // Роутинг по категориям и заданиям
+            when {
+                categoryId == "reading" && taskId == "alphabet" -> {
+                    ReadingAlphabetScreen(
+                        onLetterClick = { letter -> navController.navigate(Routes.letter(letter)) },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                else -> {
+                    TaskScreen(
+                        categoryId = categoryId,
+                        taskId = taskId,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
+        }
+
+        composable(
+            route = Routes.LETTER,
+            arguments = listOf(navArgument("letter") { type = NavType.StringType })
+        ) { entry ->
+            val letter = entry.arguments?.getString("letter").orEmpty()
+            LetterPracticeScreen(
+                letter = letter,
                 onBack = { navController.popBackStack() }
             )
         }
