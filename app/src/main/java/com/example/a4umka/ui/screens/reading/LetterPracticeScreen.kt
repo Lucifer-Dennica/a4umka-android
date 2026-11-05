@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.ui.components.LetterCanvas
 import com.example.a4umka.util.PdfExporter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,10 +24,11 @@ fun LetterPracticeScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var savedPath by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Ключ сброса холста: меняем — Canvas пересоздаётся, штрихи пропадают
     var resetKey by remember { mutableIntStateOf(0) }
     val currentPaths = remember { mutableStateListOf<Path>() }
-    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
@@ -46,13 +48,10 @@ fun LetterPracticeScreen(
                     }
                     IconButton(onClick = {
                         val result = PdfExporter.exportLetter(context, letter, currentPaths.toList())
-                        if (result != null) {
-                            savedPath = result
-                            scope.launch {
+                        scope.launch {
+                            if (result != null) {
                                 snackbarHostState.showSnackbar("Сохранено: $result")
-                            }
-                        } else {
-                            scope.launch {
+                            } else {
                                 snackbarHostState.showSnackbar("Не удалось сохранить PDF")
                             }
                         }
@@ -75,17 +74,18 @@ fun LetterPracticeScreen(
                 fontSize = 16.sp,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
-            LetterCanvas(
-                letter = letter,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .let { it },
-                onPathsChanged = { list ->
-                    currentPaths.clear()
-                    currentPaths.addAll(list)
-                }
-            )
+            key(resetKey) {
+                LetterCanvas(
+                    letter = letter,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    onPathsChanged = { list ->
+                        currentPaths.clear()
+                        currentPaths.addAll(list)
+                    }
+                )
+            }
         }
     }
 }
