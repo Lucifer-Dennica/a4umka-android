@@ -90,7 +90,6 @@ fun LetterPracticeScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Верхний ряд — печатная буква
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
@@ -115,7 +114,7 @@ fun LetterPracticeScreen(
                 key(resetKey, "print") {
                     LetterCanvas(
                         letter = letter,
-                        style = LetterStyle.PRINT,
+                        letterStyle = LetterStyle.PRINT,
                         modifier = Modifier.fillMaxSize(),
                         onPathsChanged = { list ->
                             printPaths.clear()
@@ -129,7 +128,6 @@ fun LetterPracticeScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Нижний ряд — пропись
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
@@ -154,7 +152,7 @@ fun LetterPracticeScreen(
                 key(resetKey, "cursive") {
                     LetterCanvas(
                         letter = letter,
-                        style = LetterStyle.CURSIVE,
+                        letterStyle = LetterStyle.CURSIVE,
                         modifier = Modifier.fillMaxSize(),
                         onPathsChanged = { list ->
                             cursivePaths.clear()
