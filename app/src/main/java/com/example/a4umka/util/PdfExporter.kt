@@ -118,10 +118,10 @@ object PdfExporter {
         }
         canvas.drawText(label, 40f, top + 20f, labelPaint)
 
-        // Загрузка шрифта
+        // Загрузка шрифта Caveat
         val typeface = if (isCursive) {
-            // ВНИМАНИЕ: Замените R.font.propis на реальное имя вашего файла!
-            ResourcesCompat.getFont(context, R.font.propis) ?: Typeface.create("cursive", Typeface.NORMAL)
+            ResourcesCompat.getFont(context, R.font.caveat_regular)
+                ?: Typeface.create("cursive", Typeface.NORMAL)
         } else {
             Typeface.DEFAULT
         }
@@ -160,20 +160,17 @@ object PdfExporter {
         }
         canvas.drawPath(letterPath, outlinePaint)
 
-        // Рисуем штрихи пользователя относительно центра
+        // Рисуем штрихи пользователя
         if (viewSize.width > 0 && viewSize.height > 0) {
             val screenLetterSize = if (isCursive) {
-                minOf(viewSize.width, viewSize.height) * 0.5f
+                minOf(viewSize.width, viewSize.height) * 0.45f
             } else {
                 minOf(viewSize.width, viewSize.height) * 0.7f
             }
             
             if (screenLetterSize > 0f) {
-                // Коэффициент масштабирования от экрана к PDF
                 val scale = (if (isCursive) letterSize * 0.8f else letterSize) / screenLetterSize
                 
-                // На экране буква была отцентрирована, значит её центр был в (w/2, h/2).
-                // В PDF её центр теперь в (centerX, centerY).
                 val screenCenterX = viewSize.width / 2f
                 val screenCenterY = viewSize.height / 2f
                 
@@ -187,11 +184,9 @@ object PdfExporter {
                 }
 
                 canvas.save()
-                // Переносим в центр PDF
+                // Точная привязка координат рисования к центру
                 canvas.translate(centerX, centerY)
-                // Масштабируем
                 canvas.scale(scale, scale)
-                // Смещаем так, чтобы координаты экрана совпали (экранный центр был в 0,0)
                 canvas.translate(-screenCenterX, -screenCenterY)
                 
                 paths.forEach { canvas.drawPath(it, userPaint) }
