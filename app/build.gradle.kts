@@ -9,7 +9,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.a4umka"
+        applicationId = "com.sovenok.app"
         minSdk = 21
         targetSdk = 35
         versionCode = 1
