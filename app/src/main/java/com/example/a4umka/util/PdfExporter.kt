@@ -2,16 +2,14 @@ package com.example.a4umka.util
 
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.DashPathEffect
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Typeface
+import android.graphics.*
 import android.graphics.pdf.PdfDocument
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.compose.ui.unit.IntSize
+import androidx.core.content.res.ResourcesCompat
+import com.example.a4umka.R
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -34,7 +32,6 @@ object PdfExporter {
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
 
-        // Заголовок
         val titlePaint = Paint().apply {
             isAntiAlias = true
             textSize = 26f
@@ -42,11 +39,12 @@ object PdfExporter {
         }
         canvas.drawText("Пропись буквы «$letter»", 40f, 55f, titlePaint)
 
-        // Верхняя секция — печатная буква
+        // Верхняя секция — печатная
         drawRow(
+            context = context,
             canvas = canvas,
             letter = letter,
-            typeface = Typeface.DEFAULT,
+            isCursive = false,
             paths = printPaths,
             viewSize = printViewSize,
             top = 80f,
@@ -54,7 +52,6 @@ object PdfExporter {
             label = "Печатная"
         )
 
-        // Разделитель
         val dividerPaint = Paint().apply {
             color = android.graphics.Color.LTGRAY
             strokeWidth = 1f
@@ -63,9 +60,10 @@ object PdfExporter {
 
         // Нижняя секция — пропись
         drawRow(
+            context = context,
             canvas = canvas,
             letter = letter,
-            typeface = Typeface.create("cursive", Typeface.NORMAL),
+            isCursive = true,
             paths = cursivePaths,
             viewSize = cursiveViewSize,
             top = 450f,
@@ -103,16 +101,16 @@ object PdfExporter {
     }
 
     private fun drawRow(
+        context: Context,
         canvas: Canvas,
         letter: String,
-        typeface: Typeface,
+        isCursive: Boolean,
         paths: List<Path>,
         viewSize: IntSize,
         top: Float,
         height: Float,
         label: String
     ) {
-        // Подпись секции
         val labelPaint = Paint().apply {
             isAntiAlias = true
             textSize = 16f
@@ -120,13 +118,39 @@ object PdfExporter {
         }
         canvas.drawText(label, 40f, top + 20f, labelPaint)
 
-        // Размер буквы в PDF
-        val letterSize = minOf(PAGE_WIDTH * 0.55f, height * 0.85f)
-        // Позиция baseline буквы в PDF
-        val letterX = (PAGE_WIDTH - letterSize) / 2f
-        val letterY = top + height * 0.95f
+        // Загрузка шрифта
+        val typeface = if (isCursive) {
+            // ВНИМАНИЕ: Замените R.font.propis на реальное имя вашего файла!
+            ResourcesCompat.getFont(context, R.font.propis) ?: Typeface.create("cursive", Typeface.NORMAL)
+        } else {
+            Typeface.DEFAULT
+        }
 
-        // Пунктирный образец
+        val textToDraw = if (isCursive) "$letter ${letter.lowercase()}" else letter
+        val letterSize = minOf(PAGE_WIDTH * 0.55f, height * 0.85f)
+
+        val letterTextPaint = Paint().apply {
+            isAntiAlias = true
+            textSize = if (isCursive) letterSize * 0.8f else letterSize
+            color = android.graphics.Color.parseColor("#FF7043")
+            this.typeface = typeface
+        }
+
+        val letterPath = Path()
+        letterTextPaint.getTextPath(textToDraw, 0, textToDraw.length, 0f, 0f, letterPath)
+
+        // Центрирование в PDF
+        val bounds = RectF()
+        letterPath.computeBounds(bounds, true)
+        val centerX = PAGE_WIDTH / 2f
+        val centerY = top + height / 2f
+        val offsetX = centerX - bounds.centerX()
+        val offsetY = centerY - bounds.centerY()
+        
+        val matrix = Matrix()
+        matrix.postTranslate(offsetX, offsetY)
+        letterPath.transform(matrix)
+
         val outlinePaint = Paint().apply {
             isAntiAlias = true
             style = Paint.Style.STROKE
@@ -134,27 +158,25 @@ object PdfExporter {
             strokeWidth = 5f
             pathEffect = DashPathEffect(floatArrayOf(18f, 18f), 0f)
         }
-        val letterTextPaint = Paint().apply {
-            isAntiAlias = true
-            textSize = letterSize
-            color = android.graphics.Color.parseColor("#FF7043")
-            this.typeface = typeface
-        }
-        val letterPath = Path()
-        letterTextPaint.getTextPath(letter, 0, letter.length, letterX, letterY, letterPath)
         canvas.drawPath(letterPath, outlinePaint)
 
-        // Штрихи пользователя: масштабируем и сдвигаем так, чтобы
-        // координаты совпали с координатами буквы в PDF.
+        // Рисуем штрихи пользователя относительно центра
         if (viewSize.width > 0 && viewSize.height > 0) {
-            // На экране буква нарисована с textSize = min(w,h)*0.7,
-            // с baseline в (w*0.15, h*0.8).
-            val screenLetterSize = minOf(viewSize.width, viewSize.height) * 0.7f
+            val screenLetterSize = if (isCursive) {
+                minOf(viewSize.width, viewSize.height) * 0.5f
+            } else {
+                minOf(viewSize.width, viewSize.height) * 0.7f
+            }
+            
             if (screenLetterSize > 0f) {
-                val scale = letterSize / screenLetterSize
-                val offsetX = letterX - viewSize.width * 0.15f * scale
-                val offsetY = letterY - viewSize.height * 0.8f * scale
-
+                // Коэффициент масштабирования от экрана к PDF
+                val scale = (if (isCursive) letterSize * 0.8f else letterSize) / screenLetterSize
+                
+                // На экране буква была отцентрирована, значит её центр был в (w/2, h/2).
+                // В PDF её центр теперь в (centerX, centerY).
+                val screenCenterX = viewSize.width / 2f
+                val screenCenterY = viewSize.height / 2f
+                
                 val userPaint = Paint().apply {
                     isAntiAlias = true
                     style = Paint.Style.STROKE
@@ -165,8 +187,13 @@ object PdfExporter {
                 }
 
                 canvas.save()
-                canvas.translate(offsetX, offsetY)
+                // Переносим в центр PDF
+                canvas.translate(centerX, centerY)
+                // Масштабируем
                 canvas.scale(scale, scale)
+                // Смещаем так, чтобы координаты экрана совпали (экранный центр был в 0,0)
+                canvas.translate(-screenCenterX, -screenCenterY)
+                
                 paths.forEach { canvas.drawPath(it, userPaint) }
                 canvas.restore()
             }
