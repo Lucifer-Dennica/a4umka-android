@@ -5,10 +5,12 @@ import android.content.Context
 import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import com.example.a4umka.ui.components.LetterStyle
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -18,12 +20,18 @@ object PdfExporter {
     fun exportLetter(
         context: Context,
         letter: String,
-        userPaths: List<Path>
+        userPaths: List<Path>,
+        style: LetterStyle = LetterStyle.PRINT
     ): String? {
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // A4
         val page = document.startPage(pageInfo)
         val canvas = page.canvas
+
+        val typeface = when (style) {
+            LetterStyle.PRINT -> Typeface.DEFAULT
+            LetterStyle.CURSIVE -> Typeface.create("cursive", Typeface.NORMAL)
+        }
 
         // Заголовок
         val titlePaint = Paint().apply {
@@ -31,9 +39,10 @@ object PdfExporter {
             textSize = 28f
             color = android.graphics.Color.DKGRAY
         }
-        canvas.drawText("Пропись буквы «$letter»", 40f, 60f, titlePaint)
+        val styleLabel = if (style == LetterStyle.CURSIVE) "прописная" else "печатная"
+        canvas.drawText("Пропись буквы «$letter» ($styleLabel)", 40f, 60f, titlePaint)
 
-        // Пунктирная буква
+        // Пунктирный образец
         val letterPaint = Paint().apply {
             isAntiAlias = true
             style = Paint.Style.STROKE
@@ -45,12 +54,13 @@ object PdfExporter {
             isAntiAlias = true
             textSize = 420f
             color = android.graphics.Color.parseColor("#FF7043")
+            this.typeface = typeface
         }
         val letterPath = Path()
         textPaint.getTextPath(letter, 0, letter.length, 80f, 650f, letterPath)
         canvas.drawPath(letterPath, letterPaint)
 
-        // Штрихи ребёнка (масштабируем из экранных координат примерно)
+        // Штрихи ребёнка
         val userPaint = Paint().apply {
             isAntiAlias = true
             style = Paint.Style.STROKE
