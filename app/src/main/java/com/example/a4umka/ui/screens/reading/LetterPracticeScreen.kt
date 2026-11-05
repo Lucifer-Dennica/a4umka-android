@@ -9,7 +9,9 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.ui.components.LetterCanvas
@@ -27,9 +29,12 @@ fun LetterPracticeScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var style by remember { mutableStateOf(LetterStyle.PRINT) }
     var resetKey by remember { mutableIntStateOf(0) }
-    val currentPaths = remember { mutableStateListOf<Path>() }
+
+    val printPaths = remember { mutableStateListOf<Path>() }
+    val cursivePaths = remember { mutableStateListOf<Path>() }
+    var printSize by remember { mutableStateOf(IntSize.Zero) }
+    var cursiveSize by remember { mutableStateOf(IntSize.Zero) }
 
     Scaffold(
         topBar = {
@@ -42,7 +47,8 @@ fun LetterPracticeScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        currentPaths.clear()
+                        printPaths.clear()
+                        cursivePaths.clear()
                         resetKey++
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = "Очистить")
@@ -51,8 +57,10 @@ fun LetterPracticeScreen(
                         val result = PdfExporter.exportLetter(
                             context = context,
                             letter = letter,
-                            userPaths = currentPaths.toList(),
-                            style = style
+                            printPaths = printPaths.toList(),
+                            cursivePaths = cursivePaths.toList(),
+                            printViewSize = printSize,
+                            cursiveViewSize = cursiveSize
                         )
                         scope.launch {
                             if (result != null) {
@@ -73,57 +81,87 @@ fun LetterPracticeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // Переключатель «Печатная / Пропись»
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = style == LetterStyle.PRINT,
-                    onClick = {
-                        if (style != LetterStyle.PRINT) {
-                            style = LetterStyle.PRINT
-                            currentPaths.clear()
-                            resetKey++
-                        }
-                    },
-                    label = { Text("Печатная") }
-                )
-                FilterChip(
-                    selected = style == LetterStyle.CURSIVE,
-                    onClick = {
-                        if (style != LetterStyle.CURSIVE) {
-                            style = LetterStyle.CURSIVE
-                            currentPaths.clear()
-                            resetKey++
-                        }
-                    },
-                    label = { Text("Пропись") }
-                )
-            }
-
             Text(
-                text = "Обведи букву по пунктиру пальцем:",
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 12.dp)
+                text = "Обведи обе буквы по пунктиру:",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            key(resetKey, style) {
-                LetterCanvas(
-                    letter = letter,
-                    style = style,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    onPathsChanged = { list ->
-                        currentPaths.clear()
-                        currentPaths.addAll(list)
-                    }
-                )
+            // Верхний ряд — печатная буква
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Text(
+                        text = "Печатная",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .onSizeChanged { printSize = it }
+            ) {
+                key(resetKey, "print") {
+                    LetterCanvas(
+                        letter = letter,
+                        style = LetterStyle.PRINT,
+                        modifier = Modifier.fillMaxSize(),
+                        onPathsChanged = { list ->
+                            printPaths.clear()
+                            printPaths.addAll(list)
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Нижний ряд — пропись
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.tertiaryContainer
+                ) {
+                    Text(
+                        text = "Пропись",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .onSizeChanged { cursiveSize = it }
+            ) {
+                key(resetKey, "cursive") {
+                    LetterCanvas(
+                        letter = letter,
+                        style = LetterStyle.CURSIVE,
+                        modifier = Modifier.fillMaxSize(),
+                        onPathsChanged = { list ->
+                            cursivePaths.clear()
+                            cursivePaths.addAll(list)
+                        }
+                    )
+                }
             }
         }
     }
