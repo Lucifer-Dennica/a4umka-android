@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.res.ResourcesCompat
-import com.example.a4umka.R // Убедитесь, что этот импорт есть!
+import com.example.a4umka.R
 
 enum class LetterStyle { PRINT, CURSIVE }
 
@@ -64,13 +64,11 @@ fun LetterCanvas(
         val w = size.width
         val h = size.height
 
-        // ЗАГРУЗКА ШРИФТА
+        // Загружаем наш шрифт Caveat
         val typeface = when (letterStyle) {
             LetterStyle.PRINT -> Typeface.DEFAULT
-            // ВНИМАНИЕ: Замените R.font.propis на реальное имя вашего файла из папки font!
-            // Если файл называется caveat_regular.ttf, то будет R.font.caveat_regular
-            LetterStyle.CURSIVE -> ResourcesCompat.getFont(context, R.font.propis) 
-                ?: Typeface.create("cursive", Typeface.NORMAL) // Запасной вариант
+            LetterStyle.CURSIVE -> ResourcesCompat.getFont(context, R.font.caveat_regular)
+                ?: Typeface.create("cursive", Typeface.NORMAL)
         }
 
         // Если пропись, рисуем "А а", если печатная - просто "А"
@@ -91,8 +89,8 @@ fun LetterCanvas(
         
         val textPaint = Paint().apply {
             isAntiAlias = true
-            // Если рисуем две буквы, уменьшаем размер, чтобы влезло
-            textSize = if (letterStyle == LetterStyle.CURSIVE) minOf(w, h) * 0.5f else minOf(w, h) * 0.7f
+            // Если рисуем две буквы (пропись), делаем размер чуть меньше, чтобы влезло
+            textSize = if (letterStyle == LetterStyle.CURSIVE) minOf(w, h) * 0.45f else minOf(w, h) * 0.7f
             color = letterColor.toArgb()
             this.typeface = typeface
         }
