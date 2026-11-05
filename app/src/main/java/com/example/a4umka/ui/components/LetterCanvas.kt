@@ -1,8 +1,10 @@
 package com.example.a4umka.ui.components
 
 import android.graphics.DashPathEffect
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -12,6 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.res.ResourcesCompat
+import com.example.a4umka.R // Убедитесь, что этот импорт есть!
 
 enum class LetterStyle { PRINT, CURSIVE }
 
@@ -25,6 +30,7 @@ fun LetterCanvas(
     strokeWidthDp: Float = 4f,
     onPathsChanged: (List<Path>) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val strokes = remember(letter, letterStyle) { mutableStateListOf<Path>() }
     var currentPath by remember(letter, letterStyle) { mutableStateOf<Path?>(null) }
     var redrawTrigger by remember { mutableIntStateOf(0) }
@@ -58,33 +64,59 @@ fun LetterCanvas(
         val w = size.width
         val h = size.height
 
+        // ЗАГРУЗКА ШРИФТА
         val typeface = when (letterStyle) {
             LetterStyle.PRINT -> Typeface.DEFAULT
-            LetterStyle.CURSIVE -> Typeface.create("cursive", Typeface.NORMAL)
+            // ВНИМАНИЕ: Замените R.font.propis на реальное имя вашего файла из папки font!
+            // Если файл называется caveat_regular.ttf, то будет R.font.caveat_regular
+            LetterStyle.CURSIVE -> ResourcesCompat.getFont(context, R.font.propis) 
+                ?: Typeface.create("cursive", Typeface.NORMAL) // Запасной вариант
+        }
+
+        // Если пропись, рисуем "А а", если печатная - просто "А"
+        val textToDraw = if (letterStyle == LetterStyle.CURSIVE) {
+            "$letter ${letter.lowercase()}"
+        } else {
+            letter
         }
 
         // 1) Пунктирный образец буквы
         val outlinePaint = Paint().apply {
             isAntiAlias = true
-            this.style = Paint.Style.STROKE   // ← явно this, чтобы не спутать с letterStyle
+            this.style = Paint.Style.STROKE
             color = letterColor.toArgb()
             strokeWidth = strokeWidthDp * 2f
             pathEffect = DashPathEffect(floatArrayOf(20f, 20f), 0f)
         }
+        
         val textPaint = Paint().apply {
             isAntiAlias = true
-            textSize = minOf(w, h) * 0.7f
+            // Если рисуем две буквы, уменьшаем размер, чтобы влезло
+            textSize = if (letterStyle == LetterStyle.CURSIVE) minOf(w, h) * 0.5f else minOf(w, h) * 0.7f
             color = letterColor.toArgb()
             this.typeface = typeface
         }
+
         val letterPath = Path()
-        textPaint.getTextPath(letter, 0, letter.length, w * 0.15f, h * 0.8f, letterPath)
+        // Рисуем текст в координатах (0,0), чтобы потом отцентрировать
+        textPaint.getTextPath(textToDraw, 0, textToDraw.length, 0f, 0f, letterPath)
+
+        // ЦЕНТРИРОВАНИЕ БУКВЫ
+        val bounds = RectF()
+        letterPath.computeBounds(bounds, true)
+        val offsetX = (w - bounds.width()) / 2f - bounds.left
+        val offsetY = (h - bounds.height()) / 2f - bounds.top
+        
+        val matrix = Matrix()
+        matrix.postTranslate(offsetX, offsetY)
+        letterPath.transform(matrix)
+
         drawContext.canvas.nativeCanvas.drawPath(letterPath, outlinePaint)
 
         // 2) Штрихи пользователя
         val userPaint = Paint().apply {
             isAntiAlias = true
-            this.style = Paint.Style.STROKE   // ← тоже явно
+            this.style = Paint.Style.STROKE
             color = drawColor.toArgb()
             strokeWidth = strokeWidthDp * 3f
             strokeCap = Paint.Cap.ROUND
