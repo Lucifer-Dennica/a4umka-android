@@ -76,7 +76,7 @@ fun LetterPracticeScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             LetterCanvas(
-                key(resetKey) { letter }.let { letter },
+                letter = letter,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
