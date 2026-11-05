@@ -11,6 +11,7 @@ import com.example.a4umka.ui.screens.HomeScreen
 import com.example.a4umka.ui.screens.SettingsScreen
 import com.example.a4umka.ui.screens.TaskScreen
 import com.example.a4umka.ui.screens.reading.LetterPracticeScreen
+import com.example.a4umka.ui.screens.reading.PdfExportScreen
 import com.example.a4umka.ui.screens.reading.ReadingAlphabetScreen
 
 object Routes {
@@ -19,10 +20,12 @@ object Routes {
     const val CATEGORY = "category/{categoryId}"
     const val TASK = "task/{categoryId}/{taskId}"
     const val LETTER = "letter/{letter}"
+    const val PDF_EXPORT = "pdf_export/{letter}"
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
     fun letter(letter: String) = "letter/$letter"
+    fun pdfExport(letter: String) = "pdf_export/$letter"
 }
 
 @Composable
@@ -64,7 +67,6 @@ fun NavGraph() {
             val categoryId = entry.arguments?.getString("categoryId").orEmpty()
             val taskId = entry.arguments?.getString("taskId").orEmpty()
 
-            // Роутинг по категориям и заданиям
             when {
                 categoryId == "reading" && taskId == "alphabet" -> {
                     ReadingAlphabetScreen(
@@ -88,6 +90,18 @@ fun NavGraph() {
         ) { entry ->
             val letter = entry.arguments?.getString("letter").orEmpty()
             LetterPracticeScreen(
+                letter = letter,
+                onExportClick = { navController.navigate(Routes.pdfExport(letter)) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.PDF_EXPORT,
+            arguments = listOf(navArgument("letter") { type = NavType.StringType })
+        ) { entry ->
+            val letter = entry.arguments?.getString("letter").orEmpty()
+            PdfExportScreen(
                 letter = letter,
                 onBack = { navController.popBackStack() }
             )
