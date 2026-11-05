@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.ui.components.LetterCanvas
+import com.example.a4umka.ui.components.LetterStyle
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.launch
 
@@ -26,7 +27,7 @@ fun LetterPracticeScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Ключ сброса холста: меняем — Canvas пересоздаётся, штрихи пропадают
+    var style by remember { mutableStateOf(LetterStyle.PRINT) }
     var resetKey by remember { mutableIntStateOf(0) }
     val currentPaths = remember { mutableStateListOf<Path>() }
 
@@ -47,7 +48,12 @@ fun LetterPracticeScreen(
                         Icon(Icons.Default.Delete, contentDescription = "Очистить")
                     }
                     IconButton(onClick = {
-                        val result = PdfExporter.exportLetter(context, letter, currentPaths.toList())
+                        val result = PdfExporter.exportLetter(
+                            context = context,
+                            letter = letter,
+                            userPaths = currentPaths.toList(),
+                            style = style
+                        )
                         scope.launch {
                             if (result != null) {
                                 snackbarHostState.showSnackbar("Сохранено: $result")
@@ -69,14 +75,47 @@ fun LetterPracticeScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+            // Переключатель «Печатная / Пропись»
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = style == LetterStyle.PRINT,
+                    onClick = {
+                        if (style != LetterStyle.PRINT) {
+                            style = LetterStyle.PRINT
+                            currentPaths.clear()
+                            resetKey++
+                        }
+                    },
+                    label = { Text("Печатная") }
+                )
+                FilterChip(
+                    selected = style == LetterStyle.CURSIVE,
+                    onClick = {
+                        if (style != LetterStyle.CURSIVE) {
+                            style = LetterStyle.CURSIVE
+                            currentPaths.clear()
+                            resetKey++
+                        }
+                    },
+                    label = { Text("Пропись") }
+                )
+            }
+
             Text(
                 text = "Обведи букву по пунктиру пальцем:",
                 fontSize = 16.sp,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
-            key(resetKey) {
+
+            key(resetKey, style) {
                 LetterCanvas(
                     letter = letter,
+                    style = style,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
