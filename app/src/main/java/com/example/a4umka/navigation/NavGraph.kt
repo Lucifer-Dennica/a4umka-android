@@ -14,6 +14,7 @@ import com.example.a4umka.ui.screens.hand.HandwritingAlphabetScreen
 import com.example.a4umka.ui.screens.hand.LetterPracticeScreen
 import com.example.a4umka.ui.screens.hand.PdfExportScreen
 import com.example.a4umka.ui.screens.reading.AlphabetGeneratorScreen
+import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen // <-- НОВЫЙ ИМПОРТ
 
 object Routes {
     const val HOME = "home"
@@ -34,7 +35,6 @@ fun NavGraph() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
-
         composable(Routes.HOME) {
             HomeScreen(
                 onCategoryClick = { navController.navigate(Routes.category(it)) },
@@ -69,27 +69,23 @@ fun NavGraph() {
             val taskId = entry.arguments?.getString("taskId").orEmpty()
 
             when {
-                // РАЗДЕЛ ЧТЕНИЕ (Генератор алфавита)
+                // --- ЧТЕНИЕ ---
                 categoryId == "reading" && taskId == "alphabet_poster" -> {
-                    AlphabetGeneratorScreen(
-                        onBack = { navController.popBackStack() }
-                    )
+                    AlphabetGeneratorScreen(onBack = { navController.popBackStack() })
+                }
+                categoryId == "reading" && taskId == "letter_ribbon" -> { // <-- НОВЫЙ МАРШРУТ
+                    RibbonGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 
-                // РАЗДЕЛ РУКА И МОТОРИКА (Прописи)
+                // --- РУКА И МОТОРИКА ---
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
                         onLetterClick = { letter -> navController.navigate(Routes.letter(letter)) },
                         onBack = { navController.popBackStack() }
                     )
                 }
-
                 else -> {
-                    TaskScreen(
-                        categoryId = categoryId,
-                        taskId = taskId,
-                        onBack = { navController.popBackStack() }
-                    )
+                    TaskScreen(categoryId, taskId, onBack = { navController.popBackStack() })
                 }
             }
         }
@@ -111,10 +107,7 @@ fun NavGraph() {
             arguments = listOf(navArgument("letter") { type = NavType.StringType })
         ) { entry ->
             val letter = entry.arguments?.getString("letter").orEmpty()
-            PdfExportScreen(
-                letter = letter,
-                onBack = { navController.popBackStack() }
-            )
+            PdfExportScreen(letter = letter, onBack = { navController.popBackStack() })
         }
     }
 }
