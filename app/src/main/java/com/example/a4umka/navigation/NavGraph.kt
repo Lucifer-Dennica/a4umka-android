@@ -10,9 +10,10 @@ import com.example.a4umka.ui.screens.CategoryScreen
 import com.example.a4umka.ui.screens.HomeScreen
 import com.example.a4umka.ui.screens.SettingsScreen
 import com.example.a4umka.ui.screens.TaskScreen
-import com.example.a4umka.ui.screens.reading.LetterPracticeScreen
-import com.example.a4umka.ui.screens.reading.PdfExportScreen
-import com.example.a4umka.ui.screens.reading.ReadingAlphabetScreen
+import com.example.a4umka.ui.screens.hand.HandwritingAlphabetScreen // <-- НОВЫЙ ИМПОРТ
+import com.example.a4umka.ui.screens.hand.LetterPracticeScreen // <-- НОВЫЙ ИМПОРТ
+import com.example.a4umka.ui.screens.hand.PdfExportScreen // <-- НОВЫЙ ИМПОРТ
+import com.example.a4umka.ui.screens.reading.AlphabetGeneratorScreen // <-- НОВЫЙ ИМПОРТ
 
 object Routes {
     const val HOME = "home"
@@ -68,12 +69,21 @@ fun NavGraph() {
             val taskId = entry.arguments?.getString("taskId").orEmpty()
 
             when {
-                categoryId == "reading" && taskId == "alphabet" -> {
-                    ReadingAlphabetScreen(
+                // РАЗДЕЛ ЧТЕНИЕ (новый генератор плакатов)
+                categoryId == "reading" && taskId == "alphabet_poster" -> {
+                    AlphabetGeneratorScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                
+                // РАЗДЕЛ РУКА И МОТОРИКА (старые прописи)
+                categoryId == "hand" && taskId == "prescriptions" -> {
+                    HandwritingAlphabetScreen(
                         onLetterClick = { letter -> navController.navigate(Routes.letter(letter)) },
                         onBack = { navController.popBackStack() }
                     )
                 }
+
                 else -> {
                     TaskScreen(
                         categoryId = categoryId,
