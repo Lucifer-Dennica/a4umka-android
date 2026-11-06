@@ -10,9 +10,10 @@ data class AlphabetConfig(
     val case: AlphabetCase = AlphabetCase.BOTH,
     val filter: AlphabetFilter = AlphabetFilter.ALL,
     val color: PosterColor = PosterColor.WHITE,
-    val showImages: Boolean = true,
+    val showImage: Boolean = true,  // <-- РАЗДЕЛЕНО
+    val showWord: Boolean = true,   // <-- РАЗДЕЛЕНО
     val isCursive: Boolean = false,
-    val startLetterIndex: Int = 0, // Индексы для диапазона
-    val endLetterIndex: Int = 32, // По умолчанию до 'Я' (33 буквы)
-    val cardsPerPage: Int = 4 // Для режима карточек (1, 2, 4, 6)
+    val startLetterIndex: Int = 0,
+    val endLetterIndex: Int = 32,
+    val cardsPerPage: Int = 4
 )
