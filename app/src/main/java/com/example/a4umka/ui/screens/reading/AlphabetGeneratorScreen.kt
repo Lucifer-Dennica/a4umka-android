@@ -3,6 +3,7 @@ package com.example.a4umka.ui.screens.reading
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,11 +54,9 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    // Кнопка с советами
                     IconButton(onClick = { showInfoSheet = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
                     }
-                    // Кнопка сохранения
                     IconButton(onClick = {
                         val result = PdfExporter.exportAlphabetPoster(context, config)
                         scope.launch {
@@ -153,7 +153,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                 
-                // Короткий совет прямо на экране
                 Text(
                     text = "💡 Совет: не учите больше 1–2 букв за раз.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -166,6 +165,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
+            // ПРЕДПРОСМОТР И КНОПКА ПОД НИМ
             item {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Image(
@@ -174,11 +174,48 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
                     )
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // КНОПКА ИНФО ПОД ПРЕДПРОСМОТРОМ
+                ElevatedCard(
+                    onClick = { showInfoSheet = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Как заниматься по этим листам",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = "Советы для родителей и педагогов",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+                
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
-        // ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ С ТЕКСТОМ С САЙТА
+        // ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ С ТЕКСТОМ
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
