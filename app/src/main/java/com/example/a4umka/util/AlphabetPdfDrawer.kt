@@ -16,17 +16,20 @@ object AlphabetPdfDrawer {
     const val PAGE_HEIGHT = 842f
 
     fun drawPoster(canvas: Canvas, config: AlphabetConfig, context: Context) {
-        // Фон
         val bgColor = when (config.theme) {
             PosterTheme.WHITE -> Color.WHITE
-            PosterTheme.GREEN -> Color.parseColor("#E8F5E9") // Светло-зеленый
-            PosterTheme.PASTEL -> Color.parseColor("#FFF8F3") // Кремовый
+            PosterTheme.GREEN -> Color.parseColor("#E8F5E9")
+            PosterTheme.PASTEL -> Color.parseColor("#FFF8F3")
         }
         canvas.drawColor(bgColor)
 
-        val typeface = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        // Выбор шрифта в зависимости от настроек
+        val typeface = if (config.isCursive) {
+            ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        } else {
+            Typeface.DEFAULT
+        }
 
-        // Фильтрация букв
         val letters = AlphabetData.russianAlphabet.filter {
             when (config.filter) {
                 AlphabetFilter.ALL -> true
@@ -35,7 +38,6 @@ object AlphabetPdfDrawer {
             }
         }
 
-        // Рассчитываем сетку (стремимся к квадрату)
         val count = letters.size
         if (count == 0) return
 
@@ -44,11 +46,10 @@ object AlphabetPdfDrawer {
 
         val margin = 40f
         val availableWidth = PAGE_WIDTH - margin * 2
-        val availableHeight = PAGE_HEIGHT - margin * 2 - 60f // Оставляем место под заголовок
+        val availableHeight = PAGE_HEIGHT - margin * 2 - 60f
         val cellWidth = availableWidth / cols
         val cellHeight = availableHeight / rows
 
-        // Заголовок
         val titlePaint = Paint().apply {
             isAntiAlias = true
             textSize = 32f
@@ -62,7 +63,7 @@ object AlphabetPdfDrawer {
             isAntiAlias = true
             textSize = minOf(cellWidth, cellHeight) * 0.35f
             color = Color.parseColor("#FF7043")
-            this.typeface = typeface
+            this.typeface = typeface // <-- ПРИМЕНЯЕМ ШРИФТ
             textAlign = Paint.Align.CENTER
         }
 
@@ -70,7 +71,7 @@ object AlphabetPdfDrawer {
             isAntiAlias = true
             textSize = minOf(cellWidth, cellHeight) * 0.15f
             color = Color.DKGRAY
-            this.typeface = Typeface.DEFAULT // <-- ИСПРАВЛЕНО: добавлено this.
+            this.typeface = Typeface.DEFAULT
             textAlign = Paint.Align.CENTER
         }
 
@@ -86,24 +87,20 @@ object AlphabetPdfDrawer {
             val left = margin + col * cellWidth
             val top = margin + 60f + row * cellHeight
 
-            // Рамка ячейки
             canvas.drawRect(left, top, left + cellWidth, top + cellHeight, linePaint.apply { style = Paint.Style.STROKE })
 
             val centerX = left + cellWidth / 2f
 
-            // Буквы
             val text = when (config.case) {
                 AlphabetCase.UPPERCASE -> item.uppercase
                 AlphabetCase.LOWERCASE -> item.lowercase
                 AlphabetCase.BOTH -> "${item.uppercase} ${item.lowercase}"
             }
             
-            // Отрисовка букв
             val fontMetrics = letterPaint.fontMetrics
             val baselineY = top + cellHeight * 0.35f - (fontMetrics.ascent + fontMetrics.descent) / 2f
             canvas.drawText(text, centerX, baselineY, letterPaint)
 
-            // Слово (и место под картинку)
             if (config.showImages) {
                 val picSize = minOf(cellWidth, cellHeight) * 0.25f
                 val picPaint = Paint().apply { color = Color.parseColor("#FFD4C2") }
