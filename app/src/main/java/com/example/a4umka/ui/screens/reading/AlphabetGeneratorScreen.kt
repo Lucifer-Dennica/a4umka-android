@@ -4,11 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +29,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(AlphabetConfig()) }
 
-    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА
+    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА (пересоздается только при смене настроек)
     val previewBitmap = remember(config) {
         val bmp = Bitmap.createBitmap(
             AlphabetPdfDrawer.PAGE_WIDTH.toInt(),
@@ -67,10 +65,12 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
+        // ИСПОЛЬЗУЕМ LAZYCOLUMN ДЛЯ УСТРАНЕНИЯ ФРИЗОВ
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(16.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            item {
                 // ВИД ЛИСТА
                 Text("Вид листа:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -79,7 +79,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     FilterChip(selected = config.layoutType == AlphabetLayoutType.COLORING, onClick = { config = config.copy(layoutType = AlphabetLayoutType.COLORING) }, label = { Text("Раскраска") })
                 }
 
-                // КОЛИЧЕСТВО КАРТОЧЕК (если выбран этот режим)
                 if (config.layoutType == AlphabetLayoutType.FLASHCARDS) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Карточек на лист:", style = MaterialTheme.typography.labelLarge)
@@ -96,13 +95,13 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 Text("Диапазон букв:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     LetterDropdown(
-                        label = "От буквы",
+                        label = "От",
                         selectedIndex = config.startLetterIndex,
                         onSelect = { config = config.copy(startLetterIndex = it.coerceAtMost(config.endLetterIndex)) },
                         modifier = Modifier.weight(1f)
                     )
                     LetterDropdown(
-                        label = "До буквы",
+                        label = "До",
                         selectedIndex = config.endLetterIndex,
                         onSelect = { config = config.copy(endLetterIndex = it.coerceAtLeast(config.startLetterIndex)) },
                         modifier = Modifier.weight(1f)
@@ -111,7 +110,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // ФИЛЬТР ГЛАСНЫЕ/СОГЛАСНЫЕ
+                // ФИЛЬТР
                 Text("Какие буквы:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.filter == AlphabetFilter.ALL, onClick = { config = config.copy(filter = AlphabetFilter.ALL) }, label = { Text("Все") })
@@ -135,7 +134,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     FilterChip(selected = config.color == PosterColor.WHITE, onClick = { config = config.copy(color = PosterColor.WHITE) }, label = { Text("Белый") })
                     FilterChip(selected = config.color == PosterColor.GREEN, onClick = { config = config.copy(color = PosterColor.GREEN) }, label = { Text("Зеленый") })
                     FilterChip(selected = config.color == PosterColor.BLUE, onClick = { config = config.copy(color = PosterColor.BLUE) }, label = { Text("Синий") })
-                    FilterChip(selected = config.color == PosterColor.PINK, onClick = { config = config.copy(color = PosterColor.PINK) }, label = { Text("Розовый") })
                     FilterChip(selected = config.color == PosterColor.BLACK_WHITE, onClick = { config = config.copy(color = PosterColor.BLACK_WHITE) }, label = { Text("Ч/Б") })
                 }
 
@@ -148,26 +146,32 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 if (config.layoutType != AlphabetLayoutType.COLORING) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Печатать слово и картинку", modifier = Modifier.weight(1f))
+                        Text("Печатать картинку и слово", modifier = Modifier.weight(1f))
                         Switch(checked = config.showImages, onCheckedChange = { config = config.copy(showImages = it) })
                     }
                 }
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            HorizontalDivider()
-            Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(16.dp))
-
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    bitmap = previewBitmap.asImageBitmap(),
-                    contentDescription = "Предпросмотр",
-                    modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
-                )
+            // ПРЕДПРОСМОТР (вынесен в отдельный item, чтобы не перегружать настройки)
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        bitmap = previewBitmap.asImageBitmap(),
+                        contentDescription = "Предпросмотр",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
