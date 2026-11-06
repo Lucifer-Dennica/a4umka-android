@@ -1,10 +1,13 @@
 package com.example.a4umka.util
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
 import com.example.a4umka.R
@@ -17,7 +20,6 @@ object AlphabetPdfDrawer {
     const val PAGE_HEIGHT = 842f
 
     fun drawLayout(canvas: Canvas, config: AlphabetConfig, context: Context) {
-        // 1. Фон
         val bgColor = when (config.color) {
             PosterColor.WHITE -> Color.WHITE
             PosterColor.GREEN -> Color.parseColor("#E8F5E9")
@@ -31,26 +33,23 @@ object AlphabetPdfDrawer {
         val isBW = config.color == PosterColor.BLACK_WHITE
         val mainTextColor = if (isBW) Color.BLACK else Color.parseColor("#FF7043")
 
-        // 2. Шрифт
         val font = if (config.isCursive) {
             ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
         } else {
             Typeface.DEFAULT
         }
 
-        // 3. Получаем буквы
         val letters = AlphabetData.getLettersByRange(config.startLetterIndex, config.endLetterIndex, config.filter)
         if (letters.isEmpty()) return
 
-        // 4. Рисуем нужный макет
         when (config.layoutType) {
-            AlphabetLayoutType.POSTER -> drawPoster(canvas, config, letters, font, mainTextColor, isBW)
-            AlphabetLayoutType.FLASHCARDS -> drawFlashcards(canvas, config, letters, font, mainTextColor, isBW)
+            AlphabetLayoutType.POSTER -> drawPoster(canvas, config, letters, font, mainTextColor, isBW, context)
+            AlphabetLayoutType.FLASHCARDS -> drawFlashcards(canvas, config, letters, font, mainTextColor, isBW, context)
             AlphabetLayoutType.COLORING -> drawColoring(canvas, config, letters, font, mainTextColor, isBW)
         }
     }
 
-    private fun drawPoster(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean) {
+    private fun drawPoster(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean, context: Context) {
         val count = letters.size
         val cols = ceil(sqrt(count.toFloat())).toInt()
         val rows = ceil(count.toFloat() / cols).toInt()
@@ -78,11 +77,11 @@ object AlphabetPdfDrawer {
             val top = margin + 60f + row * cellHeight
 
             canvas.drawRect(left, top, left + cellWidth, top + cellHeight, linePaint)
-            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, letterPaint, wordPaint, isBW)
+            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, letterPaint, wordPaint, isBW, context)
         }
     }
 
-    private fun drawFlashcards(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean) {
+    private fun drawFlashcards(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean, context: Context) {
         val perPage = config.cardsPerPage
         val cols = if (perPage == 1) 1 else 2
         val rows = if (perPage == 1) 1 else perPage / 2
@@ -110,7 +109,7 @@ object AlphabetPdfDrawer {
             val top = margin + row * cellHeight
 
             canvas.drawRect(left, top, left + cellWidth, top + cellHeight, cutPaint)
-            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, letterPaint, wordPaint, isBW)
+            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, letterPaint, wordPaint, isBW, context)
         }
     }
 
@@ -151,12 +150,12 @@ object AlphabetPdfDrawer {
             this.textSize = 24f
             this.color = Color.GRAY
             this.textAlign = Paint.Align.CENTER
-            this.typeface = Typeface.DEFAULT // <-- ИСПРАВЛЕНО: добавлено this.
+            this.typeface = Typeface.DEFAULT
         }
         canvas.drawText("Нарисуй: ${item.word}", PAGE_WIDTH / 2f, boxTop - 20f, hintPaint)
     }
 
-    private fun drawCellContent(canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig, left: Float, top: Float, cellWidth: Float, cellHeight: Float, letterPaint: Paint, wordPaint: Paint, isBW: Boolean) {
+    private fun drawCellContent(canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig, left: Float, top: Float, cellWidth: Float, cellHeight: Float, letterPaint: Paint, wordPaint: Paint, isBW: Boolean, context: Context) {
         val centerX = left + cellWidth / 2f
         val text = when (config.case) {
             AlphabetCase.UPPERCASE -> item.uppercase
@@ -169,14 +168,42 @@ object AlphabetPdfDrawer {
         canvas.drawText(text, centerX, baselineY, letterPaint)
 
         if (config.showImages) {
-            val picSize = minOf(cellWidth, cellHeight) * 0.25f
-            val picPaint = Paint().apply { 
-                this.color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") 
+            val picSize = minOf(cellWidth, cellHeight) * 0.3f
+            val picCenterY = top + cellHeight * 0.65f
+            
+            // ПЫТАЕМСЯ ЗАГРУЗИТЬ КАРТИНКУ ИЗ ASSETS
+            val bitmap = loadImageFromAssets(context, item.uppercase.lowercase())
+            
+            if (bitmap != null) {
+                // Если картинка есть — рисуем ее
+                val rect = RectF(
+                    centerX - picSize / 2f,
+                    picCenterY - picSize / 2f,
+                    centerX + picSize / 2f,
+                    picCenterY + picSize / 2f
+                )
+                canvas.drawBitmap(bitmap, null, rect, null)
+            } else {
+                // Если нет — рисуем кружок
+                val picPaint = Paint().apply { 
+                    this.color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") 
+                }
+                canvas.drawCircle(centerX, picCenterY, picSize / 2f, picPaint)
             }
-            canvas.drawCircle(centerX, top + cellHeight * 0.65f, picSize / 2f, picPaint)
 
             val wordBaselineY = top + cellHeight * 0.9f
             canvas.drawText(item.word, centerX, wordBaselineY, wordPaint)
+        }
+    }
+
+    private fun loadImageFromAssets(context: Context, letter: String): Bitmap? {
+        return try {
+            // Ожидаемый путь: assets/images/а.png (или a.png)
+            val inputStream = context.assets.open("images/$letter.png")
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) {
+            // Если картинки нет — возвращаем null, нарисуется кружок
+            null
         }
     }
 
