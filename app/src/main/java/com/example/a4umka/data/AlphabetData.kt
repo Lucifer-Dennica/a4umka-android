@@ -43,4 +43,17 @@ object AlphabetData {
         AlphabetLetter('Ю', "Ю", "ю", "Юбка"),
         AlphabetLetter('Я', "Я", "я", "Якорь")
     )
+
+    fun getLettersByRange(startIndex: Int, endIndex: Int, filter: AlphabetFilter): List<AlphabetLetter> {
+        val safeStart = startIndex.coerceIn(0, russianAlphabet.size - 1)
+        val safeEnd = endIndex.coerceIn(safeStart, russianAlphabet.size - 1)
+        
+        return russianAlphabet.subList(safeStart, safeEnd + 1).filter {
+            when (filter) {
+                AlphabetFilter.ALL -> true
+                AlphabetFilter.VOWELS -> it.char in listOf('А', 'Е', 'Ё', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я')
+                AlphabetFilter.CONSONANTS -> it.char !in listOf('А', 'Е', 'Ё', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я', 'Ъ', 'Ь')
+            }
+        }
+    }
 }
