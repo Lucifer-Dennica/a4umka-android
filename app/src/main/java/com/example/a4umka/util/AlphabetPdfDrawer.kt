@@ -32,7 +32,7 @@ object AlphabetPdfDrawer {
         val mainTextColor = if (isBW) Color.BLACK else Color.parseColor("#FF7043")
 
         // 2. Шрифт
-        val typeface = if (config.isCursive) {
+        val font = if (config.isCursive) {
             ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
         } else {
             Typeface.DEFAULT
@@ -44,13 +44,13 @@ object AlphabetPdfDrawer {
 
         // 4. Рисуем нужный макет
         when (config.layoutType) {
-            AlphabetLayoutType.POSTER -> drawPoster(canvas, config, letters, typeface, mainTextColor, isBW)
-            AlphabetLayoutType.FLASHCARDS -> drawFlashcards(canvas, config, letters, typeface, mainTextColor, isBW)
-            AlphabetLayoutType.COLORING -> drawColoring(canvas, config, letters, typeface, mainTextColor, isBW)
+            AlphabetLayoutType.POSTER -> drawPoster(canvas, config, letters, font, mainTextColor, isBW)
+            AlphabetLayoutType.FLASHCARDS -> drawFlashcards(canvas, config, letters, font, mainTextColor, isBW)
+            AlphabetLayoutType.COLORING -> drawColoring(canvas, config, letters, font, mainTextColor, isBW)
         }
     }
 
-    private fun drawPoster(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, typeface: Typeface, textColor: Int, isBW: Boolean) {
+    private fun drawPoster(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean) {
         val count = letters.size
         val cols = ceil(sqrt(count.toFloat())).toInt()
         val rows = ceil(count.toFloat() / cols).toInt()
@@ -61,11 +61,15 @@ object AlphabetPdfDrawer {
         val cellWidth = availableWidth / cols
         val cellHeight = availableHeight / rows
 
-        drawTitle(canvas, "Алфавит", typeface)
+        drawTitle(canvas, "Алфавит", font)
 
-        val letterPaint = createLetterPaint(cellWidth, cellHeight, typeface, textColor, isBW)
+        val letterPaint = createLetterPaint(cellWidth, cellHeight, font, textColor, isBW)
         val wordPaint = createWordPaint(cellWidth, cellHeight)
-        val linePaint = Paint().apply { color = if (isBW) Color.BLACK else Color.LTGRAY; strokeWidth = 1f; style = Paint.Style.STROKE }
+        val linePaint = Paint().apply { 
+            this.color = if (isBW) Color.BLACK else Color.LTGRAY
+            this.strokeWidth = 1f
+            this.style = Paint.Style.STROKE 
+        }
 
         letters.forEachIndexed { index, item ->
             val col = index % cols
@@ -78,7 +82,7 @@ object AlphabetPdfDrawer {
         }
     }
 
-    private fun drawFlashcards(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, typeface: Typeface, textColor: Int, isBW: Boolean) {
+    private fun drawFlashcards(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean) {
         val perPage = config.cardsPerPage
         val cols = if (perPage == 1) 1 else 2
         val rows = if (perPage == 1) 1 else perPage / 2
@@ -87,15 +91,16 @@ object AlphabetPdfDrawer {
         val cellWidth = (PAGE_WIDTH - margin * 2) / cols
         val cellHeight = (PAGE_HEIGHT - margin * 2) / rows
 
-        val letterPaint = createLetterPaint(cellWidth, cellHeight, typeface, textColor, isBW).apply { textSize = cellWidth * 0.4f }
+        val letterPaint = createLetterPaint(cellWidth, cellHeight, font, textColor, isBW).apply { 
+            this.textSize = cellWidth * 0.4f 
+        }
         val wordPaint = createWordPaint(cellWidth, cellHeight)
         
-        // Пунктир для разрезания
         val cutPaint = Paint().apply { 
-            color = Color.GRAY
-            strokeWidth = 2f
-            style = Paint.Style.STROKE
-            pathEffect = DashPathEffect(floatArrayOf(15f, 15f), 0f)
+            this.color = Color.GRAY
+            this.strokeWidth = 2f
+            this.style = Paint.Style.STROKE
+            this.pathEffect = DashPathEffect(floatArrayOf(15f, 15f), 0f)
         }
 
         letters.take(perPage).forEachIndexed { index, item ->
@@ -109,50 +114,47 @@ object AlphabetPdfDrawer {
         }
     }
 
-    private fun drawColoring(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, typeface: Typeface, textColor: Int, isBW: Boolean) {
+    private fun drawColoring(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean) {
         val item = letters.firstOrNull() ?: return
         val margin = 40f
         
-        drawTitle(canvas, "Раскраска", typeface)
+        drawTitle(canvas, "Раскраска", font)
 
         val letterPaint = Paint().apply {
-            isAntiAlias = true
-            textSize = 300f
-            color = textColor
-            this.typeface = typeface
-            textAlign = Paint.Align.CENTER
-            style = Paint.Style.STROKE // Рисуем контуром для раскрашивания
-            strokeWidth = 3f
+            this.isAntiAlias = true
+            this.textSize = 300f
+            this.color = textColor
+            this.typeface = font
+            this.textAlign = Paint.Align.CENTER
+            this.style = Paint.Style.STROKE
+            this.strokeWidth = 3f
         }
 
         val text = if (config.case == AlphabetCase.LOWERCASE) item.lowercase else item.uppercase
         canvas.drawText(text, PAGE_WIDTH / 2f, 350f, letterPaint)
 
-        // Окно для рисунка
         val boxTop = 450f
         val boxBottom = 750f
         val boxLeft = 100f
         val boxRight = PAGE_WIDTH - 100f
         
         val boxPaint = Paint().apply { 
-            color = if (isBW) Color.BLACK else Color.GRAY
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-            pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
+            this.color = if (isBW) Color.BLACK else Color.GRAY
+            this.style = Paint.Style.STROKE
+            this.strokeWidth = 2f
+            this.pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
         }
         canvas.drawRect(boxLeft, boxTop, boxRight, boxBottom, boxPaint)
 
         val hintPaint = Paint().apply {
-            isAntiAlias = true
-            textSize = 24f
-            color = Color.GRAY
-            textAlign = Paint.Align.CENTER
-            typeface = Typeface.DEFAULT
+            this.isAntiAlias = true
+            this.textSize = 24f
+            this.color = Color.GRAY
+            this.textAlign = Paint.Align.CENTER
+            this.typeface = Typeface.DEFAULT // <-- ИСПРАВЛЕНО: добавлено this.
         }
         canvas.drawText("Нарисуй: ${item.word}", PAGE_WIDTH / 2f, boxTop - 20f, hintPaint)
     }
-
-    // --- Вспомогательные методы ---
 
     private fun drawCellContent(canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig, left: Float, top: Float, cellWidth: Float, cellHeight: Float, letterPaint: Paint, wordPaint: Paint, isBW: Boolean) {
         val centerX = left + cellWidth / 2f
@@ -168,7 +170,9 @@ object AlphabetPdfDrawer {
 
         if (config.showImages) {
             val picSize = minOf(cellWidth, cellHeight) * 0.25f
-            val picPaint = Paint().apply { color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") }
+            val picPaint = Paint().apply { 
+                this.color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") 
+            }
             canvas.drawCircle(centerX, top + cellHeight * 0.65f, picSize / 2f, picPaint)
 
             val wordBaselineY = top + cellHeight * 0.9f
@@ -176,36 +180,36 @@ object AlphabetPdfDrawer {
         }
     }
 
-    private fun drawTitle(canvas: Canvas, text: String, typeface: Typeface) {
+    private fun drawTitle(canvas: Canvas, text: String, font: Typeface) {
         val titlePaint = Paint().apply {
-            isAntiAlias = true
-            textSize = 32f
-            color = Color.DKGRAY
-            this.typeface = typeface
-            textAlign = Paint.Align.CENTER
+            this.isAntiAlias = true
+            this.textSize = 32f
+            this.color = Color.DKGRAY
+            this.typeface = font
+            this.textAlign = Paint.Align.CENTER
         }
         canvas.drawText(text, PAGE_WIDTH / 2f, 60f, titlePaint)
     }
 
-    private fun createLetterPaint(cellWidth: Float, cellHeight: Float, typeface: Typeface, textColor: Int, isBW: Boolean): Paint {
+    private fun createLetterPaint(cellWidth: Float, cellHeight: Float, font: Typeface, textColor: Int, isBW: Boolean): Paint {
         return Paint().apply {
-            isAntiAlias = true
-            textSize = minOf(cellWidth, cellHeight) * 0.35f
-            color = if (isBW) Color.BLACK else textColor
-            this.typeface = typeface
-            textAlign = Paint.Align.CENTER
-            style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
-            strokeWidth = if (isBW) 2f else 0f
+            this.isAntiAlias = true
+            this.textSize = minOf(cellWidth, cellHeight) * 0.35f
+            this.color = if (isBW) Color.BLACK else textColor
+            this.typeface = font
+            this.textAlign = Paint.Align.CENTER
+            this.style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
+            this.strokeWidth = if (isBW) 2f else 0f
         }
     }
 
     private fun createWordPaint(cellWidth: Float, cellHeight: Float): Paint {
         return Paint().apply {
-            isAntiAlias = true
-            textSize = minOf(cellWidth, cellHeight) * 0.15f
-            color = Color.DKGRAY
+            this.isAntiAlias = true
+            this.textSize = minOf(cellWidth, cellHeight) * 0.15f
+            this.color = Color.DKGRAY
             this.typeface = Typeface.DEFAULT
-            textAlign = Paint.Align.CENTER
+            this.textAlign = Paint.Align.CENTER
         }
     }
 }
