@@ -62,8 +62,6 @@ object AlphabetPdfDrawer {
 
         drawTitle(canvas, "Алфавит", font)
 
-        val letterPaint = createLetterPaint(cellWidth, cellHeight, font, textColor, isBW)
-        val wordPaint = createWordPaint(cellWidth, cellHeight)
         val linePaint = Paint().apply { 
             this.color = if (isBW) Color.BLACK else Color.LTGRAY
             this.strokeWidth = 1f
@@ -77,7 +75,7 @@ object AlphabetPdfDrawer {
             val top = margin + 60f + row * cellHeight
 
             canvas.drawRect(left, top, left + cellWidth, top + cellHeight, linePaint)
-            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, letterPaint, wordPaint, isBW, context)
+            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, font, textColor, isBW, context)
         }
     }
 
@@ -89,11 +87,6 @@ object AlphabetPdfDrawer {
         val margin = 20f
         val cellWidth = (PAGE_WIDTH - margin * 2) / cols
         val cellHeight = (PAGE_HEIGHT - margin * 2) / rows
-
-        val letterPaint = createLetterPaint(cellWidth, cellHeight, font, textColor, isBW).apply { 
-            this.textSize = cellWidth * 0.4f 
-        }
-        val wordPaint = createWordPaint(cellWidth, cellHeight)
         
         val cutPaint = Paint().apply { 
             this.color = Color.GRAY
@@ -109,7 +102,7 @@ object AlphabetPdfDrawer {
             val top = margin + row * cellHeight
 
             canvas.drawRect(left, top, left + cellWidth, top + cellHeight, cutPaint)
-            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, letterPaint, wordPaint, isBW, context)
+            drawCellContent(canvas, item, config, left, top, cellWidth, cellHeight, font, textColor, isBW, context)
         }
     }
 
@@ -155,54 +148,83 @@ object AlphabetPdfDrawer {
         canvas.drawText("Нарисуй: ${item.word}", PAGE_WIDTH / 2f, boxTop - 20f, hintPaint)
     }
 
-    private fun drawCellContent(canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig, left: Float, top: Float, cellWidth: Float, cellHeight: Float, letterPaint: Paint, wordPaint: Paint, isBW: Boolean, context: Context) {
+    private fun drawCellContent(
+        canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig, 
+        left: Float, top: Float, cellWidth: Float, cellHeight: Float, 
+        font: Typeface, textColor: Int, isBW: Boolean, context: Context
+    ) {
         val centerX = left + cellWidth / 2f
+        
+        // АДАПТИВНЫЙ РАЗМЕР БУКВ (если нет картинок и слов, буква становится огромной)
+        val letterSizeMultiplier = if (!config.showImage && !config.showWord) 0.6f else 0.35f
+        
+        val letterPaint = Paint().apply {
+            this.isAntiAlias = true
+            this.textSize = minOf(cellWidth, cellHeight) * letterSizeMultiplier
+            this.color = if (isBW) Color.BLACK else textColor
+            this.typeface = font
+            this.textAlign = Paint.Align.CENTER
+            this.style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
+            this.strokeWidth = if (isBW) 3f else 0f
+        }
+
         val text = when (config.case) {
             AlphabetCase.UPPERCASE -> item.uppercase
             AlphabetCase.LOWERCASE -> item.lowercase
             AlphabetCase.BOTH -> "${item.uppercase} ${item.lowercase}"
         }
         
+        // Если нет ни картинки, ни слова — центрируем букву ровно посередине
+        val letterCenterY = if (!config.showImage && !config.showWord) {
+            top + cellHeight / 2f
+        } else {
+            top + cellHeight * 0.35f
+        }
+
         val fontMetrics = letterPaint.fontMetrics
-        val baselineY = top + cellHeight * 0.35f - (fontMetrics.ascent + fontMetrics.descent) / 2f
+        val baselineY = letterCenterY - (fontMetrics.ascent + fontMetrics.descent) / 2f
         canvas.drawText(text, centerX, baselineY, letterPaint)
 
-        if (config.showImages) {
-            val picSize = minOf(cellWidth, cellHeight) * 0.3f
-            val picCenterY = top + cellHeight * 0.65f
-            
-            // ПЫТАЕМСЯ ЗАГРУЗИТЬ КАРТИНКУ ИЗ ASSETS
-            val bitmap = loadImageFromAssets(context, item.uppercase.lowercase())
-            
-            if (bitmap != null) {
-                // Если картинка есть — рисуем ее
-                val rect = RectF(
-                    centerX - picSize / 2f,
-                    picCenterY - picSize / 2f,
-                    centerX + picSize / 2f,
-                    picCenterY + picSize / 2f
-                )
-                canvas.drawBitmap(bitmap, null, rect, null)
-            } else {
-                // Если нет — рисуем кружок
-                val picPaint = Paint().apply { 
-                    this.color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") 
-                }
-                canvas.drawCircle(centerX, picCenterY, picSize / 2f, picPaint)
+        // ЛОГИКА ОТРИСОВКИ КАРТИНКИ И СЛОВА
+        if (config.showImage || config.showWord) {
+            val wordPaint = Paint().apply {
+                this.isAntiAlias = true
+                // Если картинки нет, слово можно сделать чуть больше
+                this.textSize = minOf(cellWidth, cellHeight) * (if (!config.showImage) 0.25f else 0.15f)
+                this.color = Color.DKGRAY
+                this.typeface = Typeface.DEFAULT
+                this.textAlign = Paint.Align.CENTER
             }
 
-            val wordBaselineY = top + cellHeight * 0.9f
-            canvas.drawText(item.word, centerX, wordBaselineY, wordPaint)
+            var currentY = top + cellHeight * 0.65f
+
+            if (config.showImage) {
+                val picSize = minOf(cellWidth, cellHeight) * 0.25f
+                val bitmap = loadImageFromAssets(context, item.uppercase.lowercase())
+                
+                if (bitmap != null) {
+                    val rect = RectF(centerX - picSize / 2f, currentY - picSize / 2f, centerX + picSize / 2f, currentY + picSize / 2f)
+                    canvas.drawBitmap(bitmap, null, rect, null)
+                } else {
+                    val picPaint = Paint().apply { this.color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") }
+                    canvas.drawCircle(centerX, currentY, picSize / 2f, picPaint)
+                }
+                currentY += cellHeight * 0.2f // Смещаем координату для слова вниз
+            }
+
+            if (config.showWord) {
+                // Если картинки нет, слово рисуем чуть ниже центра
+                val wordY = if (!config.showImage) top + cellHeight * 0.75f else currentY
+                canvas.drawText(item.word, centerX, wordY, wordPaint)
+            }
         }
     }
 
     private fun loadImageFromAssets(context: Context, letter: String): Bitmap? {
         return try {
-            // Ожидаемый путь: assets/images/а.png (или a.png)
             val inputStream = context.assets.open("images/$letter.png")
             BitmapFactory.decodeStream(inputStream)
         } catch (e: Exception) {
-            // Если картинки нет — возвращаем null, нарисуется кружок
             null
         }
     }
@@ -216,27 +238,5 @@ object AlphabetPdfDrawer {
             this.textAlign = Paint.Align.CENTER
         }
         canvas.drawText(text, PAGE_WIDTH / 2f, 60f, titlePaint)
-    }
-
-    private fun createLetterPaint(cellWidth: Float, cellHeight: Float, font: Typeface, textColor: Int, isBW: Boolean): Paint {
-        return Paint().apply {
-            this.isAntiAlias = true
-            this.textSize = minOf(cellWidth, cellHeight) * 0.35f
-            this.color = if (isBW) Color.BLACK else textColor
-            this.typeface = font
-            this.textAlign = Paint.Align.CENTER
-            this.style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
-            this.strokeWidth = if (isBW) 2f else 0f
-        }
-    }
-
-    private fun createWordPaint(cellWidth: Float, cellHeight: Float): Paint {
-        return Paint().apply {
-            this.isAntiAlias = true
-            this.textSize = minOf(cellWidth, cellHeight) * 0.15f
-            this.color = Color.DKGRAY
-            this.typeface = Typeface.DEFAULT
-            this.textAlign = Paint.Align.CENTER
-        }
     }
 }
