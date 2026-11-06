@@ -8,5 +8,6 @@ data class AlphabetConfig(
     val case: AlphabetCase = AlphabetCase.BOTH,
     val filter: AlphabetFilter = AlphabetFilter.ALL,
     val theme: PosterTheme = PosterTheme.WHITE,
-    val showImages: Boolean = true
+    val showImages: Boolean = true,
+    val isCursive: Boolean = false // <-- НОВОЕ: по умолчанию печатные буквы
 )
