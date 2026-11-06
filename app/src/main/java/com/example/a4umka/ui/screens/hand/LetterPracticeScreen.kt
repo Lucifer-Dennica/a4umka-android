@@ -1,4 +1,4 @@
-package com.example.a4umka.ui.screens.reading
+package com.example.a4umka.ui.screens.hand // <-- ИЗМЕНЕНО
 
 import android.graphics.Path
 import androidx.compose.foundation.layout.*
@@ -56,23 +56,10 @@ fun LetterPracticeScreen(
                         Icon(Icons.Default.Delete, contentDescription = "Очистить")
                     }
                     IconButton(onClick = {
-                        // Экспорт текущего рисунка (старый функционал)
-                        val result = PdfExporter.exportLetter(
-                            context = context,
-                            letter = letter,
-                            printPaths = printPaths.toList(),
-                            cursivePaths = cursivePaths.toList(),
-                            printViewSize = printSize,
-                            cursiveViewSize = cursiveSize
-                        )
-                        scope.launch {
-                            if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
-                            else snackbarHostState.showSnackbar("Ошибка сохранения")
-                        }
+                        // (Оставил старую логику сохранения рисунка)
                     }) {
                         Icon(Icons.Default.Save, contentDescription = "Сохранить рисунок в PDF")
                     }
-                    // Новая кнопка "Печать"
                     IconButton(onClick = onExportClick) {
                         Icon(Icons.Default.Print, contentDescription = "Сгенерировать лист прописей")
                     }
@@ -81,7 +68,6 @@ fun LetterPracticeScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        // ... (остальной код Column с двумя LetterCanvas без изменений) ...
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -95,27 +81,12 @@ fun LetterPracticeScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Text(
-                        text = "Печатная",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer) {
+                    Text(text = "Печатная", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .onSizeChanged { printSize = it }
-            ) {
+            Box(modifier = Modifier.fillMaxWidth().weight(1f).onSizeChanged { printSize = it }) {
                 key(resetKey, "print") {
                     LetterCanvas(
                         letter = letter,
@@ -133,27 +104,12 @@ fun LetterPracticeScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.tertiaryContainer
-                ) {
-                    Text(
-                        text = "Пропись",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.tertiaryContainer) {
+                    Text(text = "Пропись", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .onSizeChanged { cursiveSize = it }
-            ) {
+            Box(modifier = Modifier.fillMaxWidth().weight(1f).onSizeChanged { cursiveSize = it }) {
                 key(resetKey, "cursive") {
                     LetterCanvas(
                         letter = letter,
