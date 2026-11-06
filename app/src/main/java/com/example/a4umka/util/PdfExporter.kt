@@ -8,50 +8,39 @@ import android.os.Environment
 import android.provider.MediaStore
 import com.example.a4umka.data.AlphabetConfig
 import com.example.a4umka.data.PdfExportConfig
+import com.example.a4umka.data.RibbonConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 
 object PdfExporter {
 
-    fun exportWorksheet(
-        context: Context,
-        letter: String,
-        config: PdfExportConfig
-    ): String? {
+    fun exportWorksheet(context: Context, letter: String, config: PdfExportConfig): String? {
         val document = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(
-            PdfDrawer.PAGE_WIDTH.toInt(),
-            PdfDrawer.PAGE_HEIGHT.toInt(),
-            1
-        ).create()
+        val pageInfo = PdfDocument.PageInfo.Builder(PdfDrawer.PAGE_WIDTH.toInt(), PdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
         val page = document.startPage(pageInfo)
-
         PdfDrawer.drawWorksheet(page.canvas, letter, config, context)
         document.finishPage(page)
-
-        val fileName = "worksheet_${letter}_${System.currentTimeMillis()}.pdf"
-        return saveDocument(context, document, fileName)
+        return saveDocument(context, document, "worksheet_${letter}_${System.currentTimeMillis()}.pdf")
     }
 
-    fun exportAlphabetPoster(
-        context: Context,
-        config: AlphabetConfig
-    ): String? {
+    fun exportAlphabetPoster(context: Context, config: AlphabetConfig): String? {
         val document = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(
-            AlphabetPdfDrawer.PAGE_WIDTH.toInt(),
-            AlphabetPdfDrawer.PAGE_HEIGHT.toInt(),
-            1
-        ).create()
+        val pageInfo = PdfDocument.PageInfo.Builder(AlphabetPdfDrawer.PAGE_WIDTH.toInt(), AlphabetPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
         val page = document.startPage(pageInfo)
-
-        // ИСПОЛЬЗУЕМ НОВЫЙ МЕТОД drawLayout
         AlphabetPdfDrawer.drawLayout(page.canvas, config, context)
         document.finishPage(page)
+        return saveDocument(context, document, "alphabet_${System.currentTimeMillis()}.pdf")
+    }
 
-        val fileName = "alphabet_export_${System.currentTimeMillis()}.pdf"
-        return saveDocument(context, document, fileName)
+    // НОВЫЙ МЕТОД ДЛЯ ЛЕНТЫ
+    fun exportRibbon(context: Context, config: RibbonConfig): String? {
+        val document = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
+        val page = document.startPage(pageInfo)
+        RibbonPdfDrawer.drawRibbon(page.canvas, config, context)
+        document.finishPage(page)
+        return saveDocument(context, document, "ribbon_${System.currentTimeMillis()}.pdf")
     }
 
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
@@ -62,16 +51,13 @@ object PdfExporter {
                     put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                     put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 }
-                val uri = context.contentResolver.insert(
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI, values
-                )
+                val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                 uri?.let { context.contentResolver.openOutputStream(it) }
             } else {
                 val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val file = File(dir, fileName)
                 FileOutputStream(file)
             }
-
             outputStream?.use { document.writeTo(it) }
             document.close()
             "Downloads/$fileName"
