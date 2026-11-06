@@ -37,6 +37,8 @@ object AlphabetPdfDrawer {
 
         // Рассчитываем сетку (стремимся к квадрату)
         val count = letters.size
+        if (count == 0) return
+
         val cols = ceil(sqrt(count.toFloat())).toInt()
         val rows = ceil(count.toFloat() / cols).toInt()
 
@@ -68,7 +70,7 @@ object AlphabetPdfDrawer {
             isAntiAlias = true
             textSize = minOf(cellWidth, cellHeight) * 0.15f
             color = Color.DKGRAY
-            typeface = Typeface.DEFAULT
+            this.typeface = Typeface.DEFAULT // <-- ИСПРАВЛЕНО: добавлено this.
             textAlign = Paint.Align.CENTER
         }
 
@@ -84,7 +86,7 @@ object AlphabetPdfDrawer {
             val left = margin + col * cellWidth
             val top = margin + 60f + row * cellHeight
 
-            // Рамка ячейки (как на плакате)
+            // Рамка ячейки
             canvas.drawRect(left, top, left + cellWidth, top + cellHeight, linePaint.apply { style = Paint.Style.STROKE })
 
             val centerX = left + cellWidth / 2f
@@ -103,10 +105,6 @@ object AlphabetPdfDrawer {
 
             // Слово (и место под картинку)
             if (config.showImages) {
-                // Здесь позже будет отрисовка картинки из assets
-                // canvas.drawBitmap(...)
-                
-                // Временная заглушка вместо картинки (квадратик)
                 val picSize = minOf(cellWidth, cellHeight) * 0.25f
                 val picPaint = Paint().apply { color = Color.parseColor("#FFD4C2") }
                 canvas.drawCircle(centerX, top + cellHeight * 0.6f, picSize / 2f, picPaint)
