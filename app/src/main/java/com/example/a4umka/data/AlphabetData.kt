@@ -36,9 +36,9 @@ object AlphabetData {
         AlphabetLetter('Ч', "Ч", "ч", "Часы"),
         AlphabetLetter('Ш', "Ш", "ш", "Шар"),
         AlphabetLetter('Щ', "Щ", "щ", "Щенок"),
-        AlphabetLetter('Ъ', "Ъ", "ъ", "Подъезд"),
-        AlphabetLetter('Ы', "Ы", "ы", "Сыр"),
-        AlphabetLetter('Ь', "Ь", "ь", "Медведь"),
+        AlphabetLetter('Ъ', "Ъ", "ъ", "подЪезд"), // <-- Выделили букву
+        AlphabetLetter('Ы', "Ы", "ы", "сЫр"),     // <-- Выделили букву
+        AlphabetLetter('Ь', "Ь", "ь", "медведЬ"), // <-- Выделили букву
         AlphabetLetter('Э', "Э", "э", "Эскимо"),
         AlphabetLetter('Ю', "Ю", "ю", "Юбка"),
         AlphabetLetter('Я', "Я", "я", "Якорь")
