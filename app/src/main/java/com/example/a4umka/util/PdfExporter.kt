@@ -46,10 +46,11 @@ object PdfExporter {
         ).create()
         val page = document.startPage(pageInfo)
 
-        AlphabetPdfDrawer.drawPoster(page.canvas, config, context)
+        // ИСПОЛЬЗУЕМ НОВЫЙ МЕТОД drawLayout
+        AlphabetPdfDrawer.drawLayout(page.canvas, config, context)
         document.finishPage(page)
 
-        val fileName = "alphabet_poster_${System.currentTimeMillis()}.pdf"
+        val fileName = "alphabet_export_${System.currentTimeMillis()}.pdf"
         return saveDocument(context, document, fileName)
     }
 
