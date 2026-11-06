@@ -67,7 +67,7 @@ object PdfDrawer {
             isAntiAlias = true
             textSize = 28f
             color = Color.DKGRAY
-            typeface = Typeface.DEFAULT_BOLD
+            this.typeface = Typeface.DEFAULT_BOLD // <-- ИСПРАВЛЕНО: добавили this.
         }
         canvas.drawText("Пропись: $letter", margin, 60f, titlePaint)
 
