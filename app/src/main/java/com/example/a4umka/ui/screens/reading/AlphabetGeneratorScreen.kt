@@ -1,6 +1,9 @@
 package com.example.a4umka.ui.screens.reading
 
+import android.graphics.Bitmap
+import android.graphics.Canvas as AndroidCanvas
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,9 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.a4umka.data.*
@@ -29,6 +30,19 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     var config by remember { mutableStateOf(AlphabetConfig()) }
+
+    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА (решает фризы при скролле)
+    // Он пересоздается только тогда, когда меняется config
+    val previewBitmap = remember(config) {
+        val bmp = Bitmap.createBitmap(
+            AlphabetPdfDrawer.PAGE_WIDTH.toInt(),
+            AlphabetPdfDrawer.PAGE_HEIGHT.toInt(),
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = AndroidCanvas(bmp)
+        AlphabetPdfDrawer.drawPoster(canvas, config, context)
+        bmp
+    }
 
     Scaffold(
         topBar = {
@@ -86,8 +100,20 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Прописные буквы", modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = config.isCursive,
+                        onCheckedChange = { config = config.copy(isCursive = it) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Печатать картинку и слово", modifier = Modifier.weight(1f))
-                    Switch(checked = config.showImages, onCheckedChange = { config = config.copy(showImages = it) })
+                    Switch(
+                        checked = config.showImages,
+                        onCheckedChange = { config = config.copy(showImages = it) }
+                    )
                 }
             }
 
@@ -96,26 +122,18 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
             Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(16.dp))
 
             Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(
+                Image(
+                    bitmap = previewBitmap.asImageBitmap(),
+                    contentDescription = "Предпросмотр",
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
-                ) {
-                    val scale = minOf(size.width / AlphabetPdfDrawer.PAGE_WIDTH, size.height / AlphabetPdfDrawer.PAGE_HEIGHT)
-                    val offsetX = (size.width - AlphabetPdfDrawer.PAGE_WIDTH * scale) / 2f
-                    val offsetY = (size.height - AlphabetPdfDrawer.PAGE_HEIGHT * scale) / 2f
-
-                    drawIntoCanvas { canvas ->
-                        canvas.nativeCanvas.save()
-                        canvas.nativeCanvas.translate(offsetX, offsetY)
-                        canvas.nativeCanvas.scale(scale, scale)
-                        AlphabetPdfDrawer.drawPoster(canvas.nativeCanvas, config, context)
-                        canvas.nativeCanvas.restore()
-                    }
-                }
+                )
             }
             Spacer(modifier = Modifier.height(32.dp))
         }
