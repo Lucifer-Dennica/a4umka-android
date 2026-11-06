@@ -29,13 +29,8 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(AlphabetConfig()) }
 
-    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА (пересоздается только при смене настроек)
     val previewBitmap = remember(config) {
-        val bmp = Bitmap.createBitmap(
-            AlphabetPdfDrawer.PAGE_WIDTH.toInt(),
-            AlphabetPdfDrawer.PAGE_HEIGHT.toInt(),
-            Bitmap.Config.ARGB_8888
-        )
+        val bmp = Bitmap.createBitmap(AlphabetPdfDrawer.PAGE_WIDTH.toInt(), AlphabetPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = AndroidCanvas(bmp)
         AlphabetPdfDrawer.drawLayout(canvas, config, context)
         bmp
@@ -65,13 +60,11 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        // ИСПОЛЬЗУЕМ LAZYCOLUMN ДЛЯ УСТРАНЕНИЯ ФРИЗОВ
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ВИД ЛИСТА
                 Text("Вид листа:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.layoutType == AlphabetLayoutType.POSTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.POSTER) }, label = { Text("Плакат") })
@@ -90,27 +83,21 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // ДИАПАЗОН БУКВ
                 Text("Диапазон букв:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     LetterDropdown(
-                        label = "От",
-                        selectedIndex = config.startLetterIndex,
+                        label = "От", selectedIndex = config.startLetterIndex,
                         onSelect = { config = config.copy(startLetterIndex = it.coerceAtMost(config.endLetterIndex)) },
                         modifier = Modifier.weight(1f)
                     )
                     LetterDropdown(
-                        label = "До",
-                        selectedIndex = config.endLetterIndex,
+                        label = "До", selectedIndex = config.endLetterIndex,
                         onSelect = { config = config.copy(endLetterIndex = it.coerceAtLeast(config.startLetterIndex)) },
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // ФИЛЬТР
                 Text("Какие буквы:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.filter == AlphabetFilter.ALL, onClick = { config = config.copy(filter = AlphabetFilter.ALL) }, label = { Text("Все") })
@@ -119,7 +106,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                // РЕГИСТР
                 Text("Регистр букв:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.case == AlphabetCase.UPPERCASE, onClick = { config = config.copy(case = AlphabetCase.UPPERCASE) }, label = { Text("АБВ") })
@@ -128,7 +114,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                // ЦВЕТ
                 Text("Цвет листа:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.color == PosterColor.WHITE, onClick = { config = config.copy(color = PosterColor.WHITE) }, label = { Text("Белый") })
@@ -143,11 +128,16 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     Switch(checked = config.isCursive, onCheckedChange = { config = config.copy(isCursive = it) })
                 }
 
+                // РАЗДЕЛЕННЫЕ ГАЛОЧКИ
                 if (config.layoutType != AlphabetLayoutType.COLORING) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Печатать картинку и слово", modifier = Modifier.weight(1f))
-                        Switch(checked = config.showImages, onCheckedChange = { config = config.copy(showImages = it) })
+                        Text("Печатать картинку", modifier = Modifier.weight(1f))
+                        Switch(checked = config.showImage, onCheckedChange = { config = config.copy(showImage = it) })
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Печатать слово", modifier = Modifier.weight(1f))
+                        Switch(checked = config.showWord, onCheckedChange = { config = config.copy(showWord = it) })
                     }
                 }
                 
@@ -156,18 +146,12 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ПРЕДПРОСМОТР (вынесен в отдельный item, чтобы не перегружать настройки)
             item {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Image(
                         bitmap = previewBitmap.asImageBitmap(),
                         contentDescription = "Предпросмотр",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
@@ -178,39 +162,22 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LetterDropdown(
-    label: String,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun LetterDropdown(label: String, selectedIndex: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     val letters = AlphabetData.russianAlphabet
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = modifier
-    ) {
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
         OutlinedTextField(
-            value = letters[selectedIndex].uppercase,
-            onValueChange = {},
-            readOnly = true,
+            value = letters[selectedIndex].uppercase, onValueChange = {}, readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor().fillMaxWidth()
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             letters.forEachIndexed { index, letter ->
                 DropdownMenuItem(
                     text = { Text(letter.uppercase) },
-                    onClick = {
-                        onSelect(index)
-                        expanded = false
-                    }
+                    onClick = { onSelect(index); expanded = false }
                 )
             }
         }
