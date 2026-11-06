@@ -1,4 +1,4 @@
-package com.example.a4umka.ui.screens.reading
+package com.example.a4umka.ui.screens.hand // <-- ИЗМЕНЕНО
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -46,11 +46,8 @@ fun PdfExportScreen(
                     IconButton(onClick = {
                         val result = PdfExporter.exportWorksheet(context, letter, config)
                         scope.launch {
-                            if (result != null) {
-                                snackbarHostState.showSnackbar("Сохранено: $result")
-                            } else {
-                                snackbarHostState.showSnackbar("Ошибка сохранения")
-                            }
+                            if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
+                            else snackbarHostState.showSnackbar("Ошибка сохранения")
                         }
                     }) {
                         Icon(Icons.Default.Save, contentDescription = "Сохранить в PDF")
@@ -61,31 +58,15 @@ fun PdfExportScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
         ) {
-            // Настройки
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Какие буквы показывать:", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = config.letterCase == LetterCase.UPPERCASE,
-                        onClick = { config = config.copy(letterCase = LetterCase.UPPERCASE) },
-                        label = { Text("А Б В") }
-                    )
-                    FilterChip(
-                        selected = config.letterCase == LetterCase.LOWERCASE,
-                        onClick = { config = config.copy(letterCase = LetterCase.LOWERCASE) },
-                        label = { Text("а б в") }
-                    )
-                    FilterChip(
-                        selected = config.letterCase == LetterCase.BOTH,
-                        onClick = { config = config.copy(letterCase = LetterCase.BOTH) },
-                        label = { Text("Аа Бб") }
-                    )
+                    FilterChip(selected = config.letterCase == LetterCase.UPPERCASE, onClick = { config = config.copy(letterCase = LetterCase.UPPERCASE) }, label = { Text("А Б В") })
+                    FilterChip(selected = config.letterCase == LetterCase.LOWERCASE, onClick = { config = config.copy(letterCase = LetterCase.LOWERCASE) }, label = { Text("а б в") })
+                    FilterChip(selected = config.letterCase == LetterCase.BOTH, onClick = { config = config.copy(letterCase = LetterCase.BOTH) }, label = { Text("Аа Бб") })
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -103,42 +84,26 @@ fun PdfExportScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Шрифт прописью", modifier = Modifier.weight(1f))
-                    Switch(
-                        checked = config.isCursive,
-                        onCheckedChange = { config = config.copy(isCursive = it) }
-                    )
+                    Switch(checked = config.isCursive, onCheckedChange = { config = config.copy(isCursive = it) })
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Вспомогательные линии", modifier = Modifier.weight(1f))
-                    Switch(
-                        checked = config.showGuides,
-                        onCheckedChange = { config = config.copy(showGuides = it) }
-                    )
+                    Switch(checked = config.showGuides, onCheckedChange = { config = config.copy(showGuides = it) })
                 }
             }
 
             HorizontalDivider()
 
-            // Превью
-            Text(
-                "Предпросмотр листа A4:",
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(16.dp)
-            )
+            Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(16.dp))
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Ограничиваем пропорциями A4
                 Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(PdfDrawer.PAGE_WIDTH / PdfDrawer.PAGE_HEIGHT)
+                    modifier = Modifier.fillMaxWidth().aspectRatio(PdfDrawer.PAGE_WIDTH / PdfDrawer.PAGE_HEIGHT)
                 ) {
                     val scale = minOf(size.width / PdfDrawer.PAGE_WIDTH, size.height / PdfDrawer.PAGE_HEIGHT)
                     val offsetX = (size.width - PdfDrawer.PAGE_WIDTH * scale) / 2f
@@ -148,18 +113,11 @@ fun PdfExportScreen(
                         canvas.nativeCanvas.save()
                         canvas.nativeCanvas.translate(offsetX, offsetY)
                         canvas.nativeCanvas.scale(scale, scale)
-
-                        PdfDrawer.drawWorksheet(
-                            canvas = canvas.nativeCanvas,
-                            letter = letter,
-                            config = config,
-                            context = context
-                        )
+                        PdfDrawer.drawWorksheet(canvas.nativeCanvas, letter, config, context)
                         canvas.nativeCanvas.restore()
                     }
                 }
             }
-            
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
