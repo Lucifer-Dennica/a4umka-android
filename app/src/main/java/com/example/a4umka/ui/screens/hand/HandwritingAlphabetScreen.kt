@@ -1,4 +1,4 @@
-package com.example.a4umka.ui.screens.hand // <-- ИЗМЕНЕНО
+package com.example.a4umka.ui.screens.hand
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -17,7 +17,7 @@ import com.example.a4umka.data.AlphabetData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HandwritingAlphabetScreen( // <-- ИЗМЕНЕНО НАЗВАНИЕ
+fun HandwritingAlphabetScreen(
     onLetterClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
