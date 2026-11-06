@@ -5,8 +5,11 @@ import android.graphics.Canvas as AndroidCanvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.a4umka.data.*
 import com.example.a4umka.util.AlphabetPdfDrawer
@@ -28,7 +32,9 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     var config by remember { mutableStateOf(AlphabetConfig()) }
+    var showInfoSheet by remember { mutableStateOf(false) }
 
+    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА
     val previewBitmap = remember(config) {
         val bmp = Bitmap.createBitmap(AlphabetPdfDrawer.PAGE_WIDTH.toInt(), AlphabetPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = AndroidCanvas(bmp)
@@ -46,6 +52,11 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    // Кнопка с советами
+                    IconButton(onClick = { showInfoSheet = true }) {
+                        Icon(Icons.Default.Info, contentDescription = "Справка")
+                    }
+                    // Кнопка сохранения
                     IconButton(onClick = {
                         val result = PdfExporter.exportAlphabetPoster(context, config)
                         scope.launch {
@@ -128,7 +139,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     Switch(checked = config.isCursive, onCheckedChange = { config = config.copy(isCursive = it) })
                 }
 
-                // РАЗДЕЛЕННЫЕ ГАЛОЧКИ
                 if (config.layoutType != AlphabetLayoutType.COLORING) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -142,6 +152,16 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 }
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                
+                // Короткий совет прямо на экране
+                Text(
+                    text = "💡 Совет: не учите больше 1–2 букв за раз.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -155,6 +175,49 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+
+        // ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ С ТЕКСТОМ С САЙТА
+        if (showInfoSheet) {
+            ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Как заниматься по этим листам", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "• Не больше одной-двух букв за раз. Плакат целиком хорош как украшение и повод поговорить, а учить по нему все 33 сразу не нужно.\n\n" +
+                        "• Называйте звук, а не название буквы. «м», а не «эм»: со звуками слоги складываются сами.\n\n" +
+                        "• Ищите буквы вокруг. Вывеска, упаковка, номер дома — узнавание в жизни закрепляет лучше любого листа.\n\n" +
+                        "• Играйте карточками. Разложить, найти, перевернуть, собрать своё имя — буквы запоминаются в игре быстрее.\n\n" +
+                        "• Вешайте плакат на уровне глаз ребёнка.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Буквы Ъ, Ы и Ь", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "С этих букв не начинается ни одно слово, и в азбуках их обычно неловко пропускают. Здесь для них печатается слово, где буква стоит внутри, и сама буква выделена заглавной: подЪезд, сЫр, медведЬ. Ребёнок видит, что буква существует и работает, просто иначе.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Виды листов", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "• Плакат: Все выбранные буквы на одном листе. Сетка подстраивается автоматически.\n\n" +
+                        "• Карточки: По 1, 2, 4 или 6 карточек на лист с пунктиром под разрез. Из них получаются лото, мемори, «найди букву».\n\n" +
+                        "• Раскраска: Буквы контуром плюс пустое окошко с заданием нарисовать то, что на неё начинается.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
         }
     }
