@@ -33,10 +33,10 @@ fun InteractiveRibbonScreen(
     // Диалог выбора буквы
     var activeLetter by remember { mutableStateOf<RibbonLetter?>(null) }
     var options by remember { mutableStateOf<List<String>>(emptyList()) }
-    var errorOption by remember { mutableStateOf<String?>(null) } // Для подсветки ошибки
+    var errorOption by remember { mutableStateOf<String?>(null) }
     var showSuccess by remember { mutableStateOf(false) }
 
-    // Вычисляем пропущенные буквы (используем объекты RibbonLetter, чтобы знать их цвет)
+    // Вычисляем пропущенные буквы
     val missingLetters = remember(config.seed) {
         val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants)
         val countToHide = when(config.missingCount) {
@@ -87,7 +87,6 @@ fun InteractiveRibbonScreen(
                 onCellClick = { letterObj ->
                     activeLetter = letterObj
                     errorOption = null
-                    // Формируем варианты ответов (правильный + 3 случайных)
                     val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants).map { it.char }
                     val wrongOptions = allLetters.filter { it != letterObj.char }.shuffled().take(3)
                     options = (wrongOptions + letterObj.char).shuffled()
@@ -138,15 +137,14 @@ fun InteractiveRibbonScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             options.forEach { option ->
-                                // Если эта кнопка была нажата неправильно - она красная
                                 val isError = errorOption == option
                                 Button(
                                     onClick = {
                                         if (option == activeLetter?.char) {
                                             userAnswers[activeLetter!!.char] = true
-                                            activeLetter = null // Закрываем при правильном ответе
+                                            activeLetter = null
                                         } else {
-                                            errorOption = option // Подсвечиваем ошибку
+                                            errorOption = option
                                         }
                                     },
                                     modifier = Modifier.weight(1f),
@@ -193,18 +191,17 @@ fun InteractiveGrid(
         val isMissing = missingLetters.any { it.char == letterChar }
         val isAnswered = userAnswers[letterChar] == true
         
-        // Базовый цвет берем из базы данных
+        // ИСПРАВЛЕНО: Используем Compose Color(0xFF...) вместо parseColor
         val baseColor = when (letterObj.color) {
-            RibbonColor.RED -> Color.parseColor("#EF5350")
-            RibbonColor.BLUE -> Color.parseColor("#42A5F5")
-            RibbonColor.GREEN -> Color.parseColor("#66BB6A")
+            RibbonColor.RED -> Color(0xFFEF5350)
+            RibbonColor.BLUE -> Color(0xFF42A5F5)
+            RibbonColor.GREEN -> Color(0xFF66BB6A)
             RibbonColor.WHITE -> Color.White
-            RibbonColor.BOTH -> Color.parseColor("#42A5F5") // Упрощаем для игры, делаем синим
+            RibbonColor.BOTH -> Color(0xFF42A5F5) // Упрощаем, делаем синим
         }
 
-        // Если решено - зеленый. Если не решено - базовый цвет. Если не пропущено - серый.
         val bgColor = when {
-            isAnswered -> Color.parseColor("#81C784")
+            isAnswered -> Color(0xFF81C784) // Зеленый при успехе
             isMissing -> baseColor
             else -> Color.LightGray
         }
