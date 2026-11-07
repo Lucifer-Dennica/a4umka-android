@@ -14,7 +14,8 @@ import com.example.a4umka.ui.screens.hand.HandwritingAlphabetScreen
 import com.example.a4umka.ui.screens.hand.LetterPracticeScreen
 import com.example.a4umka.ui.screens.hand.PdfExportScreen
 import com.example.a4umka.ui.screens.reading.AlphabetGeneratorScreen
-import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen // <-- НОВЫЙ ИМПОРТ
+import com.example.a4umka.ui.screens.reading.InteractiveRibbonScreen
+import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen
 
 object Routes {
     const val HOME = "home"
@@ -23,6 +24,7 @@ object Routes {
     const val TASK = "task/{categoryId}/{taskId}"
     const val LETTER = "letter/{letter}"
     const val PDF_EXPORT = "pdf_export/{letter}"
+    const val INTERACTIVE_RIBBON = "interactive_ribbon" // <-- НОВЫЙ МАРШРУТ
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -35,6 +37,7 @@ fun NavGraph() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
+
         composable(Routes.HOME) {
             HomeScreen(
                 onCategoryClick = { navController.navigate(Routes.category(it)) },
@@ -69,15 +72,15 @@ fun NavGraph() {
             val taskId = entry.arguments?.getString("taskId").orEmpty()
 
             when {
-                // --- ЧТЕНИЕ ---
                 categoryId == "reading" && taskId == "alphabet_poster" -> {
                     AlphabetGeneratorScreen(onBack = { navController.popBackStack() })
                 }
-                categoryId == "reading" && taskId == "letter_ribbon" -> { // <-- НОВЫЙ МАРШРУТ
-                    RibbonGeneratorScreen(onBack = { navController.popBackStack() })
+                categoryId == "reading" && taskId == "letter_ribbon" -> {
+                    RibbonGeneratorScreen(
+                        onBack = { navController.popBackStack() },
+                        onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_RIBBON) } // <-- ПЕРЕХОД В ИГРУ
+                    )
                 }
-                
-                // --- РУКА И МОТОРИКА ---
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
                         onLetterClick = { letter -> navController.navigate(Routes.letter(letter)) },
@@ -88,6 +91,11 @@ fun NavGraph() {
                     TaskScreen(categoryId, taskId, onBack = { navController.popBackStack() })
                 }
             }
+        }
+        
+        // НОВЫЙ ЭКРАН ИГРЫ
+        composable(Routes.INTERACTIVE_RIBBON) {
+            InteractiveRibbonScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
