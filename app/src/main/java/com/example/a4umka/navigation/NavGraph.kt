@@ -16,6 +16,7 @@ import com.example.a4umka.ui.screens.hand.PdfExportScreen
 import com.example.a4umka.ui.screens.reading.AlphabetGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveRibbonScreen
 import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen
+import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen // <-- НОВЫЙ ИМПОРТ
 
 object Routes {
     const val HOME = "home"
@@ -24,7 +25,8 @@ object Routes {
     const val TASK = "task/{categoryId}/{taskId}"
     const val LETTER = "letter/{letter}"
     const val PDF_EXPORT = "pdf_export/{letter}"
-    const val INTERACTIVE_RIBBON = "interactive_ribbon" // <-- НОВЫЙ МАРШРУТ
+    const val INTERACTIVE_RIBBON = "interactive_ribbon"
+    const val SYLLABLE_READING = "syllable_reading" // <-- НОВЫЙ МАРШРУТ
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -78,8 +80,12 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "letter_ribbon" -> {
                     RibbonGeneratorScreen(
                         onBack = { navController.popBackStack() },
-                        onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_RIBBON) } // <-- ПЕРЕХОД В ИГРУ
+                        onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_RIBBON) }
                     )
+                }
+                // НОВЫЙ МАРШРУТ ДЛЯ ЧТЕНИЯ ПО СЛОГАМ
+                categoryId == "reading" && taskId == "syllables" -> {
+                    SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
@@ -93,7 +99,6 @@ fun NavGraph() {
             }
         }
         
-        // НОВЫЙ ЭКРАН ИГРЫ
         composable(Routes.INTERACTIVE_RIBBON) {
             InteractiveRibbonScreen(onBack = { navController.popBackStack() })
         }
