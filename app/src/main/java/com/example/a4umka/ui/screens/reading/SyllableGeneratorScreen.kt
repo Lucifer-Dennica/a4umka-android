@@ -2,10 +2,8 @@ package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -39,10 +37,14 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var config by remember { mutableStateOf(SyllableConfig()) }
+    // По умолчанию выбираем первый текст из первой категории, чтобы превью не было пустым
+    var config by remember { 
+        mutableStateOf(
+            SyllableConfig(selectedTexts = listOf(SyllableData.categories.first().texts.first()))
+        ) 
+    }
     var showInfoSheet by remember { mutableStateOf(false) }
     
-    // Выбранная категория для отображения в UI
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
 
     // БИТМАП ПРЕДПРОСМОТРА
@@ -50,7 +52,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
         val bmp = Bitmap.createBitmap(SyllablePdfDrawer.PAGE_WIDTH.toInt(), SyllablePdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = AndroidCanvas(bmp)
         
-        // Берем первый выбранный текст для превью, либо свой текст
+        // Показываем ПЕРВЫЙ выбранный текст
         val textObj = if (config.source == SyllableSource.READY) {
             config.selectedTexts.firstOrNull() ?: SyllableText("Выберите текст", "", emptyList())
         } else {
@@ -83,13 +85,13 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     }
                     IconButton(onClick = {
                         if (config.source == SyllableSource.READY && config.selectedTexts.isEmpty()) {
-                            scope.launch { snackbarHostState.showSnackbar("Сначала выберите текст") }
+                            scope.launch { snackbarHostState.showSnackbar("Сначала выберите хотя бы один текст") }
                             return@IconButton
                         }
                         val result = PdfExporter.exportSyllableText(context, config)
                         scope.launch {
                             if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
-                            else snackbarHostState.showSnackbar("Ошибка: выберите текст")
+                            else snackbarHostState.showSnackbar("Ошибка при сохранении")
                         }
                     }) {
                         Icon(Icons.Default.Save, contentDescription = "Сохранить в PDF")
@@ -104,22 +106,8 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Источник текста:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    // ГАЛОЧКА МУЛЬТИВЫБОРА
-                    Text("Мультивыбор", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = config.isMultiSelectMode,
-                        onCheckedChange = { isChecked ->
-                            config = config.copy(
-                                isMultiSelectMode = isChecked,
-                                selectedTexts = if (!isChecked && config.selectedTexts.size > 1) {
-                                    listOf(config.selectedTexts.first()) // оставляем только один если выключили
-                                } else config.selectedTexts
-                            )
-                        }
-                    )
-                }
+                // ИСТОЧНИК ТЕКСТА
+                Text("Источник текста:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.source == SyllableSource.READY, onClick = { config = config.copy(source = SyllableSource.READY) }, label = { Text("Готовый текст") })
                     FilterChip(selected = config.source == SyllableSource.CUSTOM, onClick = { config = config.copy(source = SyllableSource.CUSTOM) }, label = { Text("Свой текст") })
@@ -143,6 +131,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // СПИСОК КАРТОЧЕК
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         selectedCategory.texts.forEach { textObj ->
                             val isSelected = config.selectedTexts.contains(textObj)
@@ -150,24 +139,24 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             ElevatedCard(
                                 onClick = {
                                     if (config.isMultiSelectMode) {
-                                        // Логика мультивыбора
                                         val newList = config.selectedTexts.toMutableList()
                                         if (isSelected) newList.remove(textObj) else newList.add(textObj)
                                         config = config.copy(selectedTexts = newList)
                                     } else {
-                                        // Обычный выбор
                                         config = config.copy(selectedTexts = listOf(textObj))
                                     }
                                 },
-                                modifier = Modifier.fillMaxWidth().border(
-                                    width = if (isSelected) 2.dp else 0.dp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = CardDefaults.elevatedShape
-                                )
+                                modifier = Modifier.fillMaxWidth(),
+                                border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(textObj.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                        Text(
+                                            textObj.title, 
+                                            style = MaterialTheme.typography.titleMedium, 
+                                            fontWeight = FontWeight.Bold, 
+                                            modifier = Modifier.weight(1f)
+                                        )
                                         if (textObj.questions.isNotEmpty()) {
                                             Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(4.dp)) {
                                                 Text("? вопросы", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
@@ -205,7 +194,30 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // НАСТРОЙКИ ПЕЧАТИ (Сюда перенесли мультивыбор)
                 Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
+                
+                if (config.source == SyllableSource.READY) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Выбрать несколько вариантов")
+                            Text("Печать нескольких текстов подряд", fontSize = 12.sp, color = Color.Gray)
+                        }
+                        Switch(
+                            checked = config.isMultiSelectMode,
+                            onCheckedChange = { isChecked ->
+                                config = config.copy(
+                                    isMultiSelectMode = isChecked,
+                                    // Если выключаем мультивыбор, оставляем только первый выбранный
+                                    selectedTexts = if (!isChecked && config.selectedTexts.size > 1) {
+                                        listOf(config.selectedTexts.first())
+                                    } else config.selectedTexts
+                                )
+                            }
+                        )
+                    }
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Крупный шрифт", modifier = Modifier.weight(1f))
                     Switch(checked = config.isLargeFont, onCheckedChange = { config = config.copy(isLargeFont = it) })
@@ -216,7 +228,18 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр (1-я страница):", style = MaterialTheme.typography.labelLarge)
+                
+                // ПОДПИСЬ К ПРЕДПРОСМОТРУ
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (config.isMultiSelectMode && config.selectedTexts.size > 1) {
+                        Text(
+                            "Показан 1-й лист из ${config.selectedTexts.size}", 
+                            color = MaterialTheme.colorScheme.primary, 
+                            fontSize = 12.sp
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -232,6 +255,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
+        // ИНФО
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
@@ -240,7 +264,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     Text(
                         "• Этот раздел помогает детям 5–7 лет учиться читать слитно. Под каждым слогом рисуется дуга, а под одиночными буквами (например, предлогами «и», «в») — точка.\n\n" +
                         "• Вы можете выбрать готовый текст из нашей подборки или вставить любой свой (сказку, стихотворение, рассказ). Программа автоматически разобьёт слова на слоги.\n\n" +
-                        "• Если включить «Мультивыбор», можно выбрать сразу несколько текстов и сохранить их в один PDF-файл (каждый текст будет на отдельной странице).\n\n" +
+                        "• Если включить «Выбрать несколько вариантов», можно накликать сразу несколько текстов из любой вкладки. При сохранении в PDF они выйдут по очереди, каждый на отдельном листе.\n\n" +
                         "• Для самых первых занятий и для детей, которым трудно удерживать строку, включайте «Крупный шрифт» — буквы становятся заметно больше, а строки просторнее.\n\n" +
                         "• Для рассказов 1 класса можно включить «Вопросы по тексту». Это проверяет не скорость чтения, а осмысленность: понял ли ребёнок, о чём прочитал.",
                         style = MaterialTheme.typography.bodyLarge
