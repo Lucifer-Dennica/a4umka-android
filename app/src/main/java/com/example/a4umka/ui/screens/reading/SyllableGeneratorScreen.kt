@@ -1,201 +1,131 @@
-package com.example.a4umka.ui.screens.reading
+package com.example.a4umka.data
 
-import android.graphics.Bitmap
-import android.graphics.Canvas as AndroidCanvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.example.a4umka.data.*
-import com.example.a4umka.util.PdfExporter
-import com.example.a4umka.util.SyllablePdfDrawer
-import kotlinx.coroutines.launch
+data class SyllableText(
+    val title: String,
+    val text: String,
+    val questions: List<String> = emptyList()
+)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable
-fun SyllableGeneratorScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
+data class SyllableCategory(
+    val name: String,
+    val texts: List<SyllableText>
+)
 
-    var config by remember { mutableStateOf(SyllableConfig()) }
-    var showInfoSheet by remember { mutableStateOf(false) }
-
-    // Состояние для выбранной категории готовых текстов
-    var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
-
-    val previewBitmap = remember(config) {
-        val bmp = Bitmap.createBitmap(SyllablePdfDrawer.PAGE_WIDTH.toInt(), SyllablePdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
-        val canvas = AndroidCanvas(bmp)
-        SyllablePdfDrawer.drawPage(canvas, config, context)
-        bmp
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Чтение по слогам") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showInfoSheet = true }) {
-                        Icon(Icons.Default.Info, contentDescription = "Справка")
-                    }
-                    IconButton(onClick = {
-                        val result = PdfExporter.exportSyllableText(context, config)
-                        scope.launch {
-                            if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
-                            else snackbarHostState.showSnackbar("Ошибка сохранения")
-                        }
-                    }) {
-                        Icon(Icons.Default.Save, contentDescription = "Сохранить в PDF")
-                    }
-                }
+object SyllableData {
+    val categories = listOf(
+        SyllableCategory(
+            name = "Слоги и слова",
+            texts = listOf(
+                SyllableText("Слова из двух слогов", "мама папа баба"),
+                SyllableText("Кто где живёт", "лиса в норе"),
+                SyllableText("Что у нас дома", "ваза лампа диван"),
+                SyllableText("Вкусные слова", "дыня слива малина"),
+                SyllableText("Слова про животных", "кот собака коза"),
+                SyllableText("Слова из трёх слогов", "корова ворона малина"),
+                SyllableText("Слова про транспорт", "машина автобус трамвай"),
+                SyllableText("Слова про одежду", "шапка шарф куртка"),
+                SyllableText("Слова про тело", "рука нога голова"),
+                SyllableText("Слова про природу", "лес поле река"),
+                SyllableText("Слова с мягким знаком", "конь день пень"),
+                SyllableText("Короткие слова", "дом кот сад"),
+                SyllableText("Слова про кухню", "чашка миска блюдце"),
+                SyllableText("Слова про игрушки", "кукла мишка зайка")
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            item {
-                // Выбор источника
-                Text("Источник текста:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.source == SyllableSource.READY, onClick = { config = config.copy(source = SyllableSource.READY) }, label = { Text("Готовый текст") })
-                    FilterChip(selected = config.source == SyllableSource.CUSTOM, onClick = { config = config.copy(source = SyllableSource.CUSTOM) }, label = { Text("Свой текст") })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // ИНТЕРФЕЙС ГОТОВЫХ ТЕКСТОВ
-                if (config.source == SyllableSource.READY) {
-                    // 1. Полоса категорий
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(SyllableData.categories) { category ->
-                            FilterChip(
-                                selected = selectedCategory == category,
-                                onClick = { selectedCategory = category },
-                                label = { Text(category.name) }
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // 2. Сетка текстов внутри категории
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        selectedCategory.texts.forEach { textObj ->
-                            ElevatedCard(
-                                onClick = {
-                                    config = config.copy(
-                                        title = textObj.title,
-                                        text = textObj.text,
-                                        showQuestions = textObj.questions.isNotEmpty()
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(textObj.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                    Text(
-                                        textObj.text.take(40) + if (textObj.text.length > 40) "..." else "",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // ИНТЕРФЕЙС СВОЕГО ТЕКСТА
-                    OutlinedTextField(
-                        value = config.title,
-                        onValueChange = { config = config.copy(title = it) },
-                        label = { Text("Название рассказа") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = config.text,
-                        onValueChange = { config = config.copy(text = it) },
-                        label = { Text("Текст рассказа") },
-                        modifier = Modifier.fillMaxWidth().height(150.dp),
-                        maxLines = 8
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Настройки печати
-                Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Крупный шрифт", modifier = Modifier.weight(1f))
-                    Switch(checked = config.isLargeFont, onCheckedChange = { config = config.copy(isLargeFont = it) })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Вопросы по тексту", modifier = Modifier.weight(1f))
-                    Switch(checked = config.showQuestions, onCheckedChange = { config = config.copy(showQuestions = it) })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Image(
-                        bitmap = previewBitmap.asImageBitmap(),
-                        contentDescription = "Предпросмотр",
-                        modifier = Modifier.fillMaxWidth().aspectRatio(SyllablePdfDrawer.PAGE_WIDTH / SyllablePdfDrawer.PAGE_HEIGHT)
-                    )
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-            }
-        }
-
-        // ИНФО С ПОДРОБНЫМ ТЕКСТОМ
-        if (showInfoSheet) {
-            ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Чтение по слогам", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "• Этот раздел помогает детям 5–7 лет учиться читать слитно. Под каждым слогом рисуется дуга, а под одиночными буквами (например, предлогами «и», «в») — точка.\n\n" +
-                        "• Вы можете выбрать готовый текст из нашей подборки (100 текстов от столбиков слов до историй для 1 класса) или вставить любой свой (сказку, стихотворение, рассказ). Программа автоматически разобьёт слова на слоги.\n\n" +
-                        "• Для самых первых занятий и для детей, которым трудно удерживать строку, включайте «Крупный шрифт» — буквы становятся заметно больше, а строки просторнее.\n\n" +
-                        "• Для рассказов 1 класса можно включить «Вопросы по тексту». Это проверяет не скорость чтения, а осмысленность: понял ли ребёнок, о чём прочитал.\n\n" +
-                        "• Почему это полезно? Ребёнок перестаёт «спотыкаться» о длинные слова, видит границы слогов, чтение становится плавным, а внимание идёт на смысл.\n\n" +
-                        "• Занимайтесь понемногу, но регулярно. Для дошкольника лучше 5–10 минут каждый день, чем полчаса раз в неделю.",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
-            }
-        }
-    }
+        ),
+        SyllableCategory(
+            name = "Первые предложения",
+            texts = listOf(
+                SyllableText("Наша Мила", "У нас есть Мила."),
+                SyllableText("Кот и мышка", "Кот сидит у норы."),
+                SyllableText("Утро", "Встало солнце."),
+                SyllableText("Дождь", "На небе туча."),
+                SyllableText("Мой пёс", "У меня есть пёс."),
+                SyllableText("В саду", "В саду растёт липа."),
+                SyllableText("Зима пришла", "Пришла зима."),
+                SyllableText("Рыбалка", "Дедушка взял удочку."),
+                SyllableText("Новая книга", "Мама купила книгу."),
+                SyllableText("Помощник", "Мама мыла посуду."),
+                SyllableText("Осень", "Пришла осень."),
+                SyllableText("У бабушки", "Мы поехали к бабушке."),
+                SyllableText("Кто что делает", "Кот спит."),
+                SyllableText("Наш огород", "У нас есть огород."),
+                SyllableText("Вечер", "За окном темно."),
+                SyllableText("На море", "Летом мы были на море."),
+                SyllableText("Котёнок", "У нас живёт котёнок."),
+                SyllableText("В зоопарке", "Мы были в зоопарке."),
+                SyllableText("Мой день", "Утром я умываюсь."),
+                SyllableText("Снегирь", "На ветке сидит снегирь."),
+                SyllableText("Весна", "Снег растаял."),
+                SyllableText("Птичий двор", "У дома ходят куры.")
+            )
+        ),
+        SyllableCategory(
+            name = "Короткие рассказы",
+            texts = listOf(
+                SyllableText("Ёжик и яблоко", "Ёжик жил в старом саду. Под яблоней он нашёл красное яблоко. Ёжик наколол его на иголки и понёс домой."),
+                SyllableText("Потерянный шарф", "У Тани был синий шарф. Она пошла гулять и потеряла его. Таня очень расстроилась. Вдруг она увидела свой шарф на скамейке. Его повесил туда прохожий."),
+                SyllableText("Синица за окном", "Зимой птицам холодно. Я насыпал в кормушку семечек. Скоро прилетела синичка. Она клевала зёрнышки и весело чирикала."),
+                SyllableText("Первый снег", "Утром я подошёл к окну. Всё было белым. Выпал первый снег. Я быстро оделся и побежал во двор. Там уже играли дети."),
+                SyllableText("Как мы сажали дерево", "Весной мы сажали дерево. Папа выкопал ямку. Я опустил туда маленький росток. Мы полили его водой. Теперь у нас во дворе будет своё дерево."),
+                SyllableText("Кораблик", "После дождя во дворе осталась лужа. Я сделал из бумаги кораблик. Я пустил его в лужу. Ветер подул, и кораблик поплыл."),
+                SyllableText("Белка на сосне", "Мы гуляли по лесу. На сосне я заметил рыжую белку. У неё был пушистый хвост. Белка грызла шишку и смотрела на нас."),
+                SyllableText("Новый друг", "В наш двор приехала новая семья. У них есть мальчик. Его зовут Миша. Мы познакомились и стали играть в футбол. Теперь он мой лучший друг."),
+                SyllableText("Гроза", "Днём небо стало тёмным. Подул сильный ветер. Загремел гром. Начался дождь. Я поскорее побежал домой. После грозы воздух стал чистым и свежим."),
+                SyllableText("Пирог", "В субботу бабушка пекла пирог. Весь дом наполнился вкусным запахом. Мы пили чай с горячим пирогом. Он был с яблоками и корицей."),
+                SyllableText("Заяц и морковка", "На огороде росла морковка. Прибежал заяц и захотел её съесть. Но морковка крепко сидела в земле. Заяц тянул, тянул, но так и не вытянул."),
+                SyllableText("Тихий час", "После обеда все легли спать. В комнате стало тихо. Только тикали часы на стене. Я лежал с закрытыми глазами и слушал тишину."),
+                SyllableText("Котёнок под крыльцом", "Под крыльцом кто-то тихо пищал. Это был маленький серый котёнок. Он замерз и проголодался. Маша взяла его домой и налила молока."),
+                SyllableText("Поход за грибами", "Рано утром мы пошли в лес. В лесу было тихо. Под деревьями мы нашли много грибов. Набрали целую корзину. Дома мама сварит вкусный грибной суп."),
+                SyllableText("Как мы мыли Шарика", "Шарик вернулся с прогулки весь в грязи. Мы налили в таз тёплой воды. Шарик сначала испугался, а потом обрадовался. Мы вымыли его с мылом, и он стал чистым."),
+                SyllableText("Птенец", "Под деревом сидел птенец. Он выпал из гнезда. Я взял его в руки и посадил обратно на ветку. Прилетела мама-птица и защебетала. Она была рада."),
+                SyllableText("Ледянка", "Зимой во дворе сделали горку. Мы полили её водой. Утром горка стала ледяной. Мы катались на санках и смеялись. Было очень весело."),
+                SyllableText("Грядка лука", "Весной мне дали свою грядку. Я посадил там маленькие луковки. Каждый день я поливал их из лейки. Скоро из земли показались зелёные перья."),
+                SyllableText("Улитка", "После дождя я нашёл улитку. Она медленно ползла по листику. У неё был домик на спине. Я смотрел на неё, а потом отнёс на траву."),
+                SyllableText("Костёр на берегу", "Вечером мы развели костёр у реки. Было тепло и уютно. Мы пекли хлеб на палочке и смотрели на звёзды. Вода в реке тихо шумела."),
+                SyllableText("Первая рыба", "Мне дали настоящую удочку. Мы пошли на пруд. Я долго сидел и смотрел на поплавок. Вдруг он нырнул. Я поймал маленького карасика!"),
+                SyllableText("Ромашки для мамы", "На поляне росли белые ромашки. Я сорвал целый букет. Принёс его домой и подарил маме. Мама очень обрадовалась и поставила цветы в вазу."),
+                SyllableText("Пропала варежка", "Я пришёл с прогулки в одной варежке. Куда делась вторая? Я искал её в карманах и под шкафом. Вдруг я увидел рыжий комок в углу. Это был наш кот, он спал на варежке."),
+                SyllableText("Воробей и крошки", "Мы обедали на веранде. На стол прилетел смелый воробей. Он клевал хлебные крошки. Мы не стали его прогонять. Воробей быстро поклевал и улетел."),
+                SyllableText("Самокат", "Летом я научился ездить на самокате. Сначала я падал, но потом понял, как держать равновесие. Теперь я быстро катаюсь по двору. Ветер дует мне в лицо."),
+                SyllableText("Тень", "Днём я заметил свою тень. Она была длинной и смешной. Я поднимал руку, и тень поднимала. Я бежал, и она бежала за мной. Но потом солнце спряталось, и тень исчезла."),
+                SyllableText("Ночное небо", "На даче ночью очень темно. На небе зажглись яркие звёзды. Луна круглая и светлая. Мы сидели на крыльце и смотрели в небо. Папа показал мне созвездие Большой Медведицы."),
+                SyllableText("Блины", "В воскресенье мама пекла блины. В доме пахло тестом и вареньем. Мы ели блины со сгущёнкой и сметаной. Это был самый вкусный завтрак на свете.")
+            )
+        ),
+        SyllableCategory(
+            name = "Рассказы для 1 класса",
+            texts = listOf(
+                // Здесь пока оставляем два примера, так как вы сказали, что скинете скрины для 1 класса отдельно
+                SyllableText(
+                    title = "Ёжик и яблоко (1 класс)",
+                    text = "Ёжик жил в старом саду. Под яблоней он нашёл красное яблоко. Ёжик наколол его на иголки и понёс домой. Дома его ждали маленькие ежата. Они обрадовались вкусному ужину.",
+                    questions = listOf("Где жил ёжик?", "Что он нашёл под яблоней?", "Кто ждал ёжика дома?")
+                ),
+                SyllableText(
+                    title = "Первый снег (1 класс)",
+                    text = "Утром я подошёл к окну. Всё было белым. Выпал первый снег. Я быстро оделся и побежал во двор. Там уже играли дети. Мы лепили снеговика и играли в снежки. Было холодно, но очень весело.",
+                    questions = listOf("Что увидел мальчик утром?", "Что он сделал?", "Во что играли дети во дворе?")
+                )
+            )
+        ),
+        SyllableCategory(
+            name = "Сказки",
+            texts = listOf(
+                SyllableText("Репка", "Посадил дед репку. Выросла репка большая-пребольшая. Стал дед репку из земли тянуть. Тянет-потянет, вытянуть не может. Позвал дед бабку. Бабка за дедку, дедка за репку. Тянут-потянут, вытянуть не могут."),
+                SyllableText("Колобок", "Испекла бабка колобок. Положила его на окошко студить. А колобок полежал-полежал, да и покатился по дорожке в лес. Катится колобок, а навстречу ему заяц."),
+                SyllableText("Теремок", "Стоит в поле теремок. Он не низок, не высок. Бежит мимо мышка-норушка. Увидела теремок, остановилась и спрашивает: «Кто, кто в теремочке живёт?» Никто ей не ответил. Зашла мышка в теремок и стала в нём жить."),
+                SyllableText("Курочка Ряба", "Жили-были дед да баба. Была у них курочка Ряба. Снесла курочка яичко, да не простое — золотое. Дед бил-бил, не разбил. Баба била-била, не разбила."),
+                SyllableText("Лиса и журавль", "Позвала лиса журавля в гости. Приготовила кашу и размазала её по тарелке. Журавль клювом стучал-стучал, ничего не попало. А лиса сама всё и съела."),
+                SyllableText("Три медведя", "Пошла девочка в лес и заблудилась. Нашла она избушку. В избушке жили три медведя. Девочка поела из их чашек и уснула на самой маленькой кроватке."),
+                SyllableText("Маша и медведь", "Пошла Маша в лес за грибами и заблудилась. Увидела она избушку. В ней жил медведь. Стал он Машу к себе жить звать. А Маша напекла пирожков и попросила медведя отнести их бабушке с дедушкой."),
+                SyllableText("Волк и семеро козлят", "Жила коза, и было у неё семеро козлят. Уходя за молоком, она наказывала им сидеть дома и никому дверь не открывать. Но волк обхитрил козлят и съел их."),
+                SyllableText("Гуси-лебеди", "Оставили Машу дома смотреть за братцем. А Маша заигралась и не уследила. Унесли братца гуси-лебеди к Бабе-Яге. Побежала Маша искать братца."),
+                SyllableText("Заюшкина избушка", "У зайца была избушка из коры, а у лисы изо льда. Весной избушка лисы растаяла. Попросилась лиса к зайцу жить, да и выгнала его. Сидит заяц и плачет."),
+                SyllableText("Петушок и бобовое зёрнышко", "Жили курочка и петушок. Петушок всё торопился, когда клевал зёрнышки, и подавился бобовым зёрнышком. Курочка побежала за водичкой, чтобы спасти петушка."),
+                SyllableText("Кот, петух и лиса", "Жили в лесу кот и петух. Кот уходил на охоту, а петух оставался дом стеречь. Лиса приходила и хотела унести петуха. Но кот спасал своего друга."),
+                SyllableText("Пузырь, соломинка и лапоть", "Шли по дороге пузырь, соломинка и лапоть. Пришли к реке. Стали думать, как перебраться. Соломинка перекинулась через реку. Лапоть пошёл по ней, а она и переломилась."),
+                SyllableText("Каша из топора", "Шёл солдат домой и попросился на ночлег. Хозяйка была жадная и не хотела его кормить. Тогда солдат предложил сварить кашу из топора. Хозяйка удивилась и дала ему крупу и масло.")
+            )
+        )
+    )
 }
