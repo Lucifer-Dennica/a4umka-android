@@ -9,5 +9,6 @@ data class RibbonConfig(
     val case: RibbonCase = RibbonCase.BOTH,
     val missingCount: MissingCount = MissingCount.EIGHT,
     val showHint: Boolean = true,
-    val showAnswers: Boolean = false // <-- НОВОЕ
+    val showAnswers: Boolean = false,
+    val seed: Long = System.currentTimeMillis() // <-- ДОБАВЛЕНО: для генерации вариантов
 )
