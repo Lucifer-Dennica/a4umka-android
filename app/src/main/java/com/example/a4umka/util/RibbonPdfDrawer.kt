@@ -16,11 +16,28 @@ object RibbonPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
-    fun drawRibbon(canvas: Canvas, config: RibbonConfig, context: Context) {
+    fun drawRibbon(canvas: Canvas, config: RibbonConfig, context: Context, isAnswerKey: Boolean = false) {
         canvas.drawColor(Color.parseColor("#FAFAFA"))
 
         val font = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
         
+        // Заголовок в зависимости от режима
+        val titleText = when {
+            isAnswerKey -> "Ответы"
+            config.mode == RibbonMode.DESK -> "Лента букв"
+            config.mode == RibbonMode.MISSING -> "Впиши пропущенные буквы"
+            config.mode == RibbonMode.COLORING -> "Раскрась ленту букв"
+            else -> "Лента букв"
+        }
+
+        val subtitleText = when {
+            isAnswerKey -> "лента букв целиком"
+            config.mode == RibbonMode.DESK -> "Гласные и согласные, звонкие и глухие, твердые и мягкие"
+            config.mode == RibbonMode.MISSING -> "Впиши буквы в пустые клетки: цвет клетки и соседи — подсказка"
+            config.mode == RibbonMode.COLORING -> "Раскрась клетки по правилам"
+            else -> ""
+        }
+
         val titlePaint = Paint().apply {
             this.isAntiAlias = true
             this.textSize = 32f
@@ -28,17 +45,46 @@ object RibbonPdfDrawer {
             this.typeface = font
             this.textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("Лента букв", PAGE_WIDTH / 2f, 50f, titlePaint)
+        canvas.drawText(titleText, PAGE_WIDTH / 2f, 50f, titlePaint)
+
+        val subtitlePaint = Paint().apply {
+            this.isAntiAlias = true
+            this.textSize = 14f
+            this.color = Color.GRAY
+            this.typeface = Typeface.DEFAULT
+            this.textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(subtitleText, PAGE_WIDTH / 2f, 70f, subtitlePaint)
+
+        // Поля Имя и Дата
+        if (config.mode != RibbonMode.DESK || isAnswerKey) {
+            val fieldPaint = Paint().apply {
+                this.isAntiAlias = true
+                this.textSize = 16f
+                this.color = Color.DKGRAY
+                this.typeface = Typeface.DEFAULT
+            }
+            val linePaint = Paint().apply {
+                this.color = Color.LTGRAY
+                this.strokeWidth = 1f
+            }
+            
+            canvas.drawText("Имя:", 40f, 110f, fieldPaint)
+            canvas.drawLine(80f, 112f, 200f, 112f, linePaint)
+            
+            canvas.drawText("Дата:", PAGE_WIDTH - 160f, 110f, fieldPaint)
+            canvas.drawLine(PAGE_WIDTH - 115f, 112f, PAGE_WIDTH - 40f, 112f, linePaint)
+        }
 
         val startX = 40f
-        val startY = 100f
+        val startY = 140f
         val cellSize = 36f
         val gap = 2f
         val colWidth = cellSize + gap
         val rowHeight = cellSize + gap
         
         val missingSet = mutableSetOf<String>()
-        if (config.mode == RibbonMode.MISSING) {
+        if (config.mode == RibbonMode.MISSING && !isAnswerKey) {
             val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants).map { it.char }
             val countToHide = when(config.missingCount) {
                 MissingCount.EIGHT -> 8
@@ -68,14 +114,31 @@ object RibbonPdfDrawer {
             drawCell(canvas, letter, config, signStartX, startY + index * rowHeight, cellSize, missingSet, font)
         }
 
+        // Блок "Эти буквы потерялись"
         if (config.mode == RibbonMode.MISSING && config.showHint && missingSet.isNotEmpty()) {
-            val hintPaint = Paint().apply {
+            val hintBoxTop = startY + 2 * rowHeight + 20f
+            val hintBoxBottom = hintBoxTop + 40f
+            val hintBoxPaint = Paint().apply {
+                this.color = Color.WHITE
+                this.style = Paint.Style.FILL
+            }
+            val hintBoxBorder = Paint().apply {
+                this.color = Color.LTGRAY
+                this.style = Paint.Style.STROKE
+                this.strokeWidth = 1f
+                this.pathEffect = DashPathEffect(floatArrayOf(5f, 5f), 0f)
+            }
+            canvas.drawRect(startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom, hintBoxPaint)
+            canvas.drawRect(startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom, hintBoxBorder)
+
+            val hintTextPaint = Paint().apply {
                 this.isAntiAlias = true
                 this.textSize = 16f
-                this.color = Color.GRAY
+                this.color = Color.DKGRAY
                 this.typeface = Typeface.DEFAULT
             }
-            canvas.drawText("Пропущенные буквы: ${missingSet.joinToString(", ")}", startX, startY + 2 * rowHeight + 30f, hintPaint)
+            val lostLettersStr = missingSet.joinToString(", ")
+            canvas.drawText("Эти буквы потерялись: $lostLettersStr", startX + 10f, hintBoxTop + 25f, hintTextPaint)
         }
 
         drawLegend(canvas, startX, PAGE_HEIGHT - 200f)
