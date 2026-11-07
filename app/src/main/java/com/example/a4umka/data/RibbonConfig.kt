@@ -8,5 +8,6 @@ data class RibbonConfig(
     val mode: RibbonMode = RibbonMode.DESK,
     val case: RibbonCase = RibbonCase.BOTH,
     val missingCount: MissingCount = MissingCount.EIGHT,
-    val showHint: Boolean = true
+    val showHint: Boolean = true,
+    val showAnswers: Boolean = false // <-- НОВОЕ
 )
