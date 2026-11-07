@@ -5,8 +5,12 @@ import android.graphics.Canvas as AndroidCanvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.a4umka.data.*
 import com.example.a4umka.util.PdfExporter
@@ -28,12 +33,12 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     var config by remember { mutableStateOf(RibbonConfig()) }
+    var showInfoSheet by remember { mutableStateOf(false) }
 
-    // ПРЕДПРОСМОТР
     val previewBitmap = remember(config) {
         val bmp = Bitmap.createBitmap(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = AndroidCanvas(bmp)
-        RibbonPdfDrawer.drawRibbon(canvas, config, context)
+        RibbonPdfDrawer.drawRibbon(canvas, config, context, isAnswerKey = false)
         bmp
     }
 
@@ -47,6 +52,9 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showInfoSheet = true }) {
+                        Icon(Icons.Default.Info, contentDescription = "Справка")
+                    }
                     IconButton(onClick = {
                         val result = PdfExporter.exportRibbon(context, config)
                         scope.launch {
@@ -86,6 +94,10 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                         Text("Подсказка (какие буквы пропущены)", modifier = Modifier.weight(1f))
                         Switch(checked = config.showHint, onCheckedChange = { config = config.copy(showHint = it) })
                     }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Печатать ответы (второй лист)", modifier = Modifier.weight(1f))
+                        Switch(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -97,6 +109,15 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                
+                Text(
+                    text = "💡 Совет: повесьте ленту на уровне глаз ребёнка.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -109,7 +130,55 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().aspectRatio(RibbonPdfDrawer.PAGE_WIDTH / RibbonPdfDrawer.PAGE_HEIGHT)
                     )
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Кнопка инфо
+                ElevatedCard(
+                    onClick = { showInfoSheet = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Как заниматься по ленте букв", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text("Советы родителям и учителям", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+
+        // ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ С ПЕРЕПИСАННЫМ ТЕКСТОМ
+        if (showInfoSheet) {
+            ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())
+                ) {
+                    Text("Как заниматься по ленте букв", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "• Повесьте ленту там, где ребёнок делает уроки. К ней будут обращаться чаще, чем к учебнику.\n\n" +
+                        "• Начните с гласных: найдите на ленте все красные клетки и вместе их «спойте».\n\n" +
+                        "• Звонкие и глухие проверяйте ладонью на горле: на звонких горло дрожит, на глухих — нет.\n\n" +
+                        "• Задания «Впиши пропущенные буквы» начинайте с 8 букв и включенной подсказки, постепенно усложняя задачу.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Как устроена лента", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "• Гласные — на красном поле. Верхний ряд (А, О, У, Ы, Э) — после них согласные звучат твёрдо. Нижний ряд (Я, Ё, Ю, И, Е) — после них согласные звучат мягко.\n\n" +
+                        "• Звонкие согласные находятся сверху (рядом с колокольчиком), глухие — снизу (рядом с наушниками). Парные буквы стоят друг над другом.\n\n" +
+                        "• Синяя клетка — звук всегда твёрдый (Ж, Ш, Ц). Зелёная — всегда мягкий (Й, Ч, Щ). Сине-зелёная — звук может быть и твёрдым, и мягким.\n\n" +
+                        "• Буквы Ь и Ъ звуков не обозначают, поэтому у них белая клетка.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
         }
     }
