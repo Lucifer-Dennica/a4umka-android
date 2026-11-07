@@ -28,17 +28,17 @@ fun InteractiveRibbonScreen(
     // Для игры всегда ставим 8 пропусков для начала
     var config by remember { mutableStateOf(RibbonConfig(mode = RibbonMode.MISSING, missingCount = MissingCount.EIGHT)) }
     
-    // Стейт для ответов: Буква -> Правильно/Неправильно/Пусто
     val userAnswers = remember { mutableStateMapOf<String, Boolean>() }
     
     // Диалог выбора буквы
-    var activeLetter by remember { mutableStateOf<String?>(null) }
+    var activeLetter by remember { mutableStateOf<RibbonLetter?>(null) }
     var options by remember { mutableStateOf<List<String>>(emptyList()) }
+    var errorOption by remember { mutableStateOf<String?>(null) } // Для подсветки ошибки
     var showSuccess by remember { mutableStateOf(false) }
 
-    // Вычисляем пропущенные буквы (берем напрямую из RibbonData, чтобы совпадали строки)
-    val missingSet = remember(config.seed) {
-        val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants).map { it.char }
+    // Вычисляем пропущенные буквы (используем объекты RibbonLetter, чтобы знать их цвет)
+    val missingLetters = remember(config.seed) {
+        val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants)
         val countToHide = when(config.missingCount) {
             MissingCount.EIGHT -> 8
             MissingCount.SIXTEEN -> 16
@@ -50,7 +50,7 @@ fun InteractiveRibbonScreen(
 
     // Проверка на победу
     LaunchedEffect(userAnswers.size) {
-        if (userAnswers.isNotEmpty() && userAnswers.values.all { it } && userAnswers.size == missingSet.size) {
+        if (userAnswers.isNotEmpty() && userAnswers.values.all { it } && userAnswers.size == missingLetters.size) {
             showSuccess = true
         }
     }
@@ -63,15 +63,6 @@ fun InteractiveRibbonScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
                     }
-                },
-                actions = {
-                    IconButton(onClick = { 
-                        config = config.copy(seed = System.currentTimeMillis())
-                        userAnswers.clear()
-                        showSuccess = false
-                    }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Новый вариант")
-                    }
                 }
             )
         }
@@ -80,28 +71,30 @@ fun InteractiveRibbonScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Нажми на пустую клетку и выбери правильную букву:",
+                text = "Нажми на знак вопроса, чтобы выбрать букву:",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             // Сетка
             InteractiveGrid(
-                missingSet = missingSet,
+                missingLetters = missingLetters,
                 userAnswers = userAnswers,
-                onCellClick = { letter ->
-                    activeLetter = letter
+                onCellClick = { letterObj ->
+                    activeLetter = letterObj
+                    errorOption = null
                     // Формируем варианты ответов (правильный + 3 случайных)
                     val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants).map { it.char }
-                    val wrongOptions = allLetters.filter { it != letter }.shuffled().take(3)
-                    options = (wrongOptions + letter).shuffled()
+                    val wrongOptions = allLetters.filter { it != letterObj.char }.shuffled().take(3)
+                    options = (wrongOptions + letterObj.char).shuffled()
                 }
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             if (showSuccess) {
                 Card(
@@ -115,6 +108,21 @@ fun InteractiveRibbonScreen(
                         modifier = Modifier.padding(16.dp).fillMaxWidth()
                     )
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Кнопка "Новый вариант" внизу
+            Button(
+                onClick = { 
+                    config = config.copy(seed = System.currentTimeMillis())
+                    userAnswers.clear()
+                    showSuccess = false
+                },
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Сгенерировать новый вариант")
             }
         }
 
@@ -124,30 +132,50 @@ fun InteractiveRibbonScreen(
                 onDismissRequest = { activeLetter = null },
                 title = { Text("Какая здесь буква?") },
                 text = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        options.forEach { option ->
-                            Button(
-                                onClick = {
-                                    if (option == activeLetter) {
-                                        userAnswers[activeLetter!!] = true
-                                        activeLetter = null // Закрываем при правильном ответе
-                                    } else {
-                                        // Если неправильно - можно добавить звук или вибрацию
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(0.dp), // Убираем отступы, чтобы влезло
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                            ) {
-                                Text(text = option, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            options.forEach { option ->
+                                // Если эта кнопка была нажата неправильно - она красная
+                                val isError = errorOption == option
+                                Button(
+                                    onClick = {
+                                        if (option == activeLetter?.char) {
+                                            userAnswers[activeLetter!!.char] = true
+                                            activeLetter = null // Закрываем при правильном ответе
+                                        } else {
+                                            errorOption = option // Подсвечиваем ошибку
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(0.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (isError) Color.Red else MaterialTheme.colorScheme.secondary
+                                    )
+                                ) {
+                                    Text(text = option, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
+                        }
+                        
+                        if (errorOption != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Попробуй другую букву!",
+                                color = Color.Red,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
                         }
                     }
                 },
-                confirmButton = {}
+                confirmButton = {
+                    TextButton(onClick = { activeLetter = null }) {
+                        Text("Отмена")
+                    }
+                }
             )
         }
     }
@@ -155,49 +183,62 @@ fun InteractiveRibbonScreen(
 
 @Composable
 fun InteractiveGrid(
-    missingSet: Set<String>,
+    missingLetters: Set<RibbonLetter>,
     userAnswers: Map<String, Boolean>,
-    onCellClick: (String) -> Unit
+    onCellClick: (RibbonLetter) -> Unit
 ) {
     @Composable
     fun Cell(letterObj: RibbonLetter) {
-        val letter = letterObj.char
-        val isMissing = letter in missingSet
-        val isAnswered = userAnswers[letter] == true
+        val letterChar = letterObj.char
+        val isMissing = missingLetters.any { it.char == letterChar }
+        val isAnswered = userAnswers[letterChar] == true
         
-        val bgColor = if (isAnswered) Color(0xFF81C784) else Color.Gray
-        val text = if (isMissing && !isAnswered) "?" else letter
+        // Базовый цвет берем из базы данных
+        val baseColor = when (letterObj.color) {
+            RibbonColor.RED -> Color.parseColor("#EF5350")
+            RibbonColor.BLUE -> Color.parseColor("#42A5F5")
+            RibbonColor.GREEN -> Color.parseColor("#66BB6A")
+            RibbonColor.WHITE -> Color.White
+            RibbonColor.BOTH -> Color.parseColor("#42A5F5") // Упрощаем для игры, делаем синим
+        }
+
+        // Если решено - зеленый. Если не решено - базовый цвет. Если не пропущено - серый.
+        val bgColor = when {
+            isAnswered -> Color.parseColor("#81C784")
+            isMissing -> baseColor
+            else -> Color.LightGray
+        }
+        
+        val text = if (isMissing && !isAnswered) "?" else letterChar
+        val textColor = if (isMissing && !isAnswered) Color.White else if (isAnswered) Color.White else Color.Black
         
         Box(
             modifier = Modifier
-                .size(34.dp) // Чуть уменьшили, чтобы влезло в ряд
+                .size(34.dp)
                 .padding(1.dp)
-                .background(if (isMissing) bgColor else Color.LightGray, RoundedCornerShape(4.dp))
+                .background(bgColor, RoundedCornerShape(4.dp))
                 .border(1.dp, Color.DarkGray, RoundedCornerShape(4.dp))
-                .clickable(enabled = isMissing && !isAnswered) { onCellClick(letter) },
+                .clickable(enabled = isMissing && !isAnswered) { onCellClick(letterObj) },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = text,
-                color = if (isMissing && !isAnswered) Color.White else Color.Black,
+                color = textColor,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp // Уменьшили шрифт, так как пишем пары "Аа"
+                fontSize = 12.sp
             )
         }
     }
 
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        // Гласные
         Row { RibbonData.topVowels.forEach { Cell(it) } }
         Row { RibbonData.bottomVowels.forEach { Cell(it) } }
         Spacer(modifier = Modifier.height(8.dp))
         
-        // Согласные
         Row { RibbonData.topConsonants.forEach { Cell(it) } }
         Row { RibbonData.bottomConsonants.forEach { Cell(it) } }
         Spacer(modifier = Modifier.height(8.dp))
         
-        // Знаки
         Row { RibbonData.signs.forEach { Cell(it) } }
     }
 }
