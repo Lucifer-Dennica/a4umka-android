@@ -33,7 +33,7 @@ object AppContent {
         "reading" -> listOf(
             TaskItem("alphabet_poster", "Алфавит-плакат", "Генератор плакатов и карточек с буквами"),
             TaskItem("letter_ribbon", "Лента букв", "Гласные и согласные, звонкие и глухие"),
-            TaskItem("syllables", "Слоги и слова", "Чтение по слогам"),
+            TaskItem("syllables", "Слоги и слова", "Чтение по слогам с дугами и точками"), // <-- ID должен совпадать
             TaskItem("rebus", "Ребусы", "Разгадай зашифрованные слова")
         )
         "hand" -> listOf(
