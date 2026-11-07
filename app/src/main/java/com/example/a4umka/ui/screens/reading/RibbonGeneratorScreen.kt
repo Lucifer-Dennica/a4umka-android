@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
@@ -28,7 +29,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RibbonGeneratorScreen(onBack: () -> Unit) {
+fun RibbonGeneratorScreen(
+    onBack: () -> Unit,
+    onPlayInteractive: () -> Unit // <-- НОВЫЙ КОЛБЭК
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -53,7 +57,6 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    // КНОПКА ГЕНЕРАЦИИ НОВОГО ВАРИАНТА
                     if (config.mode == RibbonMode.MISSING) {
                         IconButton(onClick = { 
                             config = config.copy(seed = System.currentTimeMillis()) 
@@ -139,7 +142,22 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().aspectRatio(RibbonPdfDrawer.PAGE_WIDTH / RibbonPdfDrawer.PAGE_HEIGHT)
                     )
                 }
+                
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // КНОПКА "РЕШАТЬ НА ЭКРАНЕ" (появляется только в режиме Пропусков)
+                if (config.mode == RibbonMode.MISSING) {
+                    Button(
+                        onClick = onPlayInteractive,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Решать на экране", style = MaterialTheme.typography.titleMedium)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
                 
                 ElevatedCard(
                     onClick = { showInfoSheet = true },
@@ -161,9 +179,7 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
 
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
                     Text("Как заниматься по ленте букв", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
@@ -171,17 +187,6 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                         "• Начните с гласных: найдите на ленте все красные клетки и вместе их «спойте».\n\n" +
                         "• Звонкие и глухие проверяйте ладонью на горле: на звонких горло дрожит, на глухих — нет.\n\n" +
                         "• Задания «Впиши пропущенные буквы» начинайте с 8 букв и включенной подсказки, постепенно усложняя задачу.",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("Как устроена лента", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "• Гласные — на красном поле. Верхний ряд (А, О, У, Ы, Э) — после них согласные звучат твёрдо. Нижний ряд (Я, Ё, Ю, И, Е) — после них согласные звучат мягко.\n\n" +
-                        "• Звонкие согласные находятся сверху (рядом с колокольчиком), глухие — снизу (рядом с наушниками). Парные буквы стоят друг над другом.\n\n" +
-                        "• Синяя клетка — звук всегда твёрдый (Ж, Ш, Ц). Зелёная — всегда мягкий (Й, Ч, Щ). Сине-зелёная — звук может быть и твёрдым, и мягким.\n\n" +
-                        "• Буквы Ь и Ъ звуков не обозначают, поэтому у них белая клетка.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
