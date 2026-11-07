@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import com.example.a4umka.data.SyllableConfig
+import com.example.a4umka.data.SyllableSource
 import com.example.a4umka.data.SyllableText
 
 object SyllablePdfDrawer {
@@ -20,24 +21,7 @@ object SyllablePdfDrawer {
         if (texts.isEmpty()) return emptyList()
 
         val pages = mutableListOf<android.graphics.Bitmap>()
-        var currentPageNum = 1
-
-        val document = PdfDocument()
-        var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), currentPageNum).create()
-        var page = document.startPage(pageInfo)
-        var currentY = drawHeader(page.canvas, config, texts)
-
-        for (textObj in texts) {
-            currentY = drawTextBlock(page.canvas, textObj, currentY, config)
-        }
-        document.finishPage(page)
-        document.close()
-
-        // Для превью проще отрисовать заново, но уже в Bitmap
-        // (Чтобы не заморачиваться с парсингом PdfDocument, отрисуем напрямую)
-        
         var yPos = 150f
-        val bmpList = mutableListOf<android.graphics.Bitmap>()
         var bmp = android.graphics.Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), android.graphics.Bitmap.Config.ARGB_8888)
         var canvas = Canvas(bmp)
         
@@ -46,7 +30,7 @@ object SyllablePdfDrawer {
         for (textObj in texts) {
             // Проверяем, влезет ли хотя бы заголовок текста
             if (yPos > PAGE_HEIGHT - 150f) {
-                bmpList.add(bmp)
+                pages.add(bmp)
                 bmp = android.graphics.Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), android.graphics.Bitmap.Config.ARGB_8888)
                 canvas = Canvas(bmp)
                 yPos = drawHeader(canvas, config, texts)
@@ -56,19 +40,17 @@ object SyllablePdfDrawer {
             
             // Если текст разорвался (перенесся на след страницу)
             if (nextY > PAGE_HEIGHT - 50f) {
-                bmpList.add(bmp)
+                pages.add(bmp)
                 bmp = android.graphics.Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), android.graphics.Bitmap.Config.ARGB_8888)
                 canvas = Canvas(bmp)
                 yPos = drawHeader(canvas, config, texts)
-                // Дорисовываем остаток сложно, для превью просто покажем начало след страницы
-                // (В реальном PDF все будет идеально)
             } else {
                 yPos = nextY
             }
         }
-        bmpList.add(bmp)
+        pages.add(bmp)
 
-        return bmpList
+        return pages
     }
 
     fun drawDocument(document: PdfDocument, config: SyllableConfig, context: Context) {
@@ -81,7 +63,6 @@ object SyllablePdfDrawer {
         var currentY = drawHeader(page.canvas, config, texts)
 
         for (textObj in texts) {
-            // Рисуем текст построчно
             val bodyPaint = Paint().apply {
                 isAntiAlias = true
                 textSize = config.fontSize
@@ -180,7 +161,7 @@ object SyllablePdfDrawer {
                 }
             }
             
-            currentY += config.textSpacing // Отступ между текстами
+            currentY += config.textSpacing
         }
         
         document.finishPage(page)
@@ -202,7 +183,6 @@ object SyllablePdfDrawer {
         canvas.drawText("Время:", PAGE_WIDTH - 160f, 40f, topPaint)
         canvas.drawLine(PAGE_WIDTH - 110f, 42f, PAGE_WIDTH - 40f, 42f, linePaint)
 
-        // Считаем общее количество слов для документа (или только для страницы? Лучше общее)
         val totalWords = texts.sumOf { it.text.split("\\s+".toRegex()).filter { w -> w.isNotBlank() }.size }
         val countBgPaint = Paint().apply { color = Color.parseColor("#A5D6A7"); style = Paint.Style.FILL }
         val countRect = RectF(PAGE_WIDTH / 2f - 40f, 25f, PAGE_WIDTH / 2f + 40f, 48f)
@@ -213,11 +193,10 @@ object SyllablePdfDrawer {
         val titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = Color.parseColor("#33691E"); typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         canvas.drawText("Чтение по слогам", PAGE_WIDTH / 2f, 90f, titlePaint)
 
-        return 130f // Возвращаем Y, с которого начинать текст
+        return 130f
     }
     
-    // Заглушка для drawTextBlock, чтобы не было ошибки в generatePreviewPages
     private fun drawTextBlock(canvas: Canvas, textObj: SyllableText, currentY: Float, config: SyllableConfig): Float {
-        return currentY + 100f // Упрощенно для превью
+        return currentY + 100f
     }
 }
