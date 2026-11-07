@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,6 +53,14 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    // КНОПКА ГЕНЕРАЦИИ НОВОГО ВАРИАНТА
+                    if (config.mode == RibbonMode.MISSING) {
+                        IconButton(onClick = { 
+                            config = config.copy(seed = System.currentTimeMillis()) 
+                        }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Другой вариант")
+                        }
+                    }
                     IconButton(onClick = { showInfoSheet = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
                     }
@@ -132,7 +141,6 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Кнопка инфо
                 ElevatedCard(
                     onClick = { showInfoSheet = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -151,7 +159,6 @@ fun RibbonGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ С ПЕРЕПИСАННЫМ ТЕКСТОМ
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
