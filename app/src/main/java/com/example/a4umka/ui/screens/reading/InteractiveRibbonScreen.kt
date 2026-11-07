@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,7 +18,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
-import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +36,7 @@ fun InteractiveRibbonScreen(
     var options by remember { mutableStateOf<List<String>>(emptyList()) }
     var showSuccess by remember { mutableStateOf(false) }
 
-    // Вычисляем пропущенные буквы
+    // Вычисляем пропущенные буквы (берем напрямую из RibbonData, чтобы совпадали строки)
     val missingSet = remember(config.seed) {
         val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants).map { it.char }
         val countToHide = when(config.missingCount) {
@@ -90,15 +88,15 @@ fun InteractiveRibbonScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Сетка (упрощенная версия для экрана)
+            // Сетка
             InteractiveGrid(
                 missingSet = missingSet,
                 userAnswers = userAnswers,
                 onCellClick = { letter ->
                     activeLetter = letter
-                    val allLetters = ("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ".map { it.toString() }).toMutableList()
-                    allLetters.remove(letter) // убираем правильный ответ из списка
-                    val wrongOptions = allLetters.shuffled().take(3)
+                    // Формируем варианты ответов (правильный + 3 случайных)
+                    val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels + RibbonData.topConsonants + RibbonData.bottomConsonants).map { it.char }
+                    val wrongOptions = allLetters.filter { it != letter }.shuffled().take(3)
                     options = (wrongOptions + letter).shuffled()
                 }
             )
@@ -128,7 +126,7 @@ fun InteractiveRibbonScreen(
                 text = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         options.forEach { option ->
                             Button(
@@ -137,15 +135,14 @@ fun InteractiveRibbonScreen(
                                         userAnswers[activeLetter!!] = true
                                         activeLetter = null // Закрываем при правильном ответе
                                     } else {
-                                        // Подсвечиваем красным (пока просто игнорируем или вибрируем)
-                                        // В MVP можно просто не закрывать диалог, пока не выберут правильный
+                                        // Если неправильно - можно добавить звук или вибрацию
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondary
-                                )
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(0.dp), // Убираем отступы, чтобы влезло
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                             ) {
-                                Text(text = option, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                Text(text = option, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -162,18 +159,18 @@ fun InteractiveGrid(
     userAnswers: Map<String, Boolean>,
     onCellClick: (String) -> Unit
 ) {
-    // Вспомогательная функция для рисования одной ячейки
     @Composable
-    fun Cell(letter: String) {
+    fun Cell(letterObj: RibbonLetter) {
+        val letter = letterObj.char
         val isMissing = letter in missingSet
         val isAnswered = userAnswers[letter] == true
         
-        val bgColor = if (isAnswered) Color(0xFF81C784) else Color.Gray // Зеленый если решено
+        val bgColor = if (isAnswered) Color(0xFF81C784) else Color.Gray
         val text = if (isMissing && !isAnswered) "?" else letter
         
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(34.dp) // Чуть уменьшили, чтобы влезло в ряд
                 .padding(1.dp)
                 .background(if (isMissing) bgColor else Color.LightGray, RoundedCornerShape(4.dp))
                 .border(1.dp, Color.DarkGray, RoundedCornerShape(4.dp))
@@ -184,34 +181,23 @@ fun InteractiveGrid(
                 text = text,
                 color = if (isMissing && !isAnswered) Color.White else Color.Black,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 12.sp // Уменьшили шрифт, так как пишем пары "Аа"
             )
         }
     }
 
-    // Рисуем упрощенную ленту (для экономии места на экране телефона)
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        // Гласные (верхний ряд)
-        Row {
-            listOf("А", "О", "У", "Ы", "Э").forEach { Cell(it) }
-        }
-        // Гласные (нижний ряд)
-        Row {
-            listOf("Я", "Ё", "Ю", "И", "Е").forEach { Cell(it) }
-        }
+        // Гласные
+        Row { RibbonData.topVowels.forEach { Cell(it) } }
+        Row { RibbonData.bottomVowels.forEach { Cell(it) } }
         Spacer(modifier = Modifier.height(8.dp))
-        // Согласные (верхний)
-        Row {
-            listOf("Л", "М", "Н", "Р", "Й", "Б", "В", "Г", "Д", "Ж", "З").forEach { Cell(it) }
-        }
-        // Согласные (нижний)
-        Row {
-            listOf("П", "Ф", "К", "Т", "Ш", "С", "Х", "Ц", "Ч", "Щ").forEach { Cell(it) }
-        }
+        
+        // Согласные
+        Row { RibbonData.topConsonants.forEach { Cell(it) } }
+        Row { RibbonData.bottomConsonants.forEach { Cell(it) } }
         Spacer(modifier = Modifier.height(8.dp))
+        
         // Знаки
-        Row {
-            listOf("ь", "ъ").forEach { Cell(it) }
-        }
+        Row { RibbonData.signs.forEach { Cell(it) } }
     }
 }
