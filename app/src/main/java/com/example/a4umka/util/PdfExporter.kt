@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import com.example.a4umka.data.AlphabetConfig
 import com.example.a4umka.data.PdfExportConfig
 import com.example.a4umka.data.RibbonConfig
+import com.example.a4umka.data.RibbonMode
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -33,13 +34,23 @@ object PdfExporter {
         return saveDocument(context, document, "alphabet_${System.currentTimeMillis()}.pdf")
     }
 
-    // НОВЫЙ МЕТОД ДЛЯ ЛЕНТЫ
     fun exportRibbon(context: Context, config: RibbonConfig): String? {
         val document = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
-        val page = document.startPage(pageInfo)
-        RibbonPdfDrawer.drawRibbon(page.canvas, config, context)
-        document.finishPage(page)
+        
+        // 1. Основной лист
+        val pageInfo1 = PdfDocument.PageInfo.Builder(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
+        val page1 = document.startPage(pageInfo1)
+        RibbonPdfDrawer.drawRibbon(page1.canvas, config, context, isAnswerKey = false)
+        document.finishPage(page1)
+
+        // 2. Второй лист (Ответы), если включено
+        if (config.mode == RibbonMode.MISSING && config.showAnswers) {
+            val pageInfo2 = PdfDocument.PageInfo.Builder(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), 2).create()
+            val page2 = document.startPage(pageInfo2)
+            RibbonPdfDrawer.drawRibbon(page2.canvas, config, context, isAnswerKey = true)
+            document.finishPage(page2)
+        }
+
         return saveDocument(context, document, "ribbon_${System.currentTimeMillis()}.pdf")
     }
 
