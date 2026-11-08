@@ -18,6 +18,7 @@ import com.example.a4umka.ui.screens.reading.InteractiveRibbonScreen
 import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen
 import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
+import com.example.a4umka.ui.screens.reading.CopyingGeneratorScreen
 
 object Routes {
     const val HOME = "home"
@@ -29,6 +30,7 @@ object Routes {
     const val INTERACTIVE_RIBBON = "interactive_ribbon"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
+    const val COPYING = "copying"
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -88,9 +90,11 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 }
-                // ИСПРАВЛЕНО: прямой вызов экрана без промежуточной навигации
                 categoryId == "reading" && taskId == "comprehension" -> {
                     ComprehensionGeneratorScreen(onBack = { navController.popBackStack() })
+                }
+                categoryId == "reading" && taskId == "copying" -> {
+                    CopyingGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
