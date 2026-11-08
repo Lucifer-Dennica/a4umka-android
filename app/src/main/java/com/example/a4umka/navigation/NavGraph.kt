@@ -88,8 +88,9 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 }
+                // ИСПРАВЛЕНО: прямой вызов экрана без промежуточной навигации
                 categoryId == "reading" && taskId == "comprehension" -> {
-                    navController.navigate(Routes.COMPREHENSION)
+                    ComprehensionGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
@@ -105,10 +106,6 @@ fun NavGraph() {
         
         composable(Routes.INTERACTIVE_RIBBON) {
             InteractiveRibbonScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.COMPREHENSION) {
-            ComprehensionGeneratorScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
