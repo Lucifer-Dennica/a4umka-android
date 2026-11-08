@@ -1,13 +1,15 @@
 package com.example.a4umka.ui.screens.reading
 
-import android.graphics.Bitmap
-import android.graphics.Canvas as AndroidCanvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
@@ -16,9 +18,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.ComprehensionConfig
 import com.example.a4umka.data.ReadingComprehensionData
 import com.example.a4umka.util.ComprehensionPdfDrawer
@@ -34,6 +38,9 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(ComprehensionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
+    
+    // Состояние для выпадающего списка рассказов
+    var dropdownExpanded by remember { mutableStateOf(false) }
 
     // Инициализация случайного рассказа при старте
     LaunchedEffect(Unit) {
@@ -41,6 +48,12 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
         }
     }
+
+    val previewPages = remember(config) {
+        ComprehensionPdfDrawer.generatePreviewPages(config, context)
+    }
+
+    val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
         topBar = {
@@ -74,6 +87,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
+                // ВЫБОР КЛАССА
                 Text("Класс:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(1, 2, 3, 4).forEach { grade ->
@@ -84,6 +98,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     grade = grade,
                                     selectedStory = ReadingComprehensionData.getRandomStory(grade)
                                 )
+                                dropdownExpanded = false
                             },
                             label = { Text(grade.toString()) }
                         )
@@ -92,9 +107,9 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // ВЫПАДАЮЩИЙ СПИСОК РАССКАЗОВ
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Рассказ:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    // Кнопка "Случайный"
                     TextButton(onClick = {
                         config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
                     }) {
@@ -104,22 +119,42 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
                 
-                // Выбор конкретного рассказа
                 val stories = ReadingComprehensionData.getStoriesByGrade(config.grade)
-                if (stories.isNotEmpty()) {
-                    Text("Выберите текст:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                    stories.forEach { story ->
-                        Card(
-                            onClick = { config = config.copy(selectedStory = story) },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (config.selectedStory == story) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(story.title, fontWeight = FontWeight.Bold)
-                                Text("${story.text.split(" ").size} слов • ${story.questions.size} вопроса", style = MaterialTheme.typography.bodySmall)
+                
+                ExposedDropdownMenuBox(
+                    expanded = dropdownExpanded,
+                    onExpandedChange = { dropdownExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = config.selectedStory?.title ?: "Выберите рассказ",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        label = { 
+                            if (config.selectedStory != null) {
+                                Text("${config.selectedStory!!.text.split(" ").size} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
                             }
+                        }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false },
+                        modifier = Modifier.heightIn(max = 350.dp) // Ограничиваем высоту, чтобы было удобно скроллить
+                    ) {
+                        stories.forEach { story ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Column {
+                                        Text(story.title, fontWeight = FontWeight.Bold)
+                                        Text("${story.text.split(" ").size} слов", fontSize = 12.sp, color = Color.Gray)
+                                    }
+                                },
+                                onClick = {
+                                    config = config.copy(selectedStory = story)
+                                    dropdownExpanded = false
+                                }
+                            )
                         }
                     }
                 }
@@ -128,6 +163,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // НАСТРОЙКИ ПЕЧАТИ
                 Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -153,15 +189,19 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             }
 
             item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    // Просто показываем заглушку
-                    Card(modifier = Modifier.fillMaxWidth().aspectRatio(595f / 842f)) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text("Предпросмотр доступен после сохранения в PDF", color = Color.Gray)
-                        }
+                if (previewPages.isNotEmpty()) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxWidth().aspectRatio(ComprehensionPdfDrawer.PAGE_WIDTH / ComprehensionPdfDrawer.PAGE_HEIGHT)
+                    ) { page ->
+                        Image(
+                            bitmap = previewPages[page].asImageBitmap(),
+                            contentDescription = "Предпросмотр",
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
