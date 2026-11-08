@@ -71,9 +71,11 @@ object CopyingPdfDrawer {
                 if (line.isNotEmpty()) lines.add(line)
                 
                 val textHeight = lines.size * bodyPaint.textSize * 1.5f
-                val titleHeight = 30f
-                val boxHeight = 60f
-                val linesForThisStory = 6 // Даем 6 строк на переписывание
+                val titleHeight = 25f
+                val boxHeight = 55f
+                
+                // Даем строк для письма в зависимости от длины текста (от 3 до 6)
+                val linesForThisStory = (story.wordCount / 15).coerceIn(3, 6)
                 val writeAreaHeight = linesForThisStory * lineSpacingPx
                 
                 // Если не влезает, начинаем новый лист
@@ -106,7 +108,7 @@ object CopyingPdfDrawer {
                 canvas.drawText("Проверь: начало предложений, буквы в словах, пробелы, знаки в конце.", margin + 5f, currentY + 30f, hintPaint)
                 currentY += 55f
 
-                // Рисуем фиксированное количество строк
+                // Рисуем строки для письма
                 val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
                 for (i in 0 until linesForThisStory) {
                     canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
@@ -115,7 +117,7 @@ object CopyingPdfDrawer {
                 currentY += 20f // Отступ между историями
             }
         } else {
-            // РЕЖИМ "РАЗДЕЛЬНЫЕ ЛИСТЫ" (старый)
+            // РЕЖИМ "РАЗДЕЛЬНЫЕ ЛИСТЫ"
             for (story in config.selectedStories) {
                 for (copy in 0 until config.childrenCount) {
                     if (currentY > 100f) { // Если это не первая страница
