@@ -46,6 +46,12 @@ object PdfExporter {
         return saveDocument(context, document, "syllables_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportComprehension(context: Context, config: ComprehensionConfig): String? {
+        val document = PdfDocument()
+        ComprehensionPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "comprehension_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
