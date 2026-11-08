@@ -2,7 +2,6 @@ package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -16,7 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,22 +40,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
         if (config.selectedStory == null) {
             config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
         }
-    }
-
-    // ПРЕДПРОСМОТР (упрощенный)
-    val previewBitmap = remember(config) {
-        val bmp = Bitmap.createBitmap(ComprehensionPdfDrawer.PAGE_WIDTH.toInt(), ComprehensionPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
-        val canvas = AndroidCanvas(bmp)
-        // Рисуем только первую страницу для превью
-        val doc = android.graphics.pdf.PdfDocument()
-        val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(ComprehensionPdfDrawer.PAGE_WIDTH.toInt(), ComprehensionPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
-        val page = doc.startPage(pageInfo)
-        ComprehensionPdfDrawer.drawDocument(doc, config, context)
-        // В реальности drawDocument рисует все страницы, для превью мы просто берем первую
-        // Но чтобы не усложнять, просто отрисуем контент на нашем Bitmap
-        val tempCanvas = AndroidCanvas(bmp)
-        // Это упрощение, но для превью сойдет
-        bmp
     }
 
     Scaffold(
@@ -121,7 +104,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
                 
-                // Выбор конкретного рассказа (упрощенно)
+                // Выбор конкретного рассказа
                 val stories = ReadingComprehensionData.getStoriesByGrade(config.grade)
                 if (stories.isNotEmpty()) {
                     Text("Выберите текст:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
@@ -171,7 +154,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
             item {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    // Просто показываем заглушку или первый лист
+                    // Просто показываем заглушку
                     Card(modifier = Modifier.fillMaxWidth().aspectRatio(595f / 842f)) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("Предпросмотр доступен после сохранения в PDF", color = Color.Gray)
