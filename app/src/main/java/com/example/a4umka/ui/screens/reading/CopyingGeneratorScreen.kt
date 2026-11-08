@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.CopyingConfig
 import com.example.a4umka.data.CopyingData
 import com.example.a4umka.data.CopyingMode
-import com.example.a4umka.data.CopyingStory
 import com.example.a4umka.util.CopyingPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.launch
@@ -40,12 +39,10 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(CopyingConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    // Состояния для поиска и фильтров
     var searchQuery by remember { mutableStateOf("") }
     var volumeFilter by remember { mutableStateOf("Любой объём") }
     var themeFilter by remember { mutableStateOf("Все темы") }
 
-    // Получаем базовый список и фильтруем его
     val allStories = CopyingData.getStories(config.grade)
     val filteredStories = allStories.filter { story ->
         val matchesSearch = story.title.contains(searchQuery, ignoreCase = true) || story.text.contains(searchQuery, ignoreCase = true)
@@ -65,7 +62,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     val previewPages = remember(config) {
         CopyingPdfDrawer.generatePreview(config, context)
     }
-    val pagerState = rememberPagerState(pageCount = { previewPages.size })
+    val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
         topBar = {
@@ -103,7 +100,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ВЫБОР КЛАССА
                 Text("Класс:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(1, 2, 3, 4).forEach { grade ->
@@ -119,9 +115,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ФИЛЬТРЫ
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Объем
                     var volExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = volExpanded, onExpandedChange = { volExpanded = it }, modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
@@ -136,7 +130,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             }
                         }
                     }
-                    // Тема
                     var themeExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }, modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
@@ -155,7 +148,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ПОИСК
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -170,7 +162,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // СПИСОК ТЕКСТОВ С ЧЕКБОКСАМИ
             items(filteredStories) { story ->
                 val isSelected = config.selectedStories.contains(story)
                 Card(
@@ -200,7 +191,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // НАСТРОЙКИ ПЕЧАТИ
                 Text("Как работаем:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
@@ -216,24 +206,40 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Как печатать:", style = MaterialTheme.typography.labelLarge)
+                Text("Настройки листа:", style = MaterialTheme.typography.labelLarge)
                 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Детей
-                    var childrenExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = childrenExpanded, onExpandedChange = { childrenExpanded = it }, modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = "Детей: ${config.childrenCount}", onValueChange = {}, readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childrenExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(expanded = childrenExpanded, onDismissRequest = { childrenExpanded = false }) {
-                            listOf(1, 2, 3, 4, 5).forEach { count ->
-                                DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(childrenCount = count); childrenExpanded = false })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Не разделять листы")
+                        Text("Печатать тексты подряд для экономии бумаги", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                    }
+                    Switch(
+                        checked = config.combineOnOnePage,
+                        onCheckedChange = { config = config.copy(combineOnOnePage = it) }
+                    )
+                }
+
+                if (!config.combineOnOnePage) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        var childrenExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = childrenExpanded, onExpandedChange = { childrenExpanded = it }, modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = "Детей: ${config.childrenCount}", onValueChange = {}, readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childrenExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = childrenExpanded, onDismissRequest = { childrenExpanded = false }) {
+                                listOf(1, 2, 3, 4, 5).forEach { count ->
+                                    DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(childrenCount = count); childrenExpanded = false })
+                                }
                             }
                         }
                     }
-                    // Шаг строк
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     var stepExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = stepExpanded, onExpandedChange = { stepExpanded = it }, modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
@@ -259,7 +265,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Добавить лист для письма", modifier = Modifier.weight(1f))
+                    Text("Добавить чистый лист для письма", modifier = Modifier.weight(1f))
                     Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -278,9 +284,11 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge)
-                if (previewPages.size > 1) {
-                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -310,7 +318,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     Text("• Выберите класс, объем текста и тему. В базе собраны авторские тексты для 1–4 классов.\n\n" +
                         "• В режиме «Списываем» текст печатается на листе, а ниже идут строки для переписывания. Это тренирует внимание и грамотность.\n\n" +
                         "• В режиме «Диктант» текст на листе не печатается (его читает взрослый с экрана), а ребёнок пишет под диктовку на строках.\n\n" +
-                        "• Вы можете настроить количество копий для нескольких детей, шаг строк, добавить чистый лист для продолжения письма и включить ч/б печать для экономии тонера.",
+                        "• Если включить «Не разделять листы», программа напечатает несколько выбранных текстов на одной странице подряд, чтобы сэкономить бумагу.",
                         style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(32.dp))
                 }
