@@ -1,6 +1,7 @@
 package com.example.a4umka.util
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -15,44 +16,106 @@ object SyllablePdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
-    // Генерирует список Bitmap для превью
-    fun generatePreviewPages(config: SyllableConfig, context: Context): List<android.graphics.Bitmap> {
+    // Генерация списка картинок (Bitmap) для карусели предпросмотра
+    fun generatePreviewPages(config: SyllableConfig, context: Context): List<Bitmap> {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return emptyList()
 
-        val pages = mutableListOf<android.graphics.Bitmap>()
-        var yPos = 150f
-        var bmp = android.graphics.Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), android.graphics.Bitmap.Config.ARGB_8888)
+        val pages = mutableListOf<Bitmap>()
+        var bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var canvas = Canvas(bmp)
-        
-        yPos = drawHeader(canvas, config, texts)
+        var currentY = drawHeader(canvas, config, texts)
 
         for (textObj in texts) {
-            // Проверяем, влезет ли хотя бы заголовок текста
-            if (yPos > PAGE_HEIGHT - 150f) {
+            // Проверяем, влезет ли заголовок текста на текущую страницу
+            if (currentY > PAGE_HEIGHT - 120f) {
                 pages.add(bmp)
-                bmp = android.graphics.Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), android.graphics.Bitmap.Config.ARGB_8888)
+                bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                 canvas = Canvas(bmp)
-                yPos = drawHeader(canvas, config, texts)
+                currentY = drawHeader(canvas, config, texts)
             }
-            
-            val nextY = drawTextBlock(canvas, textObj, yPos, config)
-            
-            // Если текст разорвался (перенесся на след страницу)
-            if (nextY > PAGE_HEIGHT - 50f) {
-                pages.add(bmp)
-                bmp = android.graphics.Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), android.graphics.Bitmap.Config.ARGB_8888)
-                canvas = Canvas(bmp)
-                yPos = drawHeader(canvas, config, texts)
-            } else {
-                yPos = nextY
+
+            val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
+            val titlePaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize + 4f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+
+            canvas.drawText(textObj.title, 40f, currentY, titlePaint)
+            currentY += titlePaint.textSize + 10f
+
+            val margin = 40f
+            val lineHeight = bodyPaint.textSize * 1.6f
+            val paragraphs = textObj.text.split("\n")
+
+            for (paragraph in paragraphs) {
+                val words = paragraph.split(" ")
+                var currentLine = ""
+                val lines = mutableListOf<String>()
+
+                for (word in words) {
+                    val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
+                    if (bodyPaint.measureText(testLine) > PAGE_WIDTH - margin * 2) {
+                        lines.add(currentLine)
+                        currentLine = word
+                    } else {
+                        currentLine = testLine
+                    }
+                }
+                if (currentLine.isNotEmpty()) lines.add(currentLine)
+
+                for (line in lines) {
+                    // Перенос на новую страницу для превью
+                    if (currentY > PAGE_HEIGHT - 60f) {
+                        pages.add(bmp)
+                        bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+                        canvas = Canvas(bmp)
+                        currentY = drawHeader(canvas, config, texts)
+                    }
+
+                    var currentX = margin
+                    val lineWords = line.split(" ")
+                    for (word in lineWords) {
+                        if (word.isEmpty()) continue
+                        val syllables = SyllableUtils.splitIntoSyllables(word)
+                        for (syllable in syllables) {
+                            canvas.drawText(syllable, currentX, currentY, bodyPaint)
+                            val textWidth = bodyPaint.measureText(syllable)
+
+                            val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
+                            val arcRect = RectF(currentX, currentY + 2f, currentX + textWidth, currentY + 15f)
+                            canvas.drawArc(arcRect, 0f, 180f, false, arcPaint)
+
+                            if (syllable.length == 1 && syllable[0].toString().lowercase() in "аеёиоуыэюя") {
+                                val dotPaint = Paint().apply { color = Color.DKGRAY }
+                                canvas.drawCircle(currentX + textWidth / 2f, currentY + 18f, 2f, dotPaint)
+                            }
+                            currentX += textWidth + 4f
+                        }
+                        currentX += bodyPaint.measureText(" ")
+                    }
+                    currentY += lineHeight
+                }
             }
+
+            if (config.showQuestions && textObj.questions.isNotEmpty()) {
+                currentY += 10f
+                val questionPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize - 4f; color = Color.DKGRAY }
+                for (q in textObj.questions) {
+                    if (currentY > PAGE_HEIGHT - 60f) {
+                        pages.add(bmp)
+                        bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+                        canvas = Canvas(bmp)
+                        currentY = drawHeader(canvas, config, texts)
+                    }
+                    canvas.drawText("• $q", margin, currentY, questionPaint)
+                    currentY += questionPaint.textSize * 1.5f
+                }
+            }
+            currentY += config.textSpacing
         }
         pages.add(bmp)
-
         return pages
     }
 
+    // Генерация PDF (логика идентична превью, но рисует в документ)
     fun drawDocument(document: PdfDocument, config: SyllableConfig, context: Context) {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return
@@ -63,21 +126,7 @@ object SyllablePdfDrawer {
         var currentY = drawHeader(page.canvas, config, texts)
 
         for (textObj in texts) {
-            val bodyPaint = Paint().apply {
-                isAntiAlias = true
-                textSize = config.fontSize
-                color = Color.BLACK
-                typeface = Typeface.DEFAULT
-            }
-            val titlePaint = Paint().apply {
-                isAntiAlias = true
-                textSize = config.fontSize + 4f
-                color = Color.DKGRAY
-                typeface = Typeface.DEFAULT_BOLD
-            }
-
-            // Заголовок текста
-            if (currentY > PAGE_HEIGHT - 100f) {
+            if (currentY > PAGE_HEIGHT - 120f) {
                 document.finishPage(page)
                 pageNum++
                 pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
@@ -85,6 +134,9 @@ object SyllablePdfDrawer {
                 currentY = drawHeader(page.canvas, config, texts)
             }
             
+            val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
+            val titlePaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize + 4f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+
             page.canvas.drawText(textObj.title, 40f, currentY, titlePaint)
             currentY += titlePaint.textSize + 10f
 
@@ -109,7 +161,7 @@ object SyllablePdfDrawer {
                 if (currentLine.isNotEmpty()) lines.add(currentLine)
 
                 for (line in lines) {
-                    if (currentY > PAGE_HEIGHT - 50f) {
+                    if (currentY > PAGE_HEIGHT - 60f) {
                         document.finishPage(page)
                         pageNum++
                         pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
@@ -126,9 +178,7 @@ object SyllablePdfDrawer {
                             page.canvas.drawText(syllable, currentX, currentY, bodyPaint)
                             val textWidth = bodyPaint.measureText(syllable)
 
-                            val arcPaint = Paint().apply {
-                                isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f
-                            }
+                            val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
                             val arcRect = RectF(currentX, currentY + 2f, currentX + textWidth, currentY + 15f)
                             page.canvas.drawArc(arcRect, 0f, 180f, false, arcPaint)
 
@@ -144,12 +194,11 @@ object SyllablePdfDrawer {
                 }
             }
 
-            // Вопросы
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
                 currentY += 10f
                 val questionPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize - 4f; color = Color.DKGRAY }
                 for (q in textObj.questions) {
-                    if (currentY > PAGE_HEIGHT - 50f) {
+                    if (currentY > PAGE_HEIGHT - 60f) {
                         document.finishPage(page)
                         pageNum++
                         pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
@@ -160,10 +209,8 @@ object SyllablePdfDrawer {
                     currentY += questionPaint.textSize * 1.5f
                 }
             }
-            
             currentY += config.textSpacing
         }
-        
         document.finishPage(page)
     }
 
@@ -194,9 +241,5 @@ object SyllablePdfDrawer {
         canvas.drawText("Чтение по слогам", PAGE_WIDTH / 2f, 90f, titlePaint)
 
         return 130f
-    }
-    
-    private fun drawTextBlock(canvas: Canvas, textObj: SyllableText, currentY: Float, config: SyllableConfig): Float {
-        return currentY + 100f
     }
 }
