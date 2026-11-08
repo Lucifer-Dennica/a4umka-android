@@ -4,17 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
-data class Category(
-    val id: String,
-    val title: String,
-    val icon: ImageVector
-)
-
-data class TaskItem(
-    val id: String,
-    val title: String,
-    val description: String
-)
+data class Category(val id: String, val title: String, val icon: ImageVector)
+data class TaskItem(val id: String, val title: String, val description: String)
 
 object AppContent {
     val categories = listOf(
@@ -35,7 +26,7 @@ object AppContent {
             TaskItem("letter_ribbon", "Лента букв", "Гласные и согласные, звонкие и глухие"),
             TaskItem("syllables", "Слоги и слова", "Чтение по слогам с дугами и точками"),
             TaskItem("comprehension", "Чтение с вопросами", "Тексты для проверки понимания прочитанного"),
-            TaskItem("copying", "Списывание и диктанты", "Тексты и разлинованные листы для письма"),
+            TaskItem("copying", "Списывание и диктанты", "Тексты и линованные листы для письма"),
             TaskItem("rebus", "Ребусы", "Разгадай зашифрованные слова")
         )
         "hand" -> listOf(
