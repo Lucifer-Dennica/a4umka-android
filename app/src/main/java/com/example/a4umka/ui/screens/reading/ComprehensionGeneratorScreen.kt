@@ -9,7 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
@@ -38,11 +37,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(ComprehensionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
-    
-    // Состояние для выпадающего списка рассказов
     var dropdownExpanded by remember { mutableStateOf(false) }
 
-    // Инициализация случайного рассказа при старте
     LaunchedEffect(Unit) {
         if (config.selectedStory == null) {
             config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
@@ -87,7 +83,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ВЫБОР КЛАССА
                 Text("Класс:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(1, 2, 3, 4).forEach { grade ->
@@ -107,7 +102,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ВЫПАДАЮЩИЙ СПИСОК РАССКАЗОВ
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Рассказ:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     TextButton(onClick = {
@@ -140,7 +134,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     ExposedDropdownMenu(
                         expanded = dropdownExpanded,
                         onDismissRequest = { dropdownExpanded = false },
-                        modifier = Modifier.heightIn(max = 350.dp) // Ограничиваем высоту, чтобы было удобно скроллить
+                        modifier = Modifier.heightIn(max = 350.dp)
                     ) {
                         stories.forEach { story ->
                             DropdownMenuItem(
@@ -163,7 +157,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // НАСТРОЙКИ ПЕЧАТИ
                 Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -208,12 +201,37 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Чтение с вопросами", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("Тексты для чтения с вопросами", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("• Выберите класс, чтобы подобрать рассказ нужной сложности. В базе есть рассказы от 51 до 175 слов.\n\n" +
-                        "• Кнопка «Случайный» выберет для вас случайный рассказ из выбранного класса.\n\n" +
-                        "• При включении «Отдельный лист ответов» в PDF добавится вторая страница с вопросами и полями для ответов, а также подсказками для проверки техники чтения.",
-                        style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Этот раздел помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.\n\n" +
+                        "В подборке 100 рассказов — по 25 для каждого класса. Выберите конкретную историю или случайный вариант.\n\n" +
+                        "• Количество слов по строкам — дополнительная разметка для проверки техники чтения. Число справа показывает сумму слов от начала рассказа. Числа можно отключить.\n\n" +
+                        "• Отдельный лист ответов добавит вторую страницу с подсказками для взрослого и полями для записи ответов ребёнка.\n\n" +
+                        "• Цветная или чёрно-белая печать — выберите подходящее оформление перед созданием листа.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Класс — ориентир сложности", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "1 класс — 51–58 слов. Первые короткие истории. Вопросы предлагают вспомнить героев и простую причину события.\n\n" +
+                        "2 класс — 82–97 слов. События и поступки. Ребёнок объясняет поступки героев и находит подтверждение в тексте.\n\n" +
+                        "3 класс — 114–135 слов. Наблюдения и выводы. Нужно связать детали рассказа и заметить, как изменилось отношение героя.\n\n" +
+                        "4 класс — 154–175 слов. Причины и главная мысль. Важны точность деталей, причинные связи и смысл поступков.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Как обсуждать прочитанное", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "• Начните с устного ответа. Дайте ребёнку время обдумать содержание.\n" +
+                        "• Попросите показать предложение, на которое он опирается.\n" +
+                        "• Перечитайте трудный фрагмент вместе, если ответить пока не получается.\n" +
+                        "• Запишите короткий ответ, если хотите потренировать письменную речь.\n\n" +
+                        "Ответы на листе взрослого — смысловые ориентиры. Важны понимание истории и соответствие тексту, а не дословное повторение.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
