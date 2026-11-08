@@ -11,5 +11,6 @@ data class CopyingConfig(
     val signature: String = "",
     val addBlankPage: Boolean = false,
     val isBlackAndWhite: Boolean = false,
-    val fontSize: Float = 16f
+    val fontSize: Float = 16f,
+    val combineOnOnePage: Boolean = false // <-- НОВОЕ: печатать всё подряд на одном листе
 )
