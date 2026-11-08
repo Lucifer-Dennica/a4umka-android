@@ -3,11 +3,15 @@ package com.example.a4umka.ui.screens.reading
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,9 +21,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.CopyingConfig
-import com.example.a4umka.data.CopyingLineType
+import com.example.a4umka.data.CopyingData
 import com.example.a4umka.data.CopyingMode
+import com.example.a4umka.data.CopyingStory
 import com.example.a4umka.util.CopyingPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.launch
@@ -34,9 +40,32 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(CopyingConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    val previewBitmap = remember(config) {
+    // Состояния для поиска и фильтров
+    var searchQuery by remember { mutableStateOf("") }
+    var volumeFilter by remember { mutableStateOf("Любой объём") }
+    var themeFilter by remember { mutableStateOf("Все темы") }
+
+    // Получаем базовый список и фильтруем его
+    val allStories = CopyingData.getStories(config.grade)
+    val filteredStories = allStories.filter { story ->
+        val matchesSearch = story.title.contains(searchQuery, ignoreCase = true) || story.text.contains(searchQuery, ignoreCase = true)
+        val matchesVolume = when (volumeFilter) {
+            "До 50 слов" -> story.wordCount <= 50
+            "Больше 50 слов" -> story.wordCount > 50
+            else -> true
+        }
+        val matchesTheme = when (themeFilter) {
+            "Природа" -> story.theme == "Природа"
+            "Дом" -> story.theme == "Дом"
+            else -> true
+        }
+        matchesSearch && matchesVolume && matchesTheme
+    }
+
+    val previewPages = remember(config) {
         CopyingPdfDrawer.generatePreview(config, context)
     }
+    val pagerState = rememberPagerState(pageCount = { previewPages.size })
 
     Scaffold(
         topBar = {
@@ -52,6 +81,10 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
                     }
                     IconButton(onClick = {
+                        if (config.selectedStories.isEmpty()) {
+                            scope.launch { snackbarHostState.showSnackbar("Выберите хотя бы один текст") }
+                            return@IconButton
+                        }
                         val result = PdfExporter.exportCopying(context, config)
                         scope.launch {
                             if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
@@ -70,12 +103,110 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                Text("Режим:", style = MaterialTheme.typography.labelLarge)
+                // ВЫБОР КЛАССА
+                Text("Класс:", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(1, 2, 3, 4).forEach { grade ->
+                        FilterChip(
+                            selected = config.grade == grade,
+                            onClick = { 
+                                config = config.copy(grade = grade, selectedStories = emptyList())
+                            },
+                            label = { Text(grade.toString()) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ФИЛЬТРЫ
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Объем
+                    var volExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = volExpanded, onExpandedChange = { volExpanded = it }, modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = volumeFilter, onValueChange = {}, readOnly = true,
+                            label = { Text("Объём", fontSize = 12.sp) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = volExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = volExpanded, onDismissRequest = { volExpanded = false }) {
+                            listOf("Любой объём", "До 50 слов", "Больше 50 слов").forEach { opt ->
+                                DropdownMenuItem(text = { Text(opt) }, onClick = { volumeFilter = opt; volExpanded = false })
+                            }
+                        }
+                    }
+                    // Тема
+                    var themeExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }, modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = themeFilter, onValueChange = {}, readOnly = true,
+                            label = { Text("Тема", fontSize = 12.sp) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
+                            listOf("Все темы", "Природа", "Дом").forEach { opt ->
+                                DropdownMenuItem(text = { Text(opt) }, onClick = { themeFilter = opt; themeExpanded = false })
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // ПОИСК
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Поиск по названию или тексту") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Подходит: ${filteredStories.size}. Выбрано: ${config.selectedStories.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // СПИСОК ТЕКСТОВ С ЧЕКБОКСАМИ
+            items(filteredStories) { story ->
+                val isSelected = config.selectedStories.contains(story)
+                Card(
+                    onClick = {
+                        val newList = config.selectedStories.toMutableList()
+                        if (isSelected) newList.remove(story) else newList.add(story)
+                        config = config.copy(selectedStories = newList)
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = isSelected, onCheckedChange = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(story.title, fontWeight = FontWeight.Bold)
+                            Text("${story.wordCount} слов • ${story.theme}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // НАСТРОЙКИ ПЕЧАТИ
+                Text("Как работаем:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = config.mode == CopyingMode.COPYING,
                         onClick = { config = config.copy(mode = CopyingMode.COPYING) },
-                        label = { Text("Списывание") }
+                        label = { Text("Списываем") }
                     )
                     FilterChip(
                         selected = config.mode == CopyingMode.DICTATION,
@@ -85,78 +216,101 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+                Text("Как печатать:", style = MaterialTheme.typography.labelLarge)
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Детей
+                    var childrenExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = childrenExpanded, onExpandedChange = { childrenExpanded = it }, modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = "Детей: ${config.childrenCount}", onValueChange = {}, readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childrenExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = childrenExpanded, onDismissRequest = { childrenExpanded = false }) {
+                            listOf(1, 2, 3, 4, 5).forEach { count ->
+                                DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(childrenCount = count); childrenExpanded = false })
+                            }
+                        }
+                    }
+                    // Шаг строк
+                    var stepExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = stepExpanded, onExpandedChange = { stepExpanded = it }, modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = "Шаг: ${config.lineStep} мм", onValueChange = {}, readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = stepExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = stepExpanded, onDismissRequest = { stepExpanded = false }) {
+                            listOf(8, 10, 12, 15).forEach { step ->
+                                DropdownMenuItem(text = { Text("$step мм") }, onClick = { config = config.copy(lineStep = step); stepExpanded = false })
+                            }
+                        }
+                    }
+                }
 
-                OutlinedTextField(
-                    value = config.title,
-                    onValueChange = { config = config.copy(title = it) },
-                    label = { Text("Заголовок") },
-                    modifier = Modifier.fillMaxWidth()
-                )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = config.text,
-                    onValueChange = { config = config.copy(text = it) },
-                    label = { Text("Текст (для диктанта он не печатается)") },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    maxLines = 5
+                    value = config.signature,
+                    onValueChange = { config = config.copy(signature = it) },
+                    label = { Text("Подпись на листе (необязательно)") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Настройки листа:", style = MaterialTheme.typography.labelLarge)
-                
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Крупный шрифт", modifier = Modifier.weight(1f))
-                    Switch(checked = config.isLargeFont, onCheckedChange = { config = config.copy(isLargeFont = it) })
+                    Text("Добавить лист для письма", modifier = Modifier.weight(1f))
+                    Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Чёрно-белый вариант", modifier = Modifier.weight(1f))
+                    Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
                 }
                 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Наклонные линии (косая)", modifier = Modifier.weight(1f))
-                    Switch(
-                        checked = config.lineType == CopyingLineType.SLANTED,
-                        onCheckedChange = { 
-                            config = config.copy(lineType = if (it) CopyingLineType.SLANTED else CopyingLineType.STANDARD) 
-                        }
-                    )
-                }
-
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text("Количество строк: ${config.linesCount}", fontSize = 14.sp)
+                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
                     Slider(
-                        value = config.linesCount.toFloat(),
-                        onValueChange = { config = config.copy(linesCount = it.toInt()) },
-                        valueRange = 5f..20f,
-                        steps = 14
+                        value = config.fontSize,
+                        onValueChange = { config = config.copy(fontSize = it) },
+                        valueRange = 12f..24f,
+                        steps = 6
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+                Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge)
+                if (previewPages.size > 1) {
+                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Image(
-                        bitmap = previewBitmap.asImageBitmap(),
-                        contentDescription = "Предпросмотр",
+                if (previewPages.isNotEmpty()) {
+                    HorizontalPager(
+                        state = pagerState,
                         modifier = Modifier.fillMaxWidth().aspectRatio(CopyingPdfDrawer.PAGE_WIDTH / CopyingPdfDrawer.PAGE_HEIGHT)
-                    )
+                    ) { page ->
+                        Image(
+                            bitmap = previewPages[page].asImageBitmap(),
+                            contentDescription = "Предпросмотр",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Списывание и диктанты", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("Тексты для списывания и диктантов", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("• В режиме «Списывание» текст печатается сверху, а ниже идут пустые строки для тренировки письма.\n\n" +
-                        "• В режиме «Диктант» печатаются только строки. Взрослый читает текст с экрана телефона, а ребёнок пишет его на листе.\n\n" +
-                        "• Вы можете выбрать крупный шрифт для первых занятий и включить наклонные линии, чтобы ребёнку было легче соблюдать наклон букв.",
+                    Text("• Выберите класс, объем текста и тему. В базе собраны авторские тексты для 1–4 классов.\n\n" +
+                        "• В режиме «Списываем» текст печатается на листе, а ниже идут строки для переписывания. Это тренирует внимание и грамотность.\n\n" +
+                        "• В режиме «Диктант» текст на листе не печатается (его читает взрослый с экрана), а ребёнок пишет под диктовку на строках.\n\n" +
+                        "• Вы можете настроить количество копий для нескольких детей, шаг строк, добавить чистый лист для продолжения письма и включить ч/б печать для экономии тонера.",
                         style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(32.dp))
                 }
