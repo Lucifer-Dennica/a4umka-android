@@ -43,20 +43,23 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     var volumeFilter by remember { mutableStateOf("Любой объём") }
     var themeFilter by remember { mutableStateOf("Все темы") }
 
-    val allStories = CopyingData.getStories(config.grade)
-    val filteredStories = allStories.filter { story ->
-        val matchesSearch = story.title.contains(searchQuery, ignoreCase = true) || story.text.contains(searchQuery, ignoreCase = true)
-        val matchesVolume = when (volumeFilter) {
-            "До 50 слов" -> story.wordCount <= 50
-            "Больше 50 слов" -> story.wordCount > 50
-            else -> true
+    // ОПТИМИЗАЦИЯ: remember для фильтрации, чтобы не лагало при скролле
+    val filteredStories = remember(searchQuery, volumeFilter, themeFilter, config.grade) {
+        val allStories = CopyingData.getStories(config.grade)
+        allStories.filter { story ->
+            val matchesSearch = story.title.contains(searchQuery, ignoreCase = true) || story.text.contains(searchQuery, ignoreCase = true)
+            val matchesVolume = when (volumeFilter) {
+                "До 50 слов" -> story.wordCount <= 50
+                "Больше 50 слов" -> story.wordCount > 50
+                else -> true
+            }
+            val matchesTheme = when (themeFilter) {
+                "Природа" -> story.theme == "Природа"
+                "Дом" -> story.theme == "Дом"
+                else -> true
+            }
+            matchesSearch && matchesVolume && matchesTheme
         }
-        val matchesTheme = when (themeFilter) {
-            "Природа" -> story.theme == "Природа"
-            "Дом" -> story.theme == "Дом"
-            else -> true
-        }
-        matchesSearch && matchesVolume && matchesTheme
     }
 
     val previewPages = remember(config) {
@@ -162,7 +165,8 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            items(filteredStories) { story ->
+            // ОПТИМИЗАЦИЯ: добавлен key для списка
+            items(filteredStories, key = { it.id }) { story ->
                 val isSelected = config.selectedStories.contains(story)
                 Card(
                     onClick = {
@@ -210,8 +214,8 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Не разделять листы")
-                        Text("Печатать тексты подряд для экономии бумаги", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        Text("Печатать несколько текстов на одном листе")
+                        Text("Для экономии бумаги (тексты идут подряд)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                     }
                     Switch(
                         checked = config.combineOnOnePage,
@@ -324,7 +328,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                         "Диктант: на детском листе нет рассказа для подсматривания. Взрослый читает полный текст с общего листа, затем диктует предложения.\n\n" +
                         "На выбор есть шаг строк 8 или 10 мм. При 10 мм расстояние между основными линиями больше; при 8 мм на той же высоте помещается больше строк. Выбирайте по привычному размеру письма.\n\n" +
                         "Если ребёнок пишет крупно или выбран длинный рассказ, включите дополнительный лист. Для каждого выбранного текста каждому ребёнку добавится ещё одна разлинованная страница.\n\n" +
-                        "Включите «Не разделять листы», если хотите напечатать несколько коротких текстов на одной странице подряд для экономии бумаги.",
+                        "Включите «Печатать несколько текстов на одном листе», если хотите напечатать несколько коротких текстов на одной странице подряд для экономии бумаги.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
