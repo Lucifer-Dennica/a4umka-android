@@ -58,6 +58,12 @@ object PdfExporter {
         return saveDocument(context, document, "copying_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportDiary(context: Context, config: DiaryConfig): String? {
+        val document = PdfDocument()
+        DiaryPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "diary_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
