@@ -16,7 +16,8 @@ import com.example.a4umka.ui.screens.hand.PdfExportScreen
 import com.example.a4umka.ui.screens.reading.AlphabetGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveRibbonScreen
 import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen
-import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen // <-- НОВЫЙ ИМПОРТ
+import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
+import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
 
 object Routes {
     const val HOME = "home"
@@ -26,7 +27,8 @@ object Routes {
     const val LETTER = "letter/{letter}"
     const val PDF_EXPORT = "pdf_export/{letter}"
     const val INTERACTIVE_RIBBON = "interactive_ribbon"
-    const val SYLLABLE_READING = "syllable_reading" // <-- НОВЫЙ МАРШРУТ
+    const val SYLLABLE_READING = "syllable_reading"
+    const val COMPREHENSION = "comprehension"
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -83,9 +85,11 @@ fun NavGraph() {
                         onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_RIBBON) }
                     )
                 }
-                // НОВЫЙ МАРШРУТ ДЛЯ ЧТЕНИЯ ПО СЛОГАМ
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
+                }
+                categoryId == "reading" && taskId == "comprehension" -> {
+                    navController.navigate(Routes.COMPREHENSION)
                 }
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
@@ -101,6 +105,10 @@ fun NavGraph() {
         
         composable(Routes.INTERACTIVE_RIBBON) {
             InteractiveRibbonScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.COMPREHENSION) {
+            ComprehensionGeneratorScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
