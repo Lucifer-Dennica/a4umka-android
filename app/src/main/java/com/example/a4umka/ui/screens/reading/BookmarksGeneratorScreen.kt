@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
 import com.example.a4umka.util.BookmarksPdfDrawer
 import com.example.a4umka.util.PdfExporter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,9 +36,19 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(BookmarksConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    val previewPages = remember(config) {
-        BookmarksPdfDrawer.generatePreview(config, context)
+    // ДЕБАУНС: ждём 300мс после последнего изменения, потом рендерим
+    var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
+    
+    LaunchedEffect(config) {
+        delay(300) // Дебаунс чтобы не рендерить при каждом клике
+        previewPages = BookmarksPdfDrawer.generatePreview(config, context)
     }
+
+    // При выходе чистим кэш
+    DisposableEffect(Unit) {
+        onDispose { BookmarksPdfDrawer.clearCache() }
+    }
+
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
@@ -72,7 +83,6 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ГЛОБАЛЬНЫЕ НАСТРОЙКИ
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -96,7 +106,6 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                 Text("Настройки 4 закладок:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
-            // НАСТРОЙКИ ДЛЯ КАЖДОЙ ИЗ 4 ЗАКЛАДОК
             items(4) { index ->
                 val bm = config.bookmarks[index]
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -104,7 +113,6 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                         Text("Закладка ${index + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Что на ней
                         var typeExpanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(expanded = typeExpanded, onExpandedChange = { typeExpanded = it }) {
                             OutlinedTextField(
@@ -137,15 +145,14 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Герой
                             var heroExpanded by remember { mutableStateOf(false) }
                             ExposedDropdownMenuBox(expanded = heroExpanded, onExpandedChange = { heroExpanded = it }, modifier = Modifier.weight(1f)) {
                                 OutlinedTextField(
                                     value = when(bm.character) {
                                         BookmarkCharacter.GIRL_BOW -> "👧 Девочка"
                                         BookmarkCharacter.BOY_SCARF -> "👦 Мальчик"
-                                        BookmarkCharacter.GIRL_CAT -> "🐱 С котом"
-                                        BookmarkCharacter.BOY_PLANE -> "✈️ С самолётиком"
+                                        BookmarkCharacter.GIRL_CAT -> "🐱 Кот"
+                                        BookmarkCharacter.BOY_PLANE -> "✈️ Самолётик"
                                     }, onValueChange = {}, readOnly = true,
                                     label = { Text("Герой", fontSize = 12.sp) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = heroExpanded) },
@@ -155,8 +162,8 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                                     listOf(
                                         BookmarkCharacter.GIRL_BOW to "👧 Девочка",
                                         BookmarkCharacter.BOY_SCARF to "👦 Мальчик",
-                                        BookmarkCharacter.GIRL_CAT to "🐱 С котом",
-                                        BookmarkCharacter.BOY_PLANE to "✈️ С самолётиком"
+                                        BookmarkCharacter.GIRL_CAT to "🐱 Кот",
+                                        BookmarkCharacter.BOY_PLANE to "✈️ Самолётик"
                                     ).forEach { (c, name) ->
                                         DropdownMenuItem(text = { Text(name) }, onClick = {
                                             val newList = config.bookmarks.toMutableList()
@@ -168,7 +175,6 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                             
-                            // Узор
                             var patternExpanded by remember { mutableStateOf(false) }
                             ExposedDropdownMenuBox(expanded = patternExpanded, onExpandedChange = { patternExpanded = it }, modifier = Modifier.weight(1f)) {
                                 OutlinedTextField(
@@ -200,7 +206,6 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                             }
                         }
 
-                        // Дополнительные поля в зависимости от типа
                         if (bm.type == BookmarkType.NAME) {
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedTextField(
@@ -306,7 +311,7 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Сторона ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
@@ -320,11 +325,13 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                         state = pagerState,
                         modifier = Modifier.fillMaxWidth().aspectRatio(BookmarksPdfDrawer.PAGE_WIDTH / BookmarksPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
-                        Image(
-                            bitmap = previewPages[page].asImageBitmap(),
-                            contentDescription = "Предпросмотр",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        if (page < previewPages.size) {
+                            Image(
+                                bitmap = previewPages[page].asImageBitmap(),
+                                contentDescription = "Предпросмотр",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }
@@ -337,13 +344,7 @@ fun BookmarksGeneratorScreen(onBack: () -> Unit) {
                     Text("Закладки для книг", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Генератор собирает лист A4, на котором помещаются четыре закладки для книг — и каждую вы настраиваете отдельно. Одному ребёнку — закладку-раскраску, второму — закладку с именем, себе — шпаргалку с таблицей умножения, а четвёртой сделать счётчик прочитанных книг.\n\n" +
-                        "• Вторым листом печатаются обороты. Порядок закладок на нём уже зеркальный, поэтому при двусторонней печати имя и рисунок оказываются на своих местах.\n\n" +
-                        "• Раскраска — контурный рисунок, узорная рамка, окно под свой рисунок и строка для имени.\n\n" +
-                        "• С именем — имя крупно на всю ширину, рисунок и окошко «остановился на странице».\n\n" +
-                        "• Шпаргалка — таблица умножения на выбранное число, русский алфавит или состав числа 10.\n\n" +
-                        "• Счётчик прочитанного — клетки, которые закрашивают: 20 книг, 50 сотен страниц или 30 дней чтения.\n\n" +
-                        "• Чёрно-белый режим — только контур, картриджа уходит меньше, а раскрашивать даже интереснее.",
+                        "Генератор собирает лист A4, на котором помещаются четыре закладки. Каждую настраиваете отдельно. Вторым листом печатаются обороты в зеркальном порядке.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
