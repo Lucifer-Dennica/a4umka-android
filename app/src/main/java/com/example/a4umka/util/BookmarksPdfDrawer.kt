@@ -87,29 +87,45 @@ object BookmarksPdfDrawer {
             BookmarkPattern.HEARTS -> Color.parseColor("#F44336")
         }
 
-        val textColor = if (isBW) Color.BLACK else Color.DKGRAY
-
-        val bgPaint = Paint().apply { color = if (isBW) Color.WHITE else Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
-        canvas.drawRect(left, top, right, bottom, bgPaint)
-
-        val borderPaint = Paint().apply { color = mainColor; style = Paint.Style.STROKE; strokeWidth = 2f }
-        canvas.drawRect(left, top, right, bottom, borderPaint)
-
-        // Узор по краям (оставляем текстовый, чтобы не перегружать память)
-        val patternPaint = Paint().apply { color = mainColor; textSize = 16f; textAlign = Paint.Align.CENTER }
-        val patternStr = when(settings.pattern) {
-            BookmarkPattern.LEAVES -> "🍃"
-            BookmarkPattern.STARS -> "★"
-            BookmarkPattern.WAVES -> "~"
-            BookmarkPattern.HEARTS -> "♥"
+        // --- 1. ФОН (Загружаем картинку узора) ---
+        val patternName = when(settings.pattern) {
+            BookmarkPattern.LEAVES -> "leaves"
+            BookmarkPattern.STARS -> "stars"
+            BookmarkPattern.WAVES -> "waves"
+            BookmarkPattern.HEARTS -> "hearts"
         }
-        for (y in (top.toInt() + 30) until (bottom.toInt() - 30) step 40) {
-            canvas.drawText(patternStr, left + 15f, y.toFloat(), patternPaint)
-            canvas.drawText(patternStr, right - 15f, y.toFloat(), patternPaint)
+        
+        val suffix = if (isBW) "_bw" else ""
+        val backPrefix = if (isBackside) "back_" else ""
+        
+        val bgBitmap = loadImageFromAssets(context, "${backPrefix}${patternName}${suffix}")
+        
+        if (bgBitmap != null) {
+            val rect = RectF(left, top, right, bottom)
+            canvas.drawBitmap(bgBitmap, null, rect, null)
+        } else {
+            // Заглушка, если нет картинки
+            val bgPaint = Paint().apply { color = if (isBW) Color.WHITE else Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
+            canvas.drawRect(left, top, right, bottom, bgPaint)
+            val borderPaint = Paint().apply { color = mainColor; style = Paint.Style.STROKE; strokeWidth = 2f }
+            canvas.drawRect(left, top, right, bottom, borderPaint)
+            
+            val patternPaint = Paint().apply { color = mainColor; textSize = 16f; textAlign = Paint.Align.CENTER }
+            val patternStr = when(settings.pattern) {
+                BookmarkPattern.LEAVES -> "🍃"
+                BookmarkPattern.STARS -> "★"
+                BookmarkPattern.WAVES -> "~"
+                BookmarkPattern.HEARTS -> "♥"
+            }
+            for (y in (top.toInt() + 30) until (bottom.toInt() - 30) step 40) {
+                canvas.drawText(patternStr, left + 15f, y.toFloat(), patternPaint)
+                canvas.drawText(patternStr, right - 15f, y.toFloat(), patternPaint)
+            }
         }
 
+        // --- 2. ОБОРОТНАЯ СТОРОНА ---
         if (isBackside) {
-            val textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; textAlign = Paint.Align.CENTER }
+            val textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = mainColor; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Здесь живут истории", centerX, top + 60f, textPaint)
             
             val linePaint = Paint().apply { color = mainColor; strokeWidth = 1f }
@@ -122,12 +138,7 @@ object BookmarksPdfDrawer {
             return
         }
 
-        // ЛИЦЕВАЯ СТОРОНА
-        val titlePaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
-        val linePaint = Paint().apply { color = mainColor; strokeWidth = 1f }
-
-        // --- ЗАГРУЗКА КАРТИНКИ ГЕРОЯ ---
+        // --- 3. ГЕРОЙ (Загружаем картинку персонажа) ---
         val heroName = when(settings.character) {
             BookmarkCharacter.GIRL_BOW -> "girl_bow"
             BookmarkCharacter.BOY_SCARF -> "boy_scarf"
@@ -135,18 +146,20 @@ object BookmarksPdfDrawer {
             BookmarkCharacter.BOY_PLANE -> "boy_plane"
         }
         
-        val heroBitmap = loadImageFromAssets(context, heroName)
+        val heroBitmap = loadImageFromAssets(context, "${heroName}${suffix}")
+        
+        var heroBottomY = top + 180f // Куда будет смещен текст после героя
         
         if (heroBitmap != null) {
-            // Рисуем картинку (масштабируем под ширину закладки)
-            val imgSize = width * 0.7f
+            val imgSize = width * 0.6f
             val leftImg = centerX - imgSize / 2f
-            val topImg = top + 30f
+            val topImg = top + 40f
             val rightImg = centerX + imgSize / 2f
             val bottomImg = topImg + imgSize
             canvas.drawBitmap(heroBitmap, null, RectF(leftImg, topImg, rightImg, bottomImg), null)
+            heroBottomY = bottomImg + 20f
         } else {
-            // Если картинки нет, рисуем эмодзи
+            // Заглушка (эмодзи)
             val heroEmoji = when(settings.character) {
                 BookmarkCharacter.GIRL_BOW -> "👧"
                 BookmarkCharacter.BOY_SCARF -> "👦"
@@ -155,9 +168,15 @@ object BookmarksPdfDrawer {
             }
             val heroPaint = Paint().apply { textSize = 60f; textAlign = Paint.Align.CENTER }
             canvas.drawText(heroEmoji, centerX, top + 100f, heroPaint)
+            heroBottomY = top + 140f
         }
 
-        var currentY = top + 180f // Сдвигаем текст ниже картинки
+        // --- 4. КОНТЕНТ (Текст/Таблицы) ---
+        val titlePaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
+        val linePaint = Paint().apply { color = mainColor; strokeWidth = 1f }
+
+        var currentY = heroBottomY
 
         when (settings.type) {
             BookmarkType.COLORING -> {
@@ -175,7 +194,7 @@ object BookmarksPdfDrawer {
             BookmarkType.NAME -> {
                 val nameStr = if (settings.name.isNotBlank()) settings.name else "Имя"
                 val namePaint = Paint().apply { textSize = 22f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                canvas.drawText(nameStr, centerX, top + 50f, namePaint) // Имя пишем сверху
+                canvas.drawText(nameStr, centerX, top + 40f, namePaint) // Имя пишем сверху
                 
                 canvas.drawText("читает книги", centerX, bottom - 180f, titlePaint)
                 
