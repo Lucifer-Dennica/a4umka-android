@@ -81,7 +81,7 @@ object DiaryPdfDrawer {
 
         val isBW = config.color == DiaryColor.BLACK_WHITE
         val textColor = if (isBW) Color.BLACK else Color.parseColor("#1B5E20")
-        val lineColor = if (isBW) Color.LTGRAY else Color.parseColor("#A5D6A7")
+        val lineColor = if (isBW) Color.LTGRAY else Color.parseColor("#81C784")
 
         // 1. Титульный лист
         if (config.includeTitlePage) {
@@ -94,7 +94,7 @@ object DiaryPdfDrawer {
         // 2. Страницы для книг
         for (i in 1..config.bookPagesCount) {
             if (config.pageType == DiaryPageType.SCHOOL) {
-                drawSchoolBookPage(canvas, config, margin, i, textColor, lineColor)
+                drawSchoolBookPage(canvas, config, margin, i, textColor, lineColor, canvasProvider, onPageFinished)
             } else {
                 drawPictureBookPage(canvas, config, margin, i, textColor, lineColor)
             }
@@ -158,7 +158,11 @@ object DiaryPdfDrawer {
         canvas.drawText("Нарисуй обложку любимой книги", PAGE_WIDTH / 2f, currentY + 30f, hintPaint)
     }
 
-    private fun drawSchoolBookPage(canvas: Canvas, config: DiaryConfig, margin: Float, pageNum: Int, textColor: Int, lineColor: Int) {
+    private fun drawSchoolBookPage(
+        startCanvas: Canvas, config: DiaryConfig, margin: Float, pageNum: Int, textColor: Int, lineColor: Int,
+        canvasProvider: (Int) -> Canvas, onPageFinished: () -> Unit
+    ) {
+        var canvas = startCanvas
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 24f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
         }
@@ -170,21 +174,33 @@ object DiaryPdfDrawer {
         var currentY = 100f
         val labelPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT_BOLD }
         val linePaint = Paint().apply { color = lineColor; strokeWidth = 1f }
-        val fieldSpacing = 40f
 
-        fun drawField(label: String, heightMultiplier: Float = 1f) {
-            if (currentY > PAGE_HEIGHT - 60f) return
+        fun drawField(label: String, linesCount: Int = 1) {
+            val fieldHeight = linesCount * 25f
+            if (currentY + fieldHeight > PAGE_HEIGHT - 60f) return
+            
             canvas.drawText(label, margin, currentY, labelPaint)
             currentY += 15f
             
-            val fieldHeight = fieldSpacing * heightMultiplier
             if (config.ruling == DiaryRuling.NONE) {
                 canvas.drawLine(margin, currentY + fieldHeight - 10f, PAGE_WIDTH - margin, currentY + fieldHeight - 10f, linePaint)
             } else {
                 var y = currentY
-                val step = if (config.ruling == DiaryRuling.WIDE) 12f * 2.83f else 8f * 2.83f
+                val step = when(config.ruling) {
+                    DiaryRuling.WIDE -> 12f * 2.83f
+                    DiaryRuling.STANDARD -> 8f * 2.83f
+                    DiaryRuling.GRID -> 5f * 2.83f
+                    else -> 8f * 2.83f
+                }
                 while (y < currentY + fieldHeight) {
                     canvas.drawLine(margin, y, PAGE_WIDTH - margin, y, linePaint)
+                    if (config.ruling == DiaryRuling.GRID) {
+                        var x = margin
+                        while (x < PAGE_WIDTH - margin) {
+                            canvas.drawLine(x, y, x, y + step, linePaint)
+                            x += step
+                        }
+                    }
                     y += step
                 }
             }
@@ -196,26 +212,50 @@ object DiaryPdfDrawer {
         if (config.showGenre) drawField("Жанр")
         if (config.showPages) drawField("Сколько страниц")
         if (config.showDates) drawField("Начал(а) / закончил(а) читать")
-        if (config.showCharacters) drawField("Главные герои", 2f)
-        if (config.showPlot) drawField("О чём эта книга", 3f)
-        if (config.showMemorable) drawField("Что запомнилось больше всего", 3f)
-        if (config.showLesson) drawField("Чему научила эта книга", 2f)
-        if (config.showNewWords) drawField("Новые слова", 1.5f)
+        if (config.showCharacters) drawField("Главные герои", 2)
+        if (config.showPlot) drawField("О чём эта книга", 3)
+        if (config.showMemorable) drawField("Что запомнилось больше всего", 3)
+        if (config.showLesson) drawField("Чему научила эта книга", 2)
+        if (config.showNewWords) drawField("Новые слова", 1)
         
+        // Рисунок выносим на отдельную страницу, если он не влезает
         if (config.showDrawing) {
-            if (currentY < PAGE_HEIGHT - 120f) {
+            val drawingHeight = 250f
+            if (currentY + drawingHeight > PAGE_HEIGHT - 60f) {
+                onPageFinished()
+                canvas = canvasProvider(999) // номер страницы не важен для превью
+                canvas.drawColor(getBgColor(config.color))
+                val newTitlePaint = Paint().apply { isAntiAlias = true; textSize = 24f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                canvas.drawText("Рисунок к книге", PAGE_WIDTH / 2f, 50f, newTitlePaint)
+                currentY = 80f
+            } else {
                 canvas.drawText("Рисунок к книге", margin, currentY, labelPaint)
                 currentY += 15f
-                val rect = RectF(margin, currentY, PAGE_WIDTH - margin, PAGE_HEIGHT - 60f)
-                canvas.drawRect(rect, linePaint)
-                currentY = PAGE_HEIGHT - 50f
             }
+
+            val framePaint = Paint().apply { 
+                color = if (config.color == DiaryColor.BLACK_WHITE) Color.BLACK else textColor
+                style = Paint.Style.STROKE
+                strokeWidth = 2f 
+            }
+            val rect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + drawingHeight)
+            canvas.drawRect(rect, framePaint)
+            
+            val hintPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
+            canvas.drawText("Нарисуй здесь сцену из книги", PAGE_WIDTH / 2f, currentY + 30f, hintPaint)
+            currentY += drawingHeight + 10f
         }
 
         if (config.showRating) {
-            val ratingY = PAGE_HEIGHT - 40f
+            if (currentY > PAGE_HEIGHT - 60f) {
+                onPageFinished()
+                canvas = canvasProvider(999)
+                canvas.drawColor(getBgColor(config.color))
+                currentY = 60f
+            }
+            val ratingY = currentY + 20f
             canvas.drawText("Моя оценка:", margin, ratingY, labelPaint)
-            val starPaint = Paint().apply { isAntiAlias = true; textSize = 24f; color = textColor }
+            val starPaint = Paint().apply { isAntiAlias = true; textSize = 24f; color = if (config.color == DiaryColor.BLACK_WHITE) Color.BLACK else Color.parseColor("#FFB300") }
             canvas.drawText("★ ★ ★ ★ ★", margin + 90f, ratingY + 5f, starPaint)
         }
     }
@@ -225,7 +265,7 @@ object DiaryPdfDrawer {
         canvas.drawText("Моя книга", PAGE_WIDTH / 2f, 50f, titlePaint)
 
         // Большая рамка для рисунка
-        val framePaint = Paint().apply { color = lineColor; style = Paint.Style.STROKE; strokeWidth = 2f }
+        val framePaint = Paint().apply { color = if (config.color == DiaryColor.BLACK_WHITE) Color.BLACK else textColor; style = Paint.Style.STROKE; strokeWidth = 2f }
         val rect = RectF(margin, 80f, PAGE_WIDTH - margin, 500f)
         canvas.drawRect(rect, framePaint)
 
@@ -246,7 +286,6 @@ object DiaryPdfDrawer {
         canvas.drawText("Список прочитанного", PAGE_WIDTH / 2f, 50f, titlePaint)
 
         val headerPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; typeface = Typeface.DEFAULT_BOLD }
-        val textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK }
         val linePaint = Paint().apply { color = lineColor; strokeWidth = 1f }
 
         var currentY = 90f
@@ -267,7 +306,6 @@ object DiaryPdfDrawer {
         }
         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
         
-        // Вертикальные линии
         for (i in 1 until 4) {
             canvas.drawLine(cols[i] - 5f, 90f, cols[i] - 5f, currentY, linePaint)
         }
