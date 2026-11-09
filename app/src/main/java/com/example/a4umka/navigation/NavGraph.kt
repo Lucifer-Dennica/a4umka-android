@@ -20,7 +20,6 @@ import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
 import com.example.a4umka.ui.screens.reading.CopyingGeneratorScreen
 import com.example.a4umka.ui.screens.reading.DiaryGeneratorScreen
-import com.example.a4umka.ui.screens.reading.BookmarksGeneratorScreen
 
 object Routes {
     const val HOME = "home"
@@ -34,7 +33,6 @@ object Routes {
     const val COMPREHENSION = "comprehension"
     const val COPYING = "copying"
     const val DIARY = "diary"
-    const val BOOKMARKS = "bookmarks"
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -102,9 +100,6 @@ fun NavGraph() {
                 }
                 categoryId == "reading" && taskId == "diary" -> {
                     DiaryGeneratorScreen(onBack = { navController.popBackStack() })
-                }
-                categoryId == "reading" && taskId == "bookmarks" -> {
-                    BookmarksGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "hand" && taskId == "prescriptions" -> {
                     HandwritingAlphabetScreen(
