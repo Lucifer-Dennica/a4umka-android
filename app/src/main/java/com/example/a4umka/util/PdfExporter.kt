@@ -64,12 +64,6 @@ object PdfExporter {
         return saveDocument(context, document, "diary_${System.currentTimeMillis()}.pdf")
     }
 
-    fun exportBookmarks(context: Context, config: BookmarksConfig): String? {
-        val document = PdfDocument()
-        BookmarksPdfDrawer.drawDocument(document, config, context)
-        return saveDocument(context, document, "bookmarks_${System.currentTimeMillis()}.pdf")
-    }
-
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
