@@ -2,6 +2,7 @@ package com.example.a4umka.util
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -17,17 +18,15 @@ object BookmarksPdfDrawer {
     fun generatePreview(config: BookmarksConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
         
-        // Лицевая сторона
         var bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var canvas = Canvas(bmp)
-        drawPage(canvas, config, isBackside = false)
+        drawPage(canvas, config, context, isBackside = false)
         pages.add(bmp)
 
-        // Обратная сторона
         if (config.printBacksides) {
             bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
             canvas = Canvas(bmp)
-            drawPage(canvas, config, isBackside = true)
+            drawPage(canvas, config, context, isBackside = true)
             pages.add(bmp)
         }
 
@@ -37,23 +36,21 @@ object BookmarksPdfDrawer {
     fun drawDocument(document: PdfDocument, config: BookmarksConfig, context: Context) {
         var pageNum = 1
         
-        // Лицевая
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
         var page = document.startPage(pageInfo)
-        drawPage(page.canvas, config, isBackside = false)
+        drawPage(page.canvas, config, context, isBackside = false)
         document.finishPage(page)
 
-        // Обратная
         if (config.printBacksides) {
             pageNum++
             pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
             page = document.startPage(pageInfo)
-            drawPage(page.canvas, config, isBackside = true)
+            drawPage(page.canvas, config, context, isBackside = true)
             document.finishPage(page)
         }
     }
 
-    private fun drawPage(canvas: Canvas, config: BookmarksConfig, isBackside: Boolean) {
+    private fun drawPage(canvas: Canvas, config: BookmarksConfig, context: Context, isBackside: Boolean) {
         canvas.drawColor(Color.WHITE)
         
         val margin = 20f
@@ -62,7 +59,6 @@ object BookmarksPdfDrawer {
         val bookmarkHeight = PAGE_HEIGHT - margin * 2
 
         for (i in 0 until 4) {
-            // При печати оборотов порядок зеркальный (4, 3, 2, 1)
             val index = if (isBackside) 3 - i else i
             val settings = config.bookmarks[index]
             
@@ -71,13 +67,14 @@ object BookmarksPdfDrawer {
             val right = left + bookmarkWidth
             val bottom = top + bookmarkHeight
 
-            drawBookmark(canvas, settings, config.isBlackAndWhite, left, top, right, bottom, isBackside)
+            drawBookmark(canvas, settings, config.isBlackAndWhite, left, top, right, bottom, isBackside, context)
         }
     }
 
     private fun drawBookmark(
         canvas: Canvas, settings: BookmarkSettings, isBW: Boolean,
-        left: Float, top: Float, right: Float, bottom: Float, isBackside: Boolean
+        left: Float, top: Float, right: Float, bottom: Float, isBackside: Boolean,
+        context: Context
     ) {
         val width = right - left
         val height = bottom - top
@@ -92,14 +89,13 @@ object BookmarksPdfDrawer {
 
         val textColor = if (isBW) Color.BLACK else Color.DKGRAY
 
-        // Фон и рамка
         val bgPaint = Paint().apply { color = if (isBW) Color.WHITE else Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
         canvas.drawRect(left, top, right, bottom, bgPaint)
 
         val borderPaint = Paint().apply { color = mainColor; style = Paint.Style.STROKE; strokeWidth = 2f }
         canvas.drawRect(left, top, right, bottom, borderPaint)
 
-        // Узор по краям (упрощенно)
+        // Узор по краям (оставляем текстовый, чтобы не перегружать память)
         val patternPaint = Paint().apply { color = mainColor; textSize = 16f; textAlign = Paint.Align.CENTER }
         val patternStr = when(settings.pattern) {
             BookmarkPattern.LEAVES -> "🍃"
@@ -113,7 +109,6 @@ object BookmarksPdfDrawer {
         }
 
         if (isBackside) {
-            // Обратная сторона (просто линии для записей)
             val textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; textAlign = Paint.Align.CENTER }
             canvas.drawText("Здесь живут истории", centerX, top + 60f, textPaint)
             
@@ -132,17 +127,37 @@ object BookmarksPdfDrawer {
         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
         val linePaint = Paint().apply { color = mainColor; strokeWidth = 1f }
 
-        // Герой (эмодзи)
-        val heroEmoji = when(settings.character) {
-            BookmarkCharacter.GIRL_BOW -> "👧"
-            BookmarkCharacter.BOY_SCARF -> "👦"
-            BookmarkCharacter.GIRL_CAT -> "🐱"
-            BookmarkCharacter.BOY_PLANE -> "✈️"
+        // --- ЗАГРУЗКА КАРТИНКИ ГЕРОЯ ---
+        val heroName = when(settings.character) {
+            BookmarkCharacter.GIRL_BOW -> "girl_bow"
+            BookmarkCharacter.BOY_SCARF -> "boy_scarf"
+            BookmarkCharacter.GIRL_CAT -> "girl_cat"
+            BookmarkCharacter.BOY_PLANE -> "boy_plane"
         }
-        val heroPaint = Paint().apply { textSize = 60f; textAlign = Paint.Align.CENTER }
-        canvas.drawText(heroEmoji, centerX, top + 100f, heroPaint)
+        
+        val heroBitmap = loadImageFromAssets(context, heroName)
+        
+        if (heroBitmap != null) {
+            // Рисуем картинку (масштабируем под ширину закладки)
+            val imgSize = width * 0.7f
+            val leftImg = centerX - imgSize / 2f
+            val topImg = top + 30f
+            val rightImg = centerX + imgSize / 2f
+            val bottomImg = topImg + imgSize
+            canvas.drawBitmap(heroBitmap, null, RectF(leftImg, topImg, rightImg, bottomImg), null)
+        } else {
+            // Если картинки нет, рисуем эмодзи
+            val heroEmoji = when(settings.character) {
+                BookmarkCharacter.GIRL_BOW -> "👧"
+                BookmarkCharacter.BOY_SCARF -> "👦"
+                BookmarkCharacter.GIRL_CAT -> "🐱"
+                BookmarkCharacter.BOY_PLANE -> "✈️"
+            }
+            val heroPaint = Paint().apply { textSize = 60f; textAlign = Paint.Align.CENTER }
+            canvas.drawText(heroEmoji, centerX, top + 100f, heroPaint)
+        }
 
-        var currentY = top + 140f
+        var currentY = top + 180f // Сдвигаем текст ниже картинки
 
         when (settings.type) {
             BookmarkType.COLORING -> {
@@ -151,7 +166,6 @@ object BookmarksPdfDrawer {
                 canvas.drawText("Нарисуй свой сюжет", centerX, currentY, bodyPaint)
                 currentY += 20f
                 
-                // Окно для рисунка
                 val boxPaint = Paint().apply { color = mainColor; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
                 canvas.drawRect(left + 15f, currentY, right - 15f, bottom - 100f, boxPaint)
                 
@@ -161,11 +175,10 @@ object BookmarksPdfDrawer {
             BookmarkType.NAME -> {
                 val nameStr = if (settings.name.isNotBlank()) settings.name else "Имя"
                 val namePaint = Paint().apply { textSize = 22f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                canvas.drawText(nameStr, centerX, top + 50f, namePaint)
+                canvas.drawText(nameStr, centerX, top + 50f, namePaint) // Имя пишем сверху
                 
                 canvas.drawText("читает книги", centerX, bottom - 180f, titlePaint)
                 
-                // Окно для страницы
                 canvas.drawText("Остановился", centerX, bottom - 120f, bodyPaint)
                 canvas.drawText("на странице", centerX, bottom - 105f, bodyPaint)
                 canvas.drawRect(centerX - 30f, bottom - 90f, centerX + 30f, bottom - 40f, linePaint)
@@ -222,6 +235,15 @@ object BookmarksPdfDrawer {
                     canvas.drawText("Прочитано", centerX, currentY, titlePaint)
                 }
             }
+        }
+    }
+
+    private fun loadImageFromAssets(context: Context, name: String): Bitmap? {
+        return try {
+            val inputStream = context.assets.open("bookmarks/$name.png")
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) {
+            null
         }
     }
 }
