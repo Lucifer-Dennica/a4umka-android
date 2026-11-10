@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
@@ -15,19 +16,19 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.FillwordConfig
+import com.example.a4umka.data.FillwordSizeMode
 import com.example.a4umka.util.FillwordGenerator
 import com.example.a4umka.util.FillwordGrid
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun InteractiveFillwordScreen(
     config: FillwordConfig,
@@ -38,9 +39,8 @@ fun InteractiveFillwordScreen(
     var foundWords by remember { mutableStateOf<Set<String>>(emptySet()) }
     var showSuccess by remember { mutableStateOf(false) }
 
-    // Инициализация
     LaunchedEffect(config) {
-        val manualSize = if (config.sizeMode == com.example.a4umka.data.FillwordSizeMode.MANUAL) config.manualSize else null
+        val manualSize = if (config.sizeMode == FillwordSizeMode.MANUAL) config.manualSize else null
         grid = FillwordGenerator.generate(words, manualSize, config.allowBackwards)
         foundWords = emptySet()
         showSuccess = false
@@ -78,7 +78,6 @@ fun InteractiveFillwordScreen(
                 Text("Найдено: ${foundWords.size} из ${words.size}", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // СЕТКА
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center
@@ -97,7 +96,6 @@ fun InteractiveFillwordScreen(
                                         val start = dragStart
                                         val end = dragEnd
                                         if (start != null && end != null) {
-                                            // Вычисляем ячейки
                                             val startCol = (start.x / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
                                             val startRow = (start.y / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
                                             val endCol = (end.x / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
@@ -118,8 +116,6 @@ fun InteractiveFillwordScreen(
                         val cellW = size.width / grid!!.size
                         val cellH = size.height / grid!!.size
                         
-                        // Отрисовка найденных слов (фон)
-                        val highlightPaint = androidx.compose.ui.graphics.Paint().apply { color = Color(0x884CAF50) }
                         for (word in foundWords) {
                             val pw = grid!!.placedWords.find { it.word == word }
                             if (pw != null) {
@@ -135,7 +131,6 @@ fun InteractiveFillwordScreen(
                             }
                         }
 
-                        // Отрисовка сетки и букв
                         for (y in 0 until grid!!.size) {
                             for (x in 0 until grid!!.size) {
                                 val left = x * cellW
@@ -163,7 +158,6 @@ fun InteractiveFillwordScreen(
                             }
                         }
 
-                        // Отрисовка текущего выделения
                         if (dragStart != null && dragEnd != null) {
                             drawLine(
                                 color = Color.Red,
@@ -181,14 +175,13 @@ fun InteractiveFillwordScreen(
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
-                // Список слов для поиска
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     words.forEach { word ->
                         val isFound = foundWords.contains(word)
                         Surface(
                             color = if (isFound) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
                             shape = MaterialTheme.shapes.small,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                            border = BorderStroke(1.dp, Color.Gray)
                         ) {
                             Text(
                                 text = word,
@@ -204,13 +197,11 @@ fun InteractiveFillwordScreen(
     }
 }
 
-// Вспомогательная функция для получения слова из координат
 private fun getWordFromPath(grid: FillwordGrid, r1: Int, c1: Int, r2: Int, c2: Int): String? {
     val dRow = r2 - r1
     val dCol = c2 - c1
     
-    // Проверяем, что это прямая линия (горизонталь, вертикаль)
-    if (dRow != 0 && dCol != 0) return null // Диагонали пока не поддерживаем для простоты ввода
+    if (dRow != 0 && dCol != 0) return null
     
     val length = maxOf(abs(dRow), abs(dCol)) + 1
     val stepRow = if (dRow == 0) 0 else dRow / abs(dRow)
@@ -224,13 +215,4 @@ private fun getWordFromPath(grid: FillwordGrid, r1: Int, c1: Int, r2: Int, c2: I
         sb.append(grid.letters[r][c])
     }
     return sb.toString()
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun FlowRow(horizontalArrangement: Arrangement.Horizontal, content: @Composable FlowRowScope.() -> Unit) {
-    androidx.compose.foundation.layout.FlowRow(
-        horizontalArrangement = horizontalArrangement,
-        content = content
-    )
 }
