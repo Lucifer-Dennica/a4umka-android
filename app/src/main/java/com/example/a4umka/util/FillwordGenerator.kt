@@ -22,15 +22,17 @@ object FillwordGenerator {
     fun generate(words: List<String>, manualSize: Int?, allowBackwards: Boolean): FillwordGrid {
         val maxWordLen = words.maxOfOrNull { it.length } ?: 4
         
-        // Автоматический подбор размера
+        // Защита от вылета: размер не может быть меньше самого длинного слова
+        val safeMaxWordLen = maxWordLen
         val totalLetters = words.sumOf { it.length }
-        val autoSize = (Math.sqrt((totalLetters * 2.5).toDouble()).toInt() + 1).coerceAtLeast(maxWordLen + 1)
-        val size = (manualSize ?: autoSize).coerceAtLeast(maxWordLen)
+        val autoSize = (Math.sqrt((totalLetters * 2.5).toDouble()).toInt() + 1).coerceAtLeast(safeMaxWordLen + 1)
+        
+        // Если выбран ручной размер, но он меньше слова, принудительно увеличиваем
+        val size = (manualSize ?: autoSize).coerceAtLeast(safeMaxWordLen + 1)
 
         val grid = Array(size) { Array(size) { ' ' } }
         val placedWords = mutableListOf<PlacedWord>()
 
-        // Сортируем слова по убыванию длины (длинные сложнее разместить)
         val sortedWords = words.sortedByDescending { it.length }
 
         for (word in sortedWords) {
@@ -43,13 +45,22 @@ object FillwordGenerator {
                     Pair(0, 1)   // Вниз
                 )
                 if (allowBackwards) {
-                    directions.add(Pair(-1, 0)) // Влево
-                    directions.add(Pair(0, -1)) // Вверх
+                    directions.add(Pair(-1, 0))
+                    directions.add(Pair(0, -1))
                 }
 
                 val (dx, dy) = directions.random()
-                val startX = if (dx == -1) Random.nextInt(word.length - 1, size) else Random.nextInt(0, size - word.length + (if (dx == 1) 1 else 0))
-                val startY = if (dy == -1) Random.nextInt(word.length - 1, size) else Random.nextInt(0, size - word.length + (if (dy == 1) 1 else 0))
+                
+                // Безопасное вычисление стартовых координат
+                val maxStartX = if (dx == 1) size - word.length else size - 1
+                val minStartX = if (dx == -1) word.length - 1 else 0
+                val maxStartY = if (dy == 1) size - word.length else size - 1
+                val minStartY = if (dy == -1) word.length - 1 else 0
+
+                if (maxStartX < minStartX || maxStartY < minStartY) continue
+
+                val startX = Random.nextInt(minStartX, maxStartX + 1)
+                val startY = Random.nextInt(minStartY, maxStartY + 1)
 
                 var fits = true
                 for (i in word.indices) {
@@ -74,7 +85,6 @@ object FillwordGenerator {
             }
         }
 
-        // Заполняем пустые клетки случайными буквами
         for (y in 0 until size) {
             for (x in 0 until size) {
                 if (grid[y][x] == ' ') {
