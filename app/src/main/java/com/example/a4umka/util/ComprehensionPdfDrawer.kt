@@ -14,14 +14,10 @@ object ComprehensionPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
-    // Генерация превью для экрана
     fun generatePreviewPages(config: ComprehensionConfig, context: Context): List<Bitmap> {
         val story = config.selectedStory ?: return emptyList()
         val pages = mutableListOf<Bitmap>()
         
-        // Упрощенная логика: генерируем только первую страницу для превью,
-        // чтобы не нагружать память, если текст очень длинный.
-        // (В реальном PDF будут все страницы)
         val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         drawPageContent(canvas, config, story, 1)
@@ -30,7 +26,6 @@ object ComprehensionPdfDrawer {
         return pages
     }
 
-    // Генерация самого PDF документа
     fun drawDocument(document: PdfDocument, config: ComprehensionConfig, context: Context) {
         val story = config.selectedStory ?: return
 
@@ -38,13 +33,9 @@ object ComprehensionPdfDrawer {
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
         var page = document.startPage(pageInfo)
         
-        // Рисуем контент. Если текст не влезает, drawPageContent вернет true
-        // (В данной реализации мы рисуем всё на одной странице для простоты,
-        // но код можно расширить для многостраничности)
         drawPageContent(page.canvas, config, story, pageNum)
         document.finishPage(page)
 
-        // Если нужен отдельный лист ответов
         if (config.showAnswerSheet) {
             pageNum++
             pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
@@ -61,7 +52,6 @@ object ComprehensionPdfDrawer {
         var currentY = 60f
         val margin = 40f
         
-        // Шапка
         val headerPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
         
@@ -77,7 +67,6 @@ object ComprehensionPdfDrawer {
         
         currentY = 90f
         
-        // Заголовок
         val titlePaint = Paint().apply { 
             isAntiAlias = true; textSize = 26f; color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#33691E"); typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER 
         }
@@ -88,12 +77,10 @@ object ComprehensionPdfDrawer {
         canvas.drawText("Читай, замечай, размышляй", PAGE_WIDTH / 2f, currentY, subtitlePaint)
         currentY += 30f
         
-        // Инструкция
         val instPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         canvas.drawText("Прочитай рассказ. Затем ответь на вопросы — устно или письменно.", margin, currentY, instPaint)
         currentY += 25f
         
-        // Текст
         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val lineNumPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
         val lineHeight = bodyPaint.textSize * 1.5f
@@ -131,7 +118,6 @@ object ComprehensionPdfDrawer {
         
         currentY += 20f
         
-        // Вопросы (если это не лист ответов)
         if (!config.showAnswerSheet) {
             val qTitlePaint = Paint().apply { isAntiAlias = true; textSize = 20f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Вопросы:", margin, currentY, qTitlePaint)
