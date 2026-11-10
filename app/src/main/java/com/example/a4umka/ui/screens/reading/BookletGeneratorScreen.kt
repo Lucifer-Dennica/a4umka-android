@@ -1,6 +1,7 @@
 package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,11 +18,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.example.a4umka.R
 import com.example.a4umka.data.*
 import com.example.a4umka.util.BookletPdfDrawer
 import com.example.a4umka.util.PdfExporter
@@ -38,8 +42,10 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(BookletConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var showFoldInstructions by remember { mutableStateOf(false) }
+    
+    // Состояние для увеличения картинки
+    var zoomImageRes by remember { mutableStateOf<Int?>(null) }
 
-    // Дебаунс для предотвращения лагов
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     LaunchedEffect(config) {
         delay(300)
@@ -84,9 +90,9 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
                         BookletType.STORY to "Своя сказка",
-                        BookletType.ABOUT_ME to "Книжка про меня",
+                        BookletType.ABOUT_ME to "Про меня",
                         BookletType.FAMILY to "Моя семья",
-                        BookletType.GRANDMA to "Подарок бабушке",
+                        BookletType.GRANDMA to "Бабушке",
                         BookletType.RIDDLES to "Загадки",
                         BookletType.BLANK to "Чистая"
                     ).forEach { (type, name) ->
@@ -113,6 +119,35 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                         label = { Text("Автор") },
                         modifier = Modifier.weight(1f)
                     )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // ВЫБОР ПЕРСОНАЖА
+                var charExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(expanded = charExpanded, onExpandedChange = { charExpanded = it }) {
+                    OutlinedTextField(
+                        value = when(config.character) {
+                            BookletCharacter.NONE -> "Без героя"
+                            BookletCharacter.BOY -> "Мальчик"
+                            BookletCharacter.GIRL -> "Девочка"
+                        }, onValueChange = {}, readOnly = true,
+                        label = { Text("Герой обложки") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = charExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = charExpanded, onDismissRequest = { charExpanded = false }) {
+                        listOf(
+                            BookletCharacter.NONE to "Без героя",
+                            BookletCharacter.BOY to "Мальчик",
+                            BookletCharacter.GIRL to "Девочка"
+                        ).forEach { (c, name) ->
+                            DropdownMenuItem(text = { Text(name) }, onClick = {
+                                config = config.copy(character = c)
+                                charExpanded = false
+                            })
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -152,7 +187,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // КНОПКА ИНСТРУКЦИИ
                 OutlinedButton(
                     onClick = { showFoldInstructions = true },
                     modifier = Modifier.fillMaxWidth()
@@ -186,6 +220,83 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
+        // МОДАЛЬНОЕ ОКНО С ИНСТРУКЦИЕЙ
+        if (showFoldInstructions) {
+            ModalBottomSheet(onDismissRequest = { showFoldInstructions = false }) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
+                    Text("Как сложить книжку", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Текст + Картинка 1
+                    Text("1. Отрежьте нижнюю полоску с инструкцией.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.booklet_step1),
+                        contentDescription = "Шаг 1",
+                        modifier = Modifier.fillMaxWidth().height(150.dp).clickable { zoomImageRes = R.drawable.booklet_step1 },
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Текст + Картинка 2
+                    Text("2. Сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.booklet_step2),
+                        contentDescription = "Шаг 2",
+                        modifier = Modifier.fillMaxWidth().height(150.dp).clickable { zoomImageRes = R.drawable.booklet_step2 },
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Текст + Картинка 3
+                    Text("3. Разверните до первого сгиба и надрежьте по жирной линии в середине.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.booklet_step3),
+                        contentDescription = "Шаг 3",
+                        modifier = Modifier.fillMaxWidth().height(150.dp).clickable { zoomImageRes = R.drawable.booklet_step3 },
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Текст + Картинка 4
+                    Text("4. Разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется. Сложите книжку и прогладьте сгибы.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.booklet_step4),
+                        contentDescription = "Шаг 4",
+                        modifier = Modifier.fillMaxWidth().height(150.dp).clickable { zoomImageRes = R.drawable.booklet_step4 },
+                        contentScale = ContentScale.Fit
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        "💡 Совет: страницы нижнего ряда напечатаны перевёрнутыми — так и задумано! После складывания они встанут правильной стороной.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
+
+        // ДИАЛОГ ДЛЯ УВЕЛИЧЕНИЯ КАРТИНКИ
+        if (zoomImageRes != null) {
+            Dialog(onDismissRequest = { zoomImageRes = null }) {
+                Card(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f)) {
+                    Box(modifier = Modifier.fillMaxSize().clickable { zoomImageRes = null }) {
+                        Image(
+                            painter = painterResource(id = zoomImageRes!!),
+                            contentDescription = "Увеличенная инструкция",
+                            modifier = Modifier.fillMaxSize().padding(8.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            }
+        }
+        
         // ИНФО
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
@@ -199,34 +310,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                         "• Загадки — готовый банк загадок, отгадка печатается на следующей странице;\n" +
                         "• Чистая — только рамки и строки, без подписей.",
                         style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
-            }
-        }
-
-        // ИНСТРУКЦИЯ ПО СКЛАДЫВАНИЮ
-        if (showFoldInstructions) {
-            ModalBottomSheet(onDismissRequest = { showFoldInstructions = false }) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Как сложить книжку", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text("1. Отрежьте нижнюю полоску с инструкцией.", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("2. Сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток.", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("3. Разверните до первого сгиба и надрежьте по жирной линии в середине.", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("4. Разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется.", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("5. Сложите книжку и прогладьте сгибы: страницы встанут по порядку сами.", style = MaterialTheme.typography.bodyLarge)
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        "💡 Совет: страницы нижнего ряда напечатаны перевёрнутыми — так и задумано! После складывания они встанут правильной стороной.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                 }
