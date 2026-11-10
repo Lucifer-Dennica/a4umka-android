@@ -16,7 +16,6 @@ object SyllablePdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
-    // Генерация списка картинок (Bitmap) для карусели предпросмотра
     fun generatePreviewPages(config: SyllableConfig, context: Context): List<Bitmap> {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return emptyList()
@@ -27,7 +26,6 @@ object SyllablePdfDrawer {
         var currentY = drawHeader(canvas, config, texts)
 
         for (textObj in texts) {
-            // Проверяем, влезет ли заголовок текста на текущую страницу
             if (currentY > PAGE_HEIGHT - 120f) {
                 pages.add(bmp)
                 bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
@@ -62,7 +60,6 @@ object SyllablePdfDrawer {
                 if (currentLine.isNotEmpty()) lines.add(currentLine)
 
                 for (line in lines) {
-                    // Перенос на новую страницу для превью
                     if (currentY > PAGE_HEIGHT - 60f) {
                         pages.add(bmp)
                         bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
@@ -115,7 +112,6 @@ object SyllablePdfDrawer {
         return pages
     }
 
-    // Генерация PDF (логика идентична превью, но рисует в документ)
     fun drawDocument(document: PdfDocument, config: SyllableConfig, context: Context) {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return
