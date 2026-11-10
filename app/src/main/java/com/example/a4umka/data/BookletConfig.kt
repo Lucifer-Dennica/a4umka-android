@@ -1,7 +1,6 @@
 package com.example.a4umka.data
 
 enum class BookletType { STORY, ABOUT_ME, FAMILY, GRANDMA, RIDDLES, BLANK }
-enum class BookletDesign { LEAVES, STARS }
 enum class BookletRuling { LINE_8MM, WIDE_10MM, GRID_5MM, NONE }
 enum class BookletCharacter { NONE, BOY, GIRL }
 
@@ -9,8 +8,7 @@ data class BookletConfig(
     val type: BookletType = BookletType.STORY,
     val title: String = "Моя сказка",
     val author: String = "",
-    val character: BookletCharacter = BookletCharacter.GIRL, // <-- НОВОЕ
-    val design: BookletDesign = BookletDesign.LEAVES,
+    val character: BookletCharacter = BookletCharacter.GIRL,
     val ruling: BookletRuling = BookletRuling.LINE_8MM,
     val showFoldLines: Boolean = true,
     val isBlackAndWhite: Boolean = false
