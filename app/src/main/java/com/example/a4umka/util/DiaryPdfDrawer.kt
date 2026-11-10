@@ -17,55 +17,68 @@ object DiaryPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
+    // Генерация превью (список Bitmap)
     fun generatePreview(config: DiaryConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
-        // 50% разрешение для скорости
         val scale = 0.5f
         val pw = (PAGE_WIDTH * scale).toInt()
         val ph = (PAGE_HEIGHT * scale).toInt()
 
-        var pageIndex = 0
-        var currentBmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
-        var currentCanvas = Canvas(currentBmp)
-        currentCanvas.scale(scale, scale)
-        currentCanvas.drawColor(getBgColor(config.color))
-        
-        renderDocument(config,
-            canvasProvider = { 
-                if (it > 0) {
-                    currentBmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
-                    currentCanvas = Canvas(currentBmp)
-                    currentCanvas.scale(scale, scale)
-                }
-                currentCanvas.drawColor(getBgColor(config.color))
-                currentCanvas
-            },
-            onPageFinished = {
-                pages.add(currentBmp)
-            }
-        )
-        return if (pages.isEmpty()) listOf(currentBmp) else pages
+        val renderers = getPageRenderers(config)
+        for (renderer in renderers) {
+            val bmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bmp)
+            canvas.scale(scale, scale)
+            canvas.drawColor(getBgColor(config.color))
+            renderer(canvas)
+            pages.add(bmp)
+        }
+        return if (pages.isEmpty()) {
+            val bmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
+            pages.add(bmp)
+            pages
+        } else pages
     }
 
+    // Генерация PDF
     fun drawDocument(document: PdfDocument, config: DiaryConfig, context: Context) {
+        val renderers = getPageRenderers(config)
         var pageNum = 1
-        var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
-        var page = document.startPage(pageInfo)
+        for (renderer in renderers) {
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
+            val page = document.startPage(pageInfo)
+            page.canvas.drawColor(getBgColor(config.color))
+            renderer(page.canvas)
+            document.finishPage(page)
+            pageNum++
+        }
+    }
 
-        renderDocument(config,
-            canvasProvider = { 
-                if (it > 0) {
-                    pageNum++
-                    pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
-                    page = document.startPage(pageInfo)
-                }
-                page.canvas.drawColor(getBgColor(config.color))
-                page.canvas
-            },
-            onPageFinished = {
-                document.finishPage(page)
+    // Список функций отрисовки для каждой страницы
+    private fun getPageRenderers(config: DiaryConfig): List<(Canvas) -> Unit> {
+        val renderers = mutableListOf<(Canvas) -> Unit>()
+        val margin = 40f
+        val isBW = config.color == DiaryColor.BLACK_WHITE
+        val textColor = if (isBW) Color.BLACK else Color.parseColor("#1B5E20")
+        val lineColor = if (isBW) Color.LTGRAY else Color.parseColor("#81C784")
+
+        if (config.includeTitlePage) {
+            renderers.add { canvas -> drawTitlePage(canvas, config, margin, textColor, lineColor) }
+        }
+        for (i in 1..config.bookPagesCount) {
+            if (config.pageType == DiaryPageType.SCHOOL) {
+                renderers.add { canvas -> drawSchoolBookPage(canvas, config, margin, i, textColor, lineColor) }
+            } else {
+                renderers.add { canvas -> drawPictureBookPage(canvas, config, margin, i, textColor, lineColor) }
             }
-        )
+        }
+        if (config.includeBookList) {
+            renderers.add { canvas -> drawListPage(canvas, config, margin, textColor, lineColor) }
+        }
+        if (config.includeSpeedTest) {
+            renderers.add { canvas -> drawSpeedTestPage(canvas, config, margin, textColor, lineColor) }
+        }
+        return renderers
     }
 
     private fun getBgColor(color: DiaryColor): Int {
@@ -75,50 +88,6 @@ object DiaryPdfDrawer {
             DiaryColor.BLUE -> Color.parseColor("#E3F2FD")
             DiaryColor.ORANGE -> Color.parseColor("#FFF3E0")
             DiaryColor.BLACK_WHITE -> Color.WHITE
-        }
-    }
-
-    private fun renderDocument(
-        config: DiaryConfig,
-        canvasProvider: (Int) -> Canvas,
-        onPageFinished: () -> Unit
-    ) {
-        var pageIndex = 0
-        var canvas = canvasProvider(pageIndex)
-        val margin = 40f
-
-        val isBW = config.color == DiaryColor.BLACK_WHITE
-        val textColor = if (isBW) Color.BLACK else Color.parseColor("#1B5E20")
-        val lineColor = if (isBW) Color.LTGRAY else Color.parseColor("#81C784")
-
-        if (config.includeTitlePage) {
-            drawTitlePage(canvas, config, margin, textColor, lineColor)
-            onPageFinished()
-            pageIndex++
-            canvas = canvasProvider(pageIndex)
-        }
-
-        for (i in 1..config.bookPagesCount) {
-            if (config.pageType == DiaryPageType.SCHOOL) {
-                drawSchoolBookPage(canvas, config, margin, i, textColor, lineColor)
-            } else {
-                drawPictureBookPage(canvas, config, margin, i, textColor, lineColor)
-            }
-            onPageFinished()
-            pageIndex++
-            canvas = canvasProvider(pageIndex)
-        }
-
-        if (config.includeBookList) {
-            drawListPage(canvas, config, margin, textColor, lineColor)
-            onPageFinished()
-            pageIndex++
-            canvas = canvasProvider(pageIndex)
-        }
-
-        if (config.includeSpeedTest) {
-            drawSpeedTestPage(canvas, config, margin, textColor, lineColor)
-            onPageFinished()
         }
     }
 
