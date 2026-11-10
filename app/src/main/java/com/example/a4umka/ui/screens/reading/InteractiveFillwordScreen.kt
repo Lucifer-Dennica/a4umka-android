@@ -147,7 +147,7 @@ fun InteractiveFillwordScreen(
                             val path = getLineCells(startCell!!, currentCell!!)
                             val word = path.joinToString("") { (r, c) -> grid!!.letters[r][c].toString() }
                             val isValid = words.contains(word) && !foundWords.contains(word)
-                            val color = if (isValid) Color(0x664CAF50) else Color(0x66FF0000) // Полупрозрачный зеленый/красный
+                            val color = if (isValid) Color(0x664CAF50) else Color(0x66FF0000)
 
                             for ((r, c) in path) {
                                 drawRect(
@@ -222,11 +222,19 @@ private fun getLineCells(start: Pair<Int, Int>, end: Pair<Int, Int>): List<Pair<
     val path = mutableListOf<Pair<Int, Int>>()
     
     if (r1 == r2) {
-        val step = if (c1 < c2) 1 else -1
-        for (c in c1..c2 step step) path.add(Pair(r1, c))
+        // Горизонталь
+        if (c1 <= c2) {
+            for (c in c1..c2) path.add(Pair(r1, c))
+        } else {
+            for (c in c1 downTo c2) path.add(Pair(r1, c))
+        }
     } else if (c1 == c2) {
-        val step = if (r1 < r2) 1 else -1
-        for (r in r1..r2 step step) path.add(Pair(r, c1))
+        // Вертикаль
+        if (r1 <= r2) {
+            for (r in r1..r2) path.add(Pair(r, c1))
+        } else {
+            for (r in r1 downTo r2) path.add(Pair(r, c1))
+        }
     } else {
         // Диагональ
         val dr = if (r1 < r2) 1 else -1
