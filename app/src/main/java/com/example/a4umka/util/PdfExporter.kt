@@ -40,6 +40,12 @@ object PdfExporter {
         return saveDocument(context, document, "ribbon_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportSyllableTable(context: Context, config: SyllableTableConfig): String? {
+        val document = PdfDocument()
+        SyllableTablePdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "syllable_table_${System.currentTimeMillis()}.pdf")
+    }
+
     fun exportSyllableText(context: Context, config: SyllableConfig): String? {
         val document = PdfDocument()
         SyllablePdfDrawer.drawDocument(document, config, context)
