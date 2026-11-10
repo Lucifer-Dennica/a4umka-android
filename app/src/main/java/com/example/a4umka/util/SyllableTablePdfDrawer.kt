@@ -16,7 +16,8 @@ object SyllableTablePdfDrawer {
     const val PAGE_HEIGHT = 842f
 
     fun generatePreview(config: SyllableTableConfig, context: Context): List<Bitmap> {
-        val scale = 0.5f
+        // Возвращаем полное разрешение для четкости (1f вместо 0.5f)
+        val scale = 1f
         val pw = (PAGE_WIDTH * scale).toInt()
         val ph = (PAGE_HEIGHT * scale).toInt()
 
@@ -42,8 +43,14 @@ object SyllableTablePdfDrawer {
         val redColor = Color.parseColor("#D32F2F")
         val blueColor = Color.parseColor("#1976D2")
 
+        // Защита от пустого списка
+        if (config.consonants.isEmpty()) {
+            val paint = Paint().apply { isAntiAlias = true; textSize = 20f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
+            canvas.drawText("Выберите хотя бы одну согласную букву", PAGE_WIDTH / 2f, PAGE_HEIGHT / 2f, paint)
+            return
+        }
+
         if (config.workType == SyllableWorkType.TABLE) {
-            // ШАПКА
             val headerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
             val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
             
@@ -59,7 +66,6 @@ object SyllableTablePdfDrawer {
             canvas.drawText("Время:", PAGE_WIDTH - 120f, 40f, headerPaint)
             canvas.drawLine(PAGE_WIDTH - 85f, 42f, PAGE_WIDTH - margin, 42f, linePaint)
 
-            // ЗАГОЛОВОК
             val titlePaint = Paint().apply { 
                 isAntiAlias = true; textSize = 28f; color = textColor; 
                 typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER 
@@ -69,7 +75,6 @@ object SyllableTablePdfDrawer {
             val subtitlePaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
             canvas.drawText("читай слоги по строкам • прочитал строку — закрась кружочек", PAGE_WIDTH / 2f, 110f, subtitlePaint)
 
-            // СЕТКА
             val vowels = SyllableTableData.getVowels(config.vowelStep)
             val consonants = config.consonants.toList().sorted()
             
@@ -87,68 +92,47 @@ object SyllableTablePdfDrawer {
             val vowelPaint = Paint().apply { isAntiAlias = true; textSize = 22f; color = redColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
             val circlePaint = Paint().apply { color = Color.GRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
 
-            // Заголовки столбцов (гласные)
             for (c in 0 until cols) {
                 val x = tableLeft + c * cellW + cellW / 2f
                 canvas.drawText(vowels[c], x, tableTop - 10f, vowelPaint)
             }
 
-            var randomSyllable = ""
-            
             for (r in 0 until rows) {
                 val y = tableTop + r * cellH
                 val cons = consonants[r]
                 
-                // Заголовок строки (согласная)
                 canvas.drawText(cons, tableLeft - 15f, y + cellH / 2f + 8f, consPaint)
-                
-                // Кружочек прогресса
                 canvas.drawCircle(PAGE_WIDTH - margin + 10f, y + cellH / 2f, 8f, circlePaint)
 
                 for (c in 0 until cols) {
                     val x = tableLeft + c * cellW
-                    // Рамка ячейки
                     canvas.drawRect(x, y, x + cellW, y + cellH, gridPaint)
                     
                     val vowel = vowels[c]
-                    
-                    // Формируем слог
                     var syllable = ""
                     var isValid = true
                     
                     when (config.syllableType) {
                         SyllableType.OPEN -> {
-                            if (SyllableTableData.isValidSyllable(cons, vowel)) {
-                                syllable = cons + vowel.lowercase()
-                            } else isValid = false
+                            if (SyllableTableData.isValidSyllable(cons, vowel)) syllable = cons + vowel.lowercase() else isValid = false
                         }
                         SyllableType.REVERSE -> {
-                            if (SyllableTableData.isValidSyllable(cons, vowel)) {
-                                syllable = vowel + cons.lowercase()
-                            } else isValid = false
+                            if (SyllableTableData.isValidSyllable(cons, vowel)) syllable = vowel + cons.lowercase() else isValid = false
                         }
                         SyllableType.CLOSED -> {
-                            if (SyllableTableData.isValidSyllable(cons, vowel)) {
-                                syllable = cons + vowel.lowercase() + config.closedSuffix.lowercase()
-                            } else isValid = false
+                            if (SyllableTableData.isValidSyllable(cons, vowel)) syllable = cons + vowel.lowercase() + config.closedSuffix.lowercase() else isValid = false
                         }
                         SyllableType.CLUSTER -> {
-                            // Для стечения берем первую согласную из списка
                             val cluster = config.clusterList.firstOrNull() ?: "СТ"
                             syllable = cluster.lowercase() + vowel.lowercase()
                         }
                     }
 
                     if (isValid && syllable.isNotEmpty()) {
-                        if (randomSyllable.isEmpty()) randomSyllable = syllable // Запоминаем для игры
-                        
                         val textColor = if (config.syllableType == SyllableType.REVERSE) redColor else blueColor
                         val textPaint = Paint(consPaint).apply { this.color = textColor }
-                        
-                        // Рисуем слог (упрощенно, без разделения на цвета внутри ячейки)
                         canvas.drawText(syllable.uppercase(), x + cellW / 2f, y + cellH / 2f + 8f, textPaint)
                         
-                        // Слог дня (рамка)
                         if (config.syllableOfTheDay && r == 1 && c == 2) {
                             val starPaint = Paint().apply { color = Color.parseColor("#FFC107"); style = Paint.Style.STROKE; strokeWidth = 2f }
                             canvas.drawRect(x + 2f, y + 2f, x + cellW - 2f, y + cellH - 2f, starPaint)
@@ -157,19 +141,19 @@ object SyllableTablePdfDrawer {
                 }
             }
 
-            // ПОДВАЛ (Игра "Найди слог")
-            if (config.findGame) {
+            // ЗАЩИТА ОТ ВЫЛЕТА: игра рисуется только если есть строки и столбцы
+            if (config.findGame && rows > 0 && cols > 0) {
                 val bottomY = PAGE_HEIGHT - 80f
                 val findPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
                 canvas.drawText("🔍 Найди и обведи в таблице слоги:", margin, bottomY, findPaint)
                 
-                // Генерируем 3 случайных слога
-                val r1 = (0 until rows).random()
-                val r2 = (0 until rows).random()
-                val r3 = (0 until rows).random()
-                val c1 = (0 until cols).random()
-                val c2 = (0 until cols).random()
-                val c3 = (0 until cols).random()
+                // Безопасный рандом
+                val r1 = Random.nextInt(rows)
+                val r2 = Random.nextInt(rows)
+                val r3 = Random.nextInt(rows)
+                val c1 = Random.nextInt(cols)
+                val c2 = Random.nextInt(cols)
+                val c3 = Random.nextInt(cols)
                 
                 val syllables = listOf(
                     consonants[r1] + vowels[c1].lowercase(),
