@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
@@ -35,6 +37,7 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(BookletConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
+    var showFoldInstructions by remember { mutableStateOf(false) }
 
     // Дебаунс для предотвращения лагов
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -148,6 +151,18 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // КНОПКА ИНСТРУКЦИИ
+                OutlinedButton(
+                    onClick = { showFoldInstructions = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.HelpOutline, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Как сложить книжку?")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4 (альбомный):", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -171,24 +186,47 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
+        // ИНФО
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
                     Text("Книжка-малышка", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Генератор собирает лист A4, который складывается в книжку-малышку на восемь страниц — без клея, скотча и степлера. Нужны только принтер и ножницы: сделать сгибы по разметке, надрезать по отмеченной линии, сложить ещё раз — и в руках настоящая маленькая книжка.\n\n" +
+                        "Генератор собирает лист A4, который складывается в книжку-малышку на восемь страниц — без клея, скотча и степлера. Нужны только принтер и ножницы.\n\n" +
                         "• Своя сказка — рамка под рисунок и строки для текста на каждой странице;\n" +
                         "• Книжка про меня — шесть подсказок, по одной на страницу;\n" +
                         "• Загадки — готовый банк загадок, отгадка печатается на следующей странице;\n" +
-                        "• Чистая — только рамки и строки, без подписей.\n\n" +
-                        "Как сложить:\n" +
-                        "1. Отрежьте нижнюю полоску с инструкцией.\n" +
-                        "2. Сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток.\n" +
-                        "3. Разверните до первого сгиба и надрежьте по жирной линии в середине.\n" +
-                        "4. Разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется.\n" +
-                        "5. Сложите книжку и прогладьте сгибы: страницы встанут по порядку сами.",
+                        "• Чистая — только рамки и строки, без подписей.",
                         style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
+
+        // ИНСТРУКЦИЯ ПО СКЛАДЫВАНИЮ
+        if (showFoldInstructions) {
+            ModalBottomSheet(onDismissRequest = { showFoldInstructions = false }) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
+                    Text("Как сложить книжку", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("1. Отрежьте нижнюю полоску с инструкцией.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("2. Сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("3. Разверните до первого сгиба и надрежьте по жирной линии в середине.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("4. Разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("5. Сложите книжку и прогладьте сгибы: страницы встанут по порядку сами.", style = MaterialTheme.typography.bodyLarge)
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        "💡 Совет: страницы нижнего ряда напечатаны перевёрнутыми — так и задумано! После складывания они встанут правильной стороной.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                 }
