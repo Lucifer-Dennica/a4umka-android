@@ -21,7 +21,7 @@ object BookletPdfDrawer {
     fun clearCache() { bitmapCache.clear() }
 
     fun generatePreview(config: BookletConfig, context: Context): List<Bitmap> {
-        val scale = 0.5f
+        val scale = 1f
         val pw = (PAGE_WIDTH * scale).toInt()
         val ph = (PAGE_HEIGHT * scale).toInt()
         
@@ -138,21 +138,18 @@ object BookletPdfDrawer {
                 curY += 20f
             }
             
-            // Зона для рисунка/персонажа
             val boxRect = RectF(left + 10f, curY + 10f, right - 10f, bottom - 50f)
             val boxPaint = Paint().apply { color = if(isBW) Color.LTGRAY else lineColor; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
             canvas.drawRect(boxRect, boxPaint)
 
-            // Загружаем картинку персонажа
             val charFile = when (config.character) {
-                BookletCharacter.BOY -> "1" // 1.png
-                BookletCharacter.GIRL -> "2" // 2.png
+                BookletCharacter.BOY -> "1"
+                BookletCharacter.GIRL -> "2"
                 else -> null
             }
             if (charFile != null) {
                 val bmp = loadImageFromAssets(context, charFile)
                 if (bmp != null) {
-                    // Рисуем по центру нижней части окна
                     val imgSize = width * 0.6f
                     val imgLeft = centerX - imgSize / 2f
                     val imgTop = boxRect.bottom - imgSize
