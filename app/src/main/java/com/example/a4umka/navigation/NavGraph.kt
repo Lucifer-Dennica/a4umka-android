@@ -17,6 +17,7 @@ import com.example.a4umka.ui.screens.reading.AlphabetGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveRibbonScreen
 import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen
 import com.example.a4umka.ui.screens.reading.SyllableTableGeneratorScreen
+import com.example.a4umka.ui.screens.reading.AssembleWordGeneratorScreen
 import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
 import com.example.a4umka.ui.screens.reading.CopyingGeneratorScreen
@@ -32,6 +33,7 @@ object Routes {
     const val PDF_EXPORT = "pdf_export/{letter}"
     const val INTERACTIVE_RIBBON = "interactive_ribbon"
     const val SYLLABLE_TABLES = "syllable_tables"
+    const val ASSEMBLE_WORD = "assemble_word"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
     const val COPYING = "copying"
@@ -95,6 +97,9 @@ fun NavGraph() {
                 }
                 categoryId == "reading" && taskId == "syllable_tables" -> {
                     SyllableTableGeneratorScreen(onBack = { navController.popBackStack() })
+                }
+                categoryId == "reading" && taskId == "assemble_word" -> {
+                    AssembleWordGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
