@@ -1,6 +1,6 @@
 package com.example.a4umka.navigation
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -54,7 +54,7 @@ object Routes {
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
-    var currentFillwordConfig by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(FillwordConfig()) }
+    var currentFillwordConfig by remember { mutableStateOf(FillwordConfig()) }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
