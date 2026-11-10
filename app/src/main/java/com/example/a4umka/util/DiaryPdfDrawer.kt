@@ -17,10 +17,9 @@ object DiaryPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
-    // Генерация превью (список Bitmap)
     fun generatePreview(config: DiaryConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
-        val scale = 0.5f
+        val scale = 1f
         val pw = (PAGE_WIDTH * scale).toInt()
         val ph = (PAGE_HEIGHT * scale).toInt()
 
@@ -40,7 +39,6 @@ object DiaryPdfDrawer {
         } else pages
     }
 
-    // Генерация PDF
     fun drawDocument(document: PdfDocument, config: DiaryConfig, context: Context) {
         val renderers = getPageRenderers(config)
         var pageNum = 1
@@ -54,7 +52,6 @@ object DiaryPdfDrawer {
         }
     }
 
-    // Список функций отрисовки для каждой страницы
     private fun getPageRenderers(config: DiaryConfig): List<(Canvas) -> Unit> {
         val renderers = mutableListOf<(Canvas) -> Unit>()
         val margin = 40f
