@@ -16,8 +16,7 @@ object SyllableTablePdfDrawer {
     const val PAGE_HEIGHT = 842f
 
     fun generatePreview(config: SyllableTableConfig, context: Context): List<Bitmap> {
-        // Возвращаем полное разрешение для четкости (1f вместо 0.5f)
-        val scale = 1f
+        val scale = 1f // <-- ЧЕТКОЕ ПРЕВЬЮ
         val pw = (PAGE_WIDTH * scale).toInt()
         val ph = (PAGE_HEIGHT * scale).toInt()
 
@@ -43,7 +42,6 @@ object SyllableTablePdfDrawer {
         val redColor = Color.parseColor("#D32F2F")
         val blueColor = Color.parseColor("#1976D2")
 
-        // Защита от пустого списка
         if (config.consonants.isEmpty()) {
             val paint = Paint().apply { isAntiAlias = true; textSize = 20f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
             canvas.drawText("Выберите хотя бы одну согласную букву", PAGE_WIDTH / 2f, PAGE_HEIGHT / 2f, paint)
@@ -92,15 +90,21 @@ object SyllableTablePdfDrawer {
             val vowelPaint = Paint().apply { isAntiAlias = true; textSize = 22f; color = redColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
             val circlePaint = Paint().apply { color = Color.GRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
 
-            for (c in 0 until cols) {
-                val x = tableLeft + c * cellW + cellW / 2f
-                canvas.drawText(vowels[c], x, tableTop - 10f, vowelPaint)
+            // Рисуем заголовки столбцов ТОЛЬКО если выключен режим "вперемешку"
+            if (!config.shuffle) {
+                for (c in 0 until cols) {
+                    val x = tableLeft + c * cellW + cellW / 2f
+                    canvas.drawText(vowels[c], x, tableTop - 10f, vowelPaint)
+                }
             }
 
             for (r in 0 until rows) {
                 val y = tableTop + r * cellH
                 val cons = consonants[r]
                 
+                // Для каждой строки перемешиваем гласные, если включен режим
+                val rowVowels = if (config.shuffle) vowels.shuffled() else vowels
+
                 canvas.drawText(cons, tableLeft - 15f, y + cellH / 2f + 8f, consPaint)
                 canvas.drawCircle(PAGE_WIDTH - margin + 10f, y + cellH / 2f, 8f, circlePaint)
 
@@ -108,7 +112,7 @@ object SyllableTablePdfDrawer {
                     val x = tableLeft + c * cellW
                     canvas.drawRect(x, y, x + cellW, y + cellH, gridPaint)
                     
-                    val vowel = vowels[c]
+                    val vowel = rowVowels[c] // Берем гласную из перемешанного списка
                     var syllable = ""
                     var isValid = true
                     
@@ -141,13 +145,11 @@ object SyllableTablePdfDrawer {
                 }
             }
 
-            // ЗАЩИТА ОТ ВЫЛЕТА: игра рисуется только если есть строки и столбцы
             if (config.findGame && rows > 0 && cols > 0) {
                 val bottomY = PAGE_HEIGHT - 80f
                 val findPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
                 canvas.drawText("🔍 Найди и обведи в таблице слоги:", margin, bottomY, findPaint)
                 
-                // Безопасный рандом
                 val r1 = Random.nextInt(rows)
                 val r2 = Random.nextInt(rows)
                 val r3 = Random.nextInt(rows)
