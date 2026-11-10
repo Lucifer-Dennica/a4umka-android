@@ -52,6 +52,12 @@ object PdfExporter {
         return saveDocument(context, document, "syllables_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportAssembleWord(context: Context, config: AssembleWordConfig): String? {
+        val document = PdfDocument()
+        AssembleWordPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "assemble_word_${System.currentTimeMillis()}.pdf")
+    }
+
     fun exportComprehension(context: Context, config: ComprehensionConfig): String? {
         val document = PdfDocument()
         ComprehensionPdfDrawer.drawDocument(document, config, context)
