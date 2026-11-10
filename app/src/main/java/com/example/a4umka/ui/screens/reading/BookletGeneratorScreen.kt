@@ -1,7 +1,9 @@
 package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,7 +19,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -123,7 +128,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // ВЫБОР ПЕРСОНАЖА
                 var charExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = charExpanded, onExpandedChange = { charExpanded = it }) {
                     OutlinedTextField(
@@ -281,34 +285,102 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // ДИАЛОГ ДЛЯ УВЕЛИЧЕНИЯ КАРТИНКИ
+        // ДИАЛОГ ДЛЯ УВЕЛИЧЕНИЯ КАРТИНКИ С ЗУМОМ
         if (zoomImageRes != null) {
             Dialog(onDismissRequest = { zoomImageRes = null }) {
                 Card(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f)) {
-                    Box(modifier = Modifier.fillMaxSize().clickable { zoomImageRes = null }) {
-                        Image(
-                            painter = painterResource(id = zoomImageRes!!),
-                            contentDescription = "Увеличенная инструкция",
-                            modifier = Modifier.fillMaxSize().padding(8.dp),
-                            contentScale = ContentScale.Fit
-                        )
+                    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+                        
+                        var scale by remember { mutableFloatStateOf(1f) }
+                        var offset by remember { mutableStateOf(Offset.Zero) }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(Unit) {
+                                    detectTransformGestures { _, pan, zoom, _ ->
+                                        scale = (scale * zoom).coerceIn(1f, 5f)
+                                        if (scale > 1f) {
+                                            offset += pan
+                                        } else {
+                                            offset = Offset.Zero
+                                        }
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = zoomImageRes!!),
+                                contentDescription = "Увеличенная инструкция",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer(
+                                        scaleX = scale,
+                                        scaleY = scale,
+                                        translationX = offset.x,
+                                        translationY = offset.y
+                                    ),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+
+                        // Кнопка закрытия
+                        IconButton(
+                            onClick = { zoomImageRes = null },
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                        ) {
+                            Text("✕", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
         }
         
-        // ИНФО
+        // ИНФО (С ПОЛНЫМ ТЕКСТОМ С САЙТА)
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Книжка-малышка", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("Книжка-малышка своими руками", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
+                    
                     Text(
-                        "Генератор собирает лист A4, который складывается в книжку-малышку на восемь страниц — без клея, скотча и степлера. Нужны только принтер и ножницы.\n\n" +
-                        "• Своя сказка — рамка под рисунок и строки для текста на каждой странице;\n" +
-                        "• Книжка про меня — шесть подсказок, по одной на страницу;\n" +
-                        "• Загадки — готовый банк загадок, отгадка печатается на следующей странице;\n" +
-                        "• Чистая — только рамки и строки, без подписей.",
+                        "Генератор собирает лист A4, который складывается в книжку-малышку на восемь страниц — без клея, скотча и степлера. Нужны только принтер и ножницы: сделать сгибы по разметке, надрезать по отмеченной линии, сложить ещё раз — и в руках настоящая маленькая книжка с обложкой, страницами и словом «Конец» в конце.\n\n" +
+                        "Внутри может быть своя сказка, книжка про себя или загадки — вид выбираете вы. На обложке печатаются название и имя автора, так что книжка сразу получается именной.\n\n" +
+                        "Зачем делать книжку с ребёнком:\n" +
+                        "• связная речь: придумать историю и уложить её в шесть страниц;\n" +
+                        "• мелкая моторика — складывание по сгибу и работа ножницами;\n" +
+                        "• понимание, как устроена книга: обложка, страницы, порядок, конец;\n" +
+                        "• рисование по замыслу, а не по образцу;\n" +
+                        "• письмо: подписать страницу своими словами — законный повод писать.\n\n" +
+                        "Для какого возраста:\n" +
+                        "• 5 лет. Книжка с рисунками: ребёнок рисует, взрослый записывает под диктовку. Складывает лист тоже взрослый — сгибы получаются аккуратнее.\n" +
+                        "• 6 лет. «Книжка про меня»: на каждой странице подсказка — «Меня зовут», «Моя семья», «Мой день». Отвечать на такие вопросы можно сразу, не задумываясь.\n" +
+                        "• 7 лет и старше. Своя сказка от начала до конца и книжка с загадками — её приятно давать разгадывать другим: загадка на странице, отгадка на следующей.\n\n" +
+                        "Как пользоваться генератором:\n" +
+                        "Выберите, что внутри, впишите название и имя автора, задайте разлиновку. Нажмите «Сохранить в PDF» и печатайте альбомно, масштаб 100%, без «вписать в страницу».\n\n" +
+                        "Что можно настроить:\n" +
+                        "• Своя сказка — рамка под рисунок и строки для текста;\n" +
+                        "• Книжка про меня — шесть подсказок;\n" +
+                        "• Моя семья — страницы с подсказками про близких;\n" +
+                        "• Подарок бабушке — рисунки, воспоминания и пожелания;\n" +
+                        "• Загадки — готовый банк загадок;\n" +
+                        "• Чистая — только рамки и строки, без подписей;\n" +
+                        "• разлиновка: линия 8 мм, широкая 10 мм, клетка 5 мм или без линий;\n" +
+                        "• чёрно-белый режим и линии сгиба с надрезом.\n\n" +
+                        "Как сложить:\n" +
+                        "1. отрежьте нижнюю полоску с инструкцией;\n" +
+                        "2. сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток;\n" +
+                        "3. разверните до первого сгиба и надрежьте по жирной линии в середине;\n" +
+                        "4. разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется;\n" +
+                        "5. сложите книжку и прогладьте сгибы: страницы встанут по порядку сами.\n\n" +
+                        "Какой навык развивает:\n" +
+                        "Главное здесь — доведение замысла до конца. Придумать начало легко, а вот дотянуть историю до восьмой страницы, где написано «Конец», уже работа. Заодно ребёнок на собственных руках понимает, почему в книге страницы идут по порядку.\n\n" +
+                        "Советы родителям:\n" +
+                        "• первую книжку сложите сами, пока ребёнок смотрит;\n" +
+                        "• не исправляйте орфографию в его книжке: она авторская;\n" +
+                        "• печатайте на обычной бумаге — плотная плохо держит тройной сгиб;\n" +
+                        "• делайте серию: «книжка про лето», «книжка про кота»;\n" +
+                        "• если книжка делается в сад, впишите имя автора на обложке сразу.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
