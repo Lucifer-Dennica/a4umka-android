@@ -1,8 +1,8 @@
 package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,7 +48,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
     var showInfoSheet by remember { mutableStateOf(false) }
     var showFoldInstructions by remember { mutableStateOf(false) }
     
-    // Состояние для увеличения картинки
     var zoomImageRes by remember { mutableStateOf<Int?>(null) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -158,13 +157,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Оформление:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.design == BookletDesign.LEAVES, onClick = { config = config.copy(design = BookletDesign.LEAVES) }, label = { Text("Листики") })
-                    FilterChip(selected = config.design == BookletDesign.STARS, onClick = { config = config.copy(design = BookletDesign.STARS) }, label = { Text("Звёзды") })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
                 Text("Разлиновка страниц:", style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = config.ruling == BookletRuling.LINE_8MM, onClick = { config = config.copy(ruling = BookletRuling.LINE_8MM) }, label = { Text("Линия 8 мм") })
@@ -231,7 +223,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                     Text("Как сложить книжку", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Текст + Картинка 1
                     Text("1. Отрежьте нижнюю полоску с инструкцией.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(4.dp))
                     Image(
@@ -242,7 +233,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Текст + Картинка 2
                     Text("2. Сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(4.dp))
                     Image(
@@ -253,7 +243,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Текст + Картинка 3
                     Text("3. Разверните до первого сгиба и надрежьте по жирной линии в середине.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(4.dp))
                     Image(
@@ -264,7 +253,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Текст + Картинка 4
                     Text("4. Разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется. Сложите книжку и прогладьте сгибы.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(4.dp))
                     Image(
@@ -324,7 +312,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                             )
                         }
 
-                        // Кнопка закрытия
                         IconButton(
                             onClick = { zoomImageRes = null },
                             modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
@@ -336,7 +323,7 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
             }
         }
         
-        // ИНФО (С ПОЛНЫМ ТЕКСТОМ С САЙТА)
+        // ИНФО (ПОЛНЫЙ ТЕКСТ)
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
