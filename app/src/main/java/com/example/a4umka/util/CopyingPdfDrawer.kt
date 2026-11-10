@@ -32,15 +32,20 @@ object CopyingPdfDrawer {
             val headerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
             canvas.drawText(headerInfo, margin, currentY, headerPaint)
             currentY += 30f
+            
             val fieldPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
             val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
+            
             canvas.drawText("Имя:", margin, currentY, fieldPaint)
             canvas.drawLine(margin + 35f, currentY + 2f, margin + 150f, currentY + 2f, linePaint)
+            
             if (config.signature.isNotEmpty()) {
                 canvas.drawText(config.signature, PAGE_WIDTH / 2f - fieldPaint.measureText(config.signature) / 2f, currentY, fieldPaint)
             }
+            
             canvas.drawText("Дата:", PAGE_WIDTH - 140f, currentY, fieldPaint)
             canvas.drawLine(PAGE_WIDTH - 100f, currentY + 2f, PAGE_WIDTH - margin, currentY + 2f, linePaint)
+            
             currentY += 30f
         }
 
@@ -103,7 +108,8 @@ object CopyingPdfDrawer {
         } else {
             for (story in config.selectedStories) {
                 for (copy in 0 until config.childrenCount) {
-                    if (currentY > 100f) { 
+                    // ИСПРАВЛЕНИЕ: Проверяем 150f вместо 100f, чтобы шапка и первый текст были на одном листе
+                    if (currentY > 150f) { 
                         onPageFinished()
                         pageIndex++
                         canvas = canvasProvider(pageIndex)
