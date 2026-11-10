@@ -11,12 +11,11 @@ import android.graphics.pdf.PdfDocument
 import com.example.a4umka.data.*
 
 object BookletPdfDrawer {
-    // Альбомная ориентация
     const val PAGE_WIDTH = 842f
     const val PAGE_HEIGHT = 595f
+    private const val INSTRUCTION_HEIGHT = 80f // Место под инструкцию
 
     fun generatePreview(config: BookletConfig, context: Context): List<Bitmap> {
-        // Генерируем одно превью в 50% разрешении для скорости
         val scale = 0.5f
         val pw = (PAGE_WIDTH * scale).toInt()
         val ph = (PAGE_HEIGHT * scale).toInt()
@@ -38,8 +37,10 @@ object BookletPdfDrawer {
     private fun drawPage(canvas: Canvas, config: BookletConfig) {
         canvas.drawColor(Color.WHITE)
         
+        // Высота для ячеек (без учета инструкции)
+        val gridHeight = PAGE_HEIGHT - INSTRUCTION_HEIGHT
         val cellW = PAGE_WIDTH / 4f
-        val cellH = PAGE_HEIGHT / 2f
+        val cellH = gridHeight / 2f
         
         val pages = BookletData.getPages(config)
         
@@ -47,44 +48,53 @@ object BookletPdfDrawer {
         val mainColor = if (isBW) Color.BLACK else Color.parseColor("#33691E")
         val lineColor = if (isBW) Color.LTGRAY else Color.parseColor("#C8E6C9")
 
-        // --- 1. Линии сгиба и надреза ---
+        // 1. Линии сгиба и надреза (только в области ячеек)
         if (config.showFoldLines) {
             val foldPaint = Paint().apply { 
                 color = Color.GRAY; strokeWidth = 1f; style = Paint.Style.STROKE 
                 pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f, 10f), 0f) 
             }
-            // Вертикальные линии
             for (i in 1..3) {
-                canvas.drawLine(cellW * i, 0f, cellW * i, PAGE_HEIGHT, foldPaint)
+                canvas.drawLine(cellW * i, 0f, cellW * i, gridHeight, foldPaint)
             }
-            // Горизонтальная линия (по бокам)
             canvas.drawLine(0f, cellH, cellW, cellH, foldPaint)
             canvas.drawLine(cellW * 3, cellH, PAGE_WIDTH, cellH, foldPaint)
 
-            // Центральная линия разреза (посередине)
             val cutPaint = Paint().apply { color = if(isBW) Color.BLACK else Color.parseColor("#D84315"); strokeWidth = 2f }
             canvas.drawLine(cellW, cellH, cellW * 3, cellH, cutPaint)
         }
 
-        // --- 2. Отрисовка 8 страниц ---
-        // Верхний ряд: 8, 1, 4, 5
-        // Нижний ряд: 7, 2, 3, 6 (перевернуты на 180)
-        
-        // Верхний ряд
-        drawCell(canvas, pages[7], config, 0, 0, cellW, cellH, mainColor, lineColor, isRotated = false) // 8 (Конец)
-        drawCell(canvas, pages[0], config, 1, 0, cellW, cellH, mainColor, lineColor, isRotated = false) // 1 (Обложка)
-        drawCell(canvas, pages[3], config, 2, 0, cellW, cellH, mainColor, lineColor, isRotated = false) // 4
-        drawCell(canvas, pages[4], config, 3, 0, cellW, cellH, mainColor, lineColor, isRotated = false) // 5
+        // 2. Отрисовка 8 страниц
+        drawCell(canvas, pages[7], config, 0, 0, cellW, cellH, mainColor, lineColor, isRotated = false)
+        drawCell(canvas, pages[0], config, 1, 0, cellW, cellH, mainColor, lineColor, isRotated = false)
+        drawCell(canvas, pages[3], config, 2, 0, cellW, cellH, mainColor, lineColor, isRotated = false)
+        drawCell(canvas, pages[4], config, 3, 0, cellW, cellH, mainColor, lineColor, isRotated = false)
 
-        // Нижний ряд (перевернут)
-        drawCell(canvas, pages[6], config, 0, 1, cellW, cellH, mainColor, lineColor, isRotated = true) // 7
-        drawCell(canvas, pages[1], config, 1, 1, cellW, cellH, mainColor, lineColor, isRotated = true) // 2
-        drawCell(canvas, pages[2], config, 2, 1, cellW, cellH, mainColor, lineColor, isRotated = true) // 3
-        drawCell(canvas, pages[5], config, 3, 1, cellW, cellH, mainColor, lineColor, isRotated = true) // 6
+        drawCell(canvas, pages[6], config, 0, 1, cellW, cellH, mainColor, lineColor, isRotated = true)
+        drawCell(canvas, pages[1], config, 1, 1, cellW, cellH, mainColor, lineColor, isRotated = true)
+        drawCell(canvas, pages[2], config, 2, 1, cellW, cellH, mainColor, lineColor, isRotated = true)
+        drawCell(canvas, pages[5], config, 3, 1, cellW, cellH, mainColor, lineColor, isRotated = true)
         
-        // Подпись снизу (полоска с инструкцией)
-        val instructionPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY }
-        canvas.drawText("✂ Отрежьте нижнюю полоску. Сложите: пополам, еще раз пополам, надрежьте по жирной линии, сложите вдоль и сдвиньте края.", 10f, PAGE_HEIGHT - 10f, instructionPaint)
+        // 3. Линия отреза и инструкция
+        val cutLineY = gridHeight + 10f
+        val cutLinePaint = Paint().apply { 
+            color = Color.GRAY; strokeWidth = 1f; style = Paint.Style.STROKE 
+            pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) 
+        }
+        canvas.drawLine(0f, cutLineY, PAGE_WIDTH, cutLineY, cutLinePaint)
+
+        val instructionPaint = Paint().apply { isAntiAlias = true; textSize = 9f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
+        var instY = cutLineY + 15f
+        
+        canvas.drawText("✂ Отрежьте эту полоску. Сложите: пополам, еще раз пополам, надрежьте по жирной линии, сложите вдоль и сдвиньте края.", 10f, instY, instructionPaint)
+        instY += 15f
+        canvas.drawText("1. Согните пополам поперек, потом еще раз пополам.", 10f, instY, instructionPaint)
+        instY += 12f
+        canvas.drawText("2. Разверните до первого сгиба и надрежьте по жирной линии в середине.", 10f, instY, instructionPaint)
+        instY += 12f
+        canvas.drawText("3. Разверните лист, сложите вдоль и сдвиньте края друг к другу.", 10f, instY, instructionPaint)
+        instY += 12f
+        canvas.drawText("4. Сложите книжку и прогладьте сгибы. Готово!", 10f, instY, instructionPaint)
     }
 
     private fun drawCell(
@@ -94,11 +104,9 @@ object BookletPdfDrawer {
     ) {
         canvas.save()
         
-        // Начало ячейки
         val startX = col * cellW
         val startY = row * cellH
         
-        // Сдвигаем в центр ячейки для вращения
         if (isRotated) {
             canvas.rotate(180f, startX + cellW / 2f, startY + cellH / 2f)
         }
@@ -120,12 +128,10 @@ object BookletPdfDrawer {
         val linePaint = Paint().apply { color = lineColor; strokeWidth = 1f }
         
         if (page.isCover) {
-            // ОБЛОЖКА
             val coverTitlePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
             canvas.drawText("МОЯ ПЕРВАЯ КНИГА", centerX, top + 20f, Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.GRAY; textAlign = Paint.Align.CENTER })
             
             val titleStr = if (config.title.isNotBlank()) config.title else "Моя книжка"
-            // Перенос строк для длинного названия
             val words = titleStr.split(" ")
             var line = ""
             var curY = top + 50f
@@ -142,7 +148,6 @@ object BookletPdfDrawer {
                 curY += 20f
             }
             
-            // Окно для рисунка на обложке
             val boxRect = RectF(left + 10f, curY + 10f, right - 10f, bottom - 50f)
             val boxPaint = Paint().apply { color = if(isBW) Color.LTGRAY else lineColor; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
             canvas.drawRect(boxRect, boxPaint)
@@ -152,16 +157,13 @@ object BookletPdfDrawer {
             canvas.drawLine(left + 20f, bottom - 10f, right - 20f, bottom - 10f, linePaint)
             
         } else if (page.isEnd) {
-            // КОНЕЦ
             canvas.drawText("Конец", centerX, startY + cellH / 2f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
             canvas.drawText("a4umka.ru", centerX, bottom - 10f, Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.GRAY; textAlign = Paint.Align.CENTER })
             
         } else {
-            // ОБЫЧНАЯ СТРАНИЦА
             var curY = top + 20f
             
             if (page.prompt != null) {
-                // Рисуем текст подсказки или загадки
                 val promptPaint = if (config.type == BookletType.RIDDLES) Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER } else titlePaint
                 
                 val words = page.prompt.split(" ")
@@ -185,7 +187,6 @@ object BookletPdfDrawer {
             }
 
             if (page.showDrawingBox) {
-                // Окно для рисунка
                 val boxHeight = height * 0.4f
                 val boxRect = RectF(left, curY, right, curY + boxHeight)
                 val boxPaint = Paint().apply { color = if(isBW) Color.LTGRAY else lineColor; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
@@ -194,7 +195,6 @@ object BookletPdfDrawer {
             }
 
             if (page.showLines) {
-                // Рисуем линии для письма
                 val step = when (config.ruling) {
                     BookletRuling.LINE_8MM -> 8f * 2.83f
                     BookletRuling.WIDE_10MM -> 10f * 2.83f
