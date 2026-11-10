@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,7 +25,6 @@ import com.example.a4umka.data.FillwordSizeMode
 import com.example.a4umka.util.FillwordGenerator
 import com.example.a4umka.util.FillwordGrid
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -46,8 +44,8 @@ fun InteractiveFillwordScreen(
         showSuccess = false
     }
 
-    var dragStart by remember { mutableStateOf<Offset?>(null) }
-    var dragEnd by remember { mutableStateOf<Offset?>(null) }
+    var startCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var currentCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
 
     Scaffold(
         topBar = {
@@ -90,32 +88,45 @@ fun InteractiveFillwordScreen(
                             .size(sizePx)
                             .pointerInput(grid) {
                                 detectDragGestures(
-                                    onDragStart = { offset -> dragStart = offset },
-                                    onDrag = { change, _ -> dragEnd = change.position },
+                                    onDragStart = { offset ->
+                                        val cellW = size.width / grid!!.size.toFloat()
+                                        val cellH = size.height / grid!!.size.toFloat()
+                                        val col = (offset.x / cellW).toInt().coerceIn(0, grid!!.size - 1)
+                                        val row = (offset.y / cellH).toInt().coerceIn(0, grid!!.size - 1)
+                                        startCell = Pair(row, col)
+                                        currentCell = Pair(row, col)
+                                    },
+                                    onDrag = { change, _ ->
+                                        val cellW = size.width / grid!!.size.toFloat()
+                                        val cellH = size.height / grid!!.size.toFloat()
+                                        val col = (change.position.x / cellW).toInt().coerceIn(0, grid!!.size - 1)
+                                        val row = (change.position.y / cellH).toInt().coerceIn(0, grid!!.size - 1)
+                                        currentCell = Pair(row, col)
+                                        change.consume()
+                                    },
                                     onDragEnd = {
-                                        val start = dragStart
-                                        val end = dragEnd
-                                        if (start != null && end != null) {
-                                            val startCol = (start.x / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
-                                            val startRow = (start.y / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
-                                            val endCol = (end.x / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
-                                            val endRow = (end.y / cellSize.toPx()).roundToInt().coerceIn(0, grid!!.size - 1)
-
-                                            val word = getWordFromPath(grid!!, startRow, startCol, endRow, endCol)
-                                            if (word != null && words.contains(word) && !foundWords.contains(word)) {
+                                        if (startCell != null && currentCell != null) {
+                                            val path = getLineCells(startCell!!, currentCell!!)
+                                            val word = path.joinToString("") { (r, c) -> grid!!.letters[r][c].toString() }
+                                            if (words.contains(word) && !foundWords.contains(word)) {
                                                 foundWords = foundWords + word
                                                 if (foundWords.size == words.size) showSuccess = true
                                             }
                                         }
-                                        dragStart = null
-                                        dragEnd = null
+                                        startCell = null
+                                        currentCell = null
+                                    },
+                                    onDragCancel = {
+                                        startCell = null
+                                        currentCell = null
                                     }
                                 )
                             }
                     ) {
                         val cellW = size.width / grid!!.size
                         val cellH = size.height / grid!!.size
-                        
+
+                        // 1. Отрисовка найденных слов (зеленый фон)
                         for (word in foundWords) {
                             val pw = grid!!.placedWords.find { it.word == word }
                             if (pw != null) {
@@ -131,6 +142,23 @@ fun InteractiveFillwordScreen(
                             }
                         }
 
+                        // 2. Отрисовка текущего выделения (зеленый или красный)
+                        if (startCell != null && currentCell != null) {
+                            val path = getLineCells(startCell!!, currentCell!!)
+                            val word = path.joinToString("") { (r, c) -> grid!!.letters[r][c].toString() }
+                            val isValid = words.contains(word) && !foundWords.contains(word)
+                            val color = if (isValid) Color(0x664CAF50) else Color(0x66FF0000) // Полупрозрачный зеленый/красный
+
+                            for ((r, c) in path) {
+                                drawRect(
+                                    color = color,
+                                    topLeft = Offset(c * cellW, r * cellH),
+                                    size = Size(cellW, cellH)
+                                )
+                            }
+                        }
+
+                        // 3. Отрисовка сетки и букв
                         for (y in 0 until grid!!.size) {
                             for (x in 0 until grid!!.size) {
                                 val left = x * cellW
@@ -140,7 +168,7 @@ fun InteractiveFillwordScreen(
                                     color = Color.LightGray,
                                     topLeft = Offset(left, top),
                                     size = Size(cellW, cellH),
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(1f)
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f)
                                 )
 
                                 drawIntoCanvas { canvas ->
@@ -156,15 +184,6 @@ fun InteractiveFillwordScreen(
                                     canvas.nativeCanvas.drawText(letter, left + cellW / 2f, textY, paint)
                                 }
                             }
-                        }
-
-                        if (dragStart != null && dragEnd != null) {
-                            drawLine(
-                                color = Color.Red,
-                                start = dragStart!!,
-                                end = dragEnd!!,
-                                strokeWidth = 5f
-                            )
                         }
                     }
                 }
@@ -197,22 +216,25 @@ fun InteractiveFillwordScreen(
     }
 }
 
-private fun getWordFromPath(grid: FillwordGrid, r1: Int, c1: Int, r2: Int, c2: Int): String? {
-    val dRow = r2 - r1
-    val dCol = c2 - c1
+private fun getLineCells(start: Pair<Int, Int>, end: Pair<Int, Int>): List<Pair<Int, Int>> {
+    val (r1, c1) = start
+    val (r2, c2) = end
+    val path = mutableListOf<Pair<Int, Int>>()
     
-    if (dRow != 0 && dCol != 0) return null
-    
-    val length = maxOf(abs(dRow), abs(dCol)) + 1
-    val stepRow = if (dRow == 0) 0 else dRow / abs(dRow)
-    val stepCol = if (dCol == 0) 0 else dCol / abs(dCol)
-    
-    val sb = StringBuilder()
-    for (i in 0 until length) {
-        val r = r1 + i * stepRow
-        val c = c1 + i * stepCol
-        if (r < 0 || r >= grid.size || c < 0 || c >= grid.size) return null
-        sb.append(grid.letters[r][c])
+    if (r1 == r2) {
+        val step = if (c1 < c2) 1 else -1
+        for (c in c1..c2 step step) path.add(Pair(r1, c))
+    } else if (c1 == c2) {
+        val step = if (r1 < r2) 1 else -1
+        for (r in r1..r2 step step) path.add(Pair(r, c1))
+    } else {
+        // Диагональ
+        val dr = if (r1 < r2) 1 else -1
+        val dc = if (c1 < c2) 1 else -1
+        val len = minOf(abs(r2 - r1), abs(c2 - c1)) + 1
+        for (i in 0 until len) {
+            path.add(Pair(r1 + i * dr, c1 + i * dc))
+        }
     }
-    return sb.toString()
+    return path
 }
