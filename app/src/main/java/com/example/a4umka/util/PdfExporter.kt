@@ -46,16 +46,22 @@ object PdfExporter {
         return saveDocument(context, document, "syllable_table_${System.currentTimeMillis()}.pdf")
     }
 
-    fun exportSyllableText(context: Context, config: SyllableConfig): String? {
-        val document = PdfDocument()
-        SyllablePdfDrawer.drawDocument(document, config, context)
-        return saveDocument(context, document, "syllables_${System.currentTimeMillis()}.pdf")
-    }
-
     fun exportAssembleWord(context: Context, config: AssembleWordConfig): String? {
         val document = PdfDocument()
         AssembleWordPdfDrawer.drawDocument(document, config, context)
         return saveDocument(context, document, "assemble_word_${System.currentTimeMillis()}.pdf")
+    }
+
+    fun exportFillword(context: Context, config: FillwordConfig): String? {
+        val document = PdfDocument()
+        FillwordPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "fillword_${System.currentTimeMillis()}.pdf")
+    }
+
+    fun exportSyllableText(context: Context, config: SyllableConfig): String? {
+        val document = PdfDocument()
+        SyllablePdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "syllables_${System.currentTimeMillis()}.pdf")
     }
 
     fun exportComprehension(context: Context, config: ComprehensionConfig): String? {
