@@ -16,7 +16,6 @@ object CopyingPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
 
-    // Общая функция для рендеринга в Bitmap (для превью) и в PDF
     private fun renderDocument(
         config: CopyingConfig,
         canvasProvider: (Int) -> Canvas,
@@ -28,36 +27,27 @@ object CopyingPdfDrawer {
         val margin = 40f
         val lineSpacingPx = config.lineStep * 3.78f
 
-        // Рисуем шапку на первой странице (или на каждой, если нужно)
         fun drawHeader() {
             val headerInfo = "${if (config.mode == CopyingMode.COPYING) "СПИСЫВАНИЕ" else "ДИКТАНТ"} • ${config.grade} КЛАСС • ОРИЕНТИР"
             val headerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
             canvas.drawText(headerInfo, margin, currentY, headerPaint)
-            
             currentY += 30f
-            
             val fieldPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
             val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-            
             canvas.drawText("Имя:", margin, currentY, fieldPaint)
             canvas.drawLine(margin + 35f, currentY + 2f, margin + 150f, currentY + 2f, linePaint)
-            
             if (config.signature.isNotEmpty()) {
                 canvas.drawText(config.signature, PAGE_WIDTH / 2f - fieldPaint.measureText(config.signature) / 2f, currentY, fieldPaint)
             }
-            
             canvas.drawText("Дата:", PAGE_WIDTH - 140f, currentY, fieldPaint)
             canvas.drawLine(PAGE_WIDTH - 100f, currentY + 2f, PAGE_WIDTH - margin, currentY + 2f, linePaint)
-            
             currentY += 30f
         }
 
         drawHeader()
 
         if (config.combineOnOnePage) {
-            // РЕЖИМ "НЕ РАЗДЕЛЯТЬ ЛИСТЫ"
             for (story in config.selectedStories) {
-                // Оцениваем высоту текста
                 val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
                 val words = story.text.split(" ")
                 var line = ""
@@ -74,11 +64,9 @@ object CopyingPdfDrawer {
                 val titleHeight = 25f
                 val boxHeight = 55f
                 
-                // Даем строк для письма в зависимости от длины текста (от 3 до 6)
-                val linesForThisStory = (story.wordCount / 15).coerceIn(3, 6)
+                val linesForThisStory = (story.wordCount / 8).coerceIn(4, 12)
                 val writeAreaHeight = linesForThisStory * lineSpacingPx
                 
-                // Если не влезает, начинаем новый лист
                 if (currentY + titleHeight + textHeight + boxHeight + writeAreaHeight > PAGE_HEIGHT - 40f) {
                     onPageFinished()
                     pageIndex++
@@ -87,19 +75,16 @@ object CopyingPdfDrawer {
                     drawHeader()
                 }
 
-                // Рисуем Заголовок
                 val titlePaint = Paint().apply { isAntiAlias = true; textSize = 20f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
                 canvas.drawText(story.title, margin, currentY, titlePaint)
                 currentY += 25f
 
-                // Рисуем Текст
                 for (l in lines) {
                     canvas.drawText(l, margin, currentY, bodyPaint)
                     currentY += bodyPaint.textSize * 1.5f
                 }
                 currentY += 10f
 
-                // Рамка с правилами
                 val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
                 val boxRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 40f)
                 canvas.drawRect(boxRect, boxPaint)
@@ -108,19 +93,17 @@ object CopyingPdfDrawer {
                 canvas.drawText("Проверь: начало предложений, буквы в словах, пробелы, знаки в конце.", margin + 5f, currentY + 30f, hintPaint)
                 currentY += 55f
 
-                // Рисуем строки для письма
                 val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
                 for (i in 0 until linesForThisStory) {
                     canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
                     currentY += lineSpacingPx
                 }
-                currentY += 20f // Отступ между историями
+                currentY += 20f
             }
         } else {
-            // РЕЖИМ "РАЗДЕЛЬНЫЕ ЛИСТЫ"
             for (story in config.selectedStories) {
                 for (copy in 0 until config.childrenCount) {
-                    if (currentY > 100f) { // Если это не первая страница
+                    if (currentY > 100f) { 
                         onPageFinished()
                         pageIndex++
                         canvas = canvasProvider(pageIndex)
@@ -128,12 +111,10 @@ object CopyingPdfDrawer {
                         drawHeader()
                     }
                     
-                    // Заголовок
                     val titlePaint = Paint().apply { isAntiAlias = true; textSize = 24f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
                     canvas.drawText(story.title, margin, currentY, titlePaint)
                     currentY += 30f
 
-                    // Текст
                     if (config.mode == CopyingMode.COPYING) {
                         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
                         val words = story.text.split(" ")
@@ -153,7 +134,6 @@ object CopyingPdfDrawer {
                         currentY += 15f
                     }
 
-                    // Рамка с правилами
                     val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
                     val boxRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 40f)
                     canvas.drawRect(boxRect, boxPaint)
@@ -166,7 +146,6 @@ object CopyingPdfDrawer {
                     canvas.drawText("Проверь: начало предложений, буквы в словах, пробелы, знаки в конце.", margin + 5f, currentY + 30f, hintPaint)
                     currentY += 60f
 
-                    // Линии до конца страницы
                     val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
                     while (currentY < PAGE_HEIGHT - 40f) {
                         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
@@ -176,7 +155,6 @@ object CopyingPdfDrawer {
             }
         }
 
-        // Если нужен дополнительный пустой лист
         if (config.addBlankPage) {
             onPageFinished()
             pageIndex++
