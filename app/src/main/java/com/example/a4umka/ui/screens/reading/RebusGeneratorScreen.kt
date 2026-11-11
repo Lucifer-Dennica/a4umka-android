@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun RebusGeneratorScreen(
     onBack: () -> Unit,
-    onPlayInteractive: (String) -> Unit
+    onPlayInteractive: (List<String>) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -102,7 +102,6 @@ fun RebusGeneratorScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // РАСПОЛОЖЕНИЕ В РЯДУ
                 var layoutExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = layoutExpanded, onExpandedChange = { layoutExpanded = it }) {
                     OutlinedTextField(
@@ -122,14 +121,13 @@ fun RebusGeneratorScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // СКОЛЬКО НА ЛИСТ
                 var perPageExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = perPageExpanded, onExpandedChange = { perPageExpanded = it }) {
                     OutlinedTextField(
                         value = "Ребусов на лист: ${config.wordsPerPage}",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Экономия бумаги") },
+                        label = { Text("Экономия бумаги (таблицей)") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = perPageExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
@@ -159,13 +157,13 @@ fun RebusGeneratorScreen(
 
                 if (words.isNotEmpty()) {
                     Button(
-                        onClick = { onPlayInteractive(words.first()) },
+                        onClick = { onPlayInteractive(words) },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Решать на экране (${words.first()})")
+                        Text("Решать на экране")
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -206,7 +204,7 @@ fun RebusGeneratorScreen(
                     Text(
                         "Введите имя, тему урока или короткую фразу — и получите ребус из своего слова на A4.\n\n" +
                         "Каждая картинка обозначает первую букву своего названия. Например: кот, облако, торт дают К, О, Т — слово «КОТ».\n\n" +
-                        "Теперь можно разместить 2 или 4 ребуса на одном листе для экономии бумаги. А с помощью кнопки «Решать на экране» ребёнок может вписать буквы прямо в приложении и проверить себя.",
+                        "Теперь можно разместить 2 или 4 ребуса на одном листе (таблицей) для экономии бумаги. А с помощью кнопки «Решать на экране» ребёнок может вписать буквы прямо в приложении и проверить себя.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
