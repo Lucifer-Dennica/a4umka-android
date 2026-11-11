@@ -202,7 +202,12 @@ fun FunnyStoryGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
