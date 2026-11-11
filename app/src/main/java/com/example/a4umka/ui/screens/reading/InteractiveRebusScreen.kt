@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.RebusData
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun InteractiveRebusScreen(
     word: String,
@@ -76,7 +76,7 @@ fun InteractiveRebusScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Карточки с эмодзи и полями ввода
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (i in word.indices) {
                     val char = word[i]
                     if (char == ' ') continue
