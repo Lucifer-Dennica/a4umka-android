@@ -2,7 +2,6 @@ package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -12,7 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.RebusData
@@ -20,17 +19,20 @@ import com.example.a4umka.data.RebusData
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun InteractiveRebusScreen(
-    word: String,
+    words: List<String>,
     onBack: () -> Unit
 ) {
-    val rebuses = remember(word) { RebusData.getRebusWordsForWord(word) }
-    val answers = remember(word) { mutableStateListOf(*Array(word.length) { "" }) }
-    var isSolved by remember { mutableStateOf(false) }
+    var currentIndex by remember { mutableIntStateOf(0) }
+    val currentWord = words.getOrNull(currentIndex) ?: ""
+    
+    val rebuses = remember(currentWord) { RebusData.getRebusWordsForWord(currentWord) }
+    val answers = remember(currentWord) { mutableStateListOf(*Array(currentWord.length) { "" }) }
+    var isSolved by remember(currentWord) { mutableStateOf(false) }
 
     fun check() {
         var allCorrect = true
-        for (i in word.indices) {
-            val char = word[i]
+        for (i in currentWord.indices) {
+            val char = currentWord[i]
             val input = answers[i].uppercase()
             if (char == ' ') continue
             
@@ -69,16 +71,22 @@ fun InteractiveRebusScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Назови картинку и запиши первую букву:",
+                text = "Слово ${currentIndex + 1} из ${words.size}",
                 style = MaterialTheme.typography.titleMedium,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Назови картинку и запиши первую букву:",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Карточки с эмодзи и полями ввода
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (i in word.indices) {
-                    val char = word[i]
+                for (i in currentWord.indices) {
+                    val char = currentWord[i]
                     if (char == ' ') continue
                     val rebus = rebuses[i]
 
@@ -101,10 +109,9 @@ fun InteractiveRebusScreen(
                                     },
                                     modifier = Modifier.width(50.dp).height(50.dp),
                                     singleLine = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, textAlign = TextAlign.Center)
                                 )
                             } else {
-                                // Готовая буква
                                 Text(
                                     text = char.toString(),
                                     fontSize = 36.sp,
@@ -123,11 +130,29 @@ fun InteractiveRebusScreen(
 
             if (isSolved) {
                 Text(
-                    text = "🎉 Молодец! Слово разгадано: $word",
+                    text = "🎉 Молодец! Слово разгадано: $currentWord",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (currentIndex < words.size - 1) {
+                    Button(
+                        onClick = { currentIndex++ }, 
+                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    ) {
+                        Text("Далее (Слово ${currentIndex + 2})")
+                    }
+                } else {
+                    Button(
+                        onClick = onBack, 
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("Закончить")
+                    }
+                }
             } else {
                 Button(onClick = { check() }, modifier = Modifier.fillMaxWidth().height(50.dp)) {
                     Text("Проверить")
