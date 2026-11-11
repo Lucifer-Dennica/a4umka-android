@@ -106,6 +106,12 @@ object PdfExporter {
         return saveDocument(context, document, "booklet_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportSimpleRebus(context: Context, config: SimpleRebusConfig): String? {
+        val document = PdfDocument()
+        SimpleRebusPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "simple_rebus_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
