@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.SimpleRebusConfig
@@ -35,7 +36,7 @@ fun SimpleRebusGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(SimpleRebusConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
-    var previewKey by remember { mutableIntStateOf(0) } // Для кнопки "Другие ребусы"
+    var previewKey by remember { mutableIntStateOf(0) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     LaunchedEffect(config, previewKey) {
