@@ -88,6 +88,12 @@ object PdfExporter {
         return saveDocument(context, document, "letter_math_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportProverb(context: Context, config: ProverbConfig): String? {
+        val document = PdfDocument()
+        ProverbPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "proverb_${System.currentTimeMillis()}.pdf")
+    }
+
     fun exportSyllableText(context: Context, config: SyllableConfig): String? {
         val document = PdfDocument()
         SyllablePdfDrawer.drawDocument(document, config, context)
