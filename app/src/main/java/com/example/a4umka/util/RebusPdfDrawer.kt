@@ -82,21 +82,30 @@ object RebusPdfDrawer {
                 canvas.drawLine(10f, halfH, PAGE_WIDTH - 10f, halfH, linePaint)
                 
                 for (i in words.indices) {
-                    drawSingleRebus(canvas, config, words[i], margin, i * halfH + 10f, PAGE_WIDTH - margin * 2, halfH - 20f, 0.65f)
+                    drawSingleRebus(canvas, config, words[i], margin, i * halfH + 10f, PAGE_WIDTH - margin * 2, halfH - 20f, 0.75f)
                 }
             }
             4 -> {
                 val halfW = PAGE_WIDTH / 2f
                 val halfH = PAGE_HEIGHT / 2f
                 
-                // Линии-разделители (крест)
+                // Рисуем четкую таблицу (крест)
                 canvas.drawLine(halfW, 10f, halfW, PAGE_HEIGHT - 10f, linePaint)
                 canvas.drawLine(10f, halfH, PAGE_WIDTH - 10f, halfH, linePaint)
 
                 for (i in words.indices) {
                     val row = i / 2
                     val col = i % 2
-                    drawSingleRebus(canvas, config, words[i], col * halfW + 10f, row * halfH + 10f, halfW - 20f, halfH - 20f, 0.45f)
+                    val left = col * halfW + 10f
+                    val top = row * halfH + 10f
+                    val width = halfW - 20f
+                    val height = halfH - 20f
+                    
+                    // Легкая рамка для каждой ячейки таблицы
+                    val cellBorder = Paint().apply { color = Color.parseColor("#F0F0F0"); strokeWidth = 1f; style = Paint.Style.STROKE }
+                    canvas.drawRect(left, top, left + width, top + height, cellBorder)
+
+                    drawSingleRebus(canvas, config, words[i], left + 5f, top + 5f, width - 10f, height - 10f, 0.65f)
                 }
             }
         }
@@ -127,7 +136,7 @@ object RebusPdfDrawer {
         val gridTop = top + 80f * scale
         val gridWidth = width
         val cellW = gridWidth / cols
-        val cellH = minOf(120f * scale, (height - 200f * scale) / rows.coerceAtLeast(1))
+        val cellH = minOf(120f * scale, (height - 180f * scale) / rows.coerceAtLeast(1))
         
         val cardBorderPaint = Paint().apply { color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#A5D6A7"); style = Paint.Style.STROKE; strokeWidth = 1.5f }
         val numPaint = Paint().apply { isAntiAlias = true; textSize = 10f * scale; color = Color.GRAY; typeface = Typeface.DEFAULT }
