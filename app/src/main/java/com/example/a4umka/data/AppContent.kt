@@ -35,6 +35,7 @@ object AppContent {
             TaskItem("fillword_kids", "Филворд для малышей", "Готовый детский словарь с картинками"),
             TaskItem("funny_stories", "Весёлые истории", "Игра в чепуху: впиши слова и читай"),
             TaskItem("rebus_custom", "Ребус из своего слова", "Зашифруй слово по первым буквам картинок")
+            TaskItem("simple_rebus", "Ребусы", "Готовые ребусы по первым буквам")
         )
         "hand" -> listOf(
             TaskItem("prescriptions", "Прописи букв", "Обводка букв по пунктиру"),
