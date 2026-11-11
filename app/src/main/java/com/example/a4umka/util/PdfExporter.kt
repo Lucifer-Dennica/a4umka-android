@@ -76,6 +76,18 @@ object PdfExporter {
         return saveDocument(context, document, "rebus_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportSimpleRebus(context: Context, config: SimpleRebusConfig): String? {
+        val document = PdfDocument()
+        SimpleRebusPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "simple_rebus_${System.currentTimeMillis()}.pdf")
+    }
+
+    fun exportLetterMath(context: Context, config: LetterMathConfig): String? {
+        val document = PdfDocument()
+        LetterMathPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "letter_math_${System.currentTimeMillis()}.pdf")
+    }
+
     fun exportSyllableText(context: Context, config: SyllableConfig): String? {
         val document = PdfDocument()
         SyllablePdfDrawer.drawDocument(document, config, context)
@@ -104,12 +116,6 @@ object PdfExporter {
         val document = PdfDocument()
         BookletPdfDrawer.drawDocument(document, config, context)
         return saveDocument(context, document, "booklet_${System.currentTimeMillis()}.pdf")
-    }
-
-    fun exportSimpleRebus(context: Context, config: SimpleRebusConfig): String? {
-        val document = PdfDocument()
-        SimpleRebusPdfDrawer.drawDocument(document, config, context)
-        return saveDocument(context, document, "simple_rebus_${System.currentTimeMillis()}.pdf")
     }
 
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
