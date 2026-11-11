@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.a4umka.data.FillwordConfig
 import com.example.a4umka.data.FunnyStory
+import com.example.a4umka.data.LetterMathConfig
 import com.example.a4umka.ui.screens.CategoryScreen
 import com.example.a4umka.ui.screens.HomeScreen
 import com.example.a4umka.ui.screens.SettingsScreen
@@ -25,9 +26,11 @@ import com.example.a4umka.ui.screens.reading.FillwordKidsGeneratorScreen
 import com.example.a4umka.ui.screens.reading.FunnyStoryGeneratorScreen
 import com.example.a4umka.ui.screens.reading.RebusGeneratorScreen
 import com.example.a4umka.ui.screens.reading.SimpleRebusGeneratorScreen
+import com.example.a4umka.ui.screens.reading.LetterMathGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFillwordScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFunnyStoryScreen
 import com.example.a4umka.ui.screens.reading.InteractiveRebusScreen
+import com.example.a4umka.ui.screens.reading.InteractiveLetterMathScreen
 import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
 import com.example.a4umka.ui.screens.reading.CopyingGeneratorScreen
@@ -52,6 +55,8 @@ object Routes {
     const val REBUS_CUSTOM = "rebus_custom"
     const val SIMPLE_REBUS = "simple_rebus"
     const val INTERACTIVE_REBUS = "interactive_rebus"
+    const val LETTER_MATH = "letter_math"
+    const val INTERACTIVE_LETTER_MATH = "interactive_letter_math"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
     const val COPYING = "copying"
@@ -70,6 +75,7 @@ fun NavGraph() {
     var currentFillwordConfig by remember { mutableStateOf(FillwordConfig()) }
     var currentFunnyStory by remember { mutableStateOf<FunnyStory?>(null) }
     var currentRebusWords by remember { mutableStateOf<List<String>>(emptyList()) }
+    var currentLetterMathConfig by remember { mutableStateOf(LetterMathConfig()) }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
@@ -155,6 +161,15 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "simple_rebus" -> {
                     SimpleRebusGeneratorScreen(onBack = { navController.popBackStack() })
                 }
+                categoryId == "reading" && taskId == "letter_math" -> {
+                    LetterMathGeneratorScreen(
+                        onBack = { navController.popBackStack() },
+                        onPlayInteractive = { config ->
+                            currentLetterMathConfig = config
+                            navController.navigate(Routes.INTERACTIVE_LETTER_MATH)
+                        }
+                    )
+                }
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 }
@@ -205,6 +220,13 @@ fun NavGraph() {
         composable(Routes.INTERACTIVE_REBUS) {
             InteractiveRebusScreen(
                 words = currentRebusWords,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.INTERACTIVE_LETTER_MATH) {
+            InteractiveLetterMathScreen(
+                config = currentLetterMathConfig,
                 onBack = { navController.popBackStack() }
             )
         }
