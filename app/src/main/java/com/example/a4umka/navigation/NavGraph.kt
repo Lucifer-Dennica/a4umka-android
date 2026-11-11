@@ -20,6 +20,7 @@ import com.example.a4umka.ui.screens.reading.RibbonGeneratorScreen
 import com.example.a4umka.ui.screens.reading.SyllableTableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.AssembleWordGeneratorScreen
 import com.example.a4umka.ui.screens.reading.FillwordGeneratorScreen
+import com.example.a4umka.ui.screens.reading.FillwordKidsGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFillwordScreen
 import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
@@ -38,6 +39,7 @@ object Routes {
     const val SYLLABLE_TABLES = "syllable_tables"
     const val ASSEMBLE_WORD = "assemble_word"
     const val FILLWORD = "fillword"
+    const val FILLWORD_KIDS = "fillword_kids"
     const val INTERACTIVE_FILLWORD = "interactive_fillword"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
@@ -115,6 +117,9 @@ fun NavGraph() {
                             navController.navigate(Routes.INTERACTIVE_FILLWORD)
                         }
                     )
+                }
+                categoryId == "reading" && taskId == "fillword_kids" -> {
+                    FillwordKidsGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
