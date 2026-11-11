@@ -64,6 +64,12 @@ object PdfExporter {
         return saveDocument(context, document, "fillword_kids_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportFunnyStory(context: Context, config: FunnyStoryConfig): String? {
+        val document = PdfDocument()
+        FunnyStoryPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "funny_story_${System.currentTimeMillis()}.pdf")
+    }
+
     fun exportSyllableText(context: Context, config: SyllableConfig): String? {
         val document = PdfDocument()
         SyllablePdfDrawer.drawDocument(document, config, context)
