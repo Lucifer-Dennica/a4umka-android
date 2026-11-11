@@ -72,10 +72,15 @@ object RebusPdfDrawer {
 
     private fun drawMultiPage(canvas: Canvas, config: RebusConfig, words: List<String>) {
         val margin = 20f
+        val linePaint = Paint().apply { color = Color.parseColor("#E0E0E0"); strokeWidth = 2f; style = Paint.Style.STROKE }
+        
         when (config.wordsPerPage) {
             1 -> drawSingleRebus(canvas, config, words[0], margin, 0f, PAGE_WIDTH - margin * 2, PAGE_HEIGHT, 1f)
             2 -> {
                 val halfH = PAGE_HEIGHT / 2f
+                // Линия-разделитель
+                canvas.drawLine(10f, halfH, PAGE_WIDTH - 10f, halfH, linePaint)
+                
                 for (i in words.indices) {
                     drawSingleRebus(canvas, config, words[i], margin, i * halfH + 10f, PAGE_WIDTH - margin * 2, halfH - 20f, 0.65f)
                 }
@@ -83,6 +88,11 @@ object RebusPdfDrawer {
             4 -> {
                 val halfW = PAGE_WIDTH / 2f
                 val halfH = PAGE_HEIGHT / 2f
+                
+                // Линии-разделители (крест)
+                canvas.drawLine(halfW, 10f, halfW, PAGE_HEIGHT - 10f, linePaint)
+                canvas.drawLine(10f, halfH, PAGE_WIDTH - 10f, halfH, linePaint)
+
                 for (i in words.indices) {
                     val row = i / 2
                     val col = i % 2
