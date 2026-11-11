@@ -24,6 +24,7 @@ import com.example.a4umka.ui.screens.reading.FillwordGeneratorScreen
 import com.example.a4umka.ui.screens.reading.FillwordKidsGeneratorScreen
 import com.example.a4umka.ui.screens.reading.FunnyStoryGeneratorScreen
 import com.example.a4umka.ui.screens.reading.RebusGeneratorScreen
+import com.example.a4umka.ui.screens.reading.SimpleRebusGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFillwordScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFunnyStoryScreen
 import com.example.a4umka.ui.screens.reading.InteractiveRebusScreen
@@ -49,6 +50,7 @@ object Routes {
     const val FUNNY_STORIES = "funny_stories"
     const val INTERACTIVE_FUNNY_STORY = "interactive_funny_story"
     const val REBUS_CUSTOM = "rebus_custom"
+    const val SIMPLE_REBUS = "simple_rebus"
     const val INTERACTIVE_REBUS = "interactive_rebus"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
@@ -149,6 +151,9 @@ fun NavGraph() {
                             navController.navigate(Routes.INTERACTIVE_REBUS)
                         }
                     )
+                }
+                categoryId == "reading" && taskId == "simple_rebus" -> {
+                    SimpleRebusGeneratorScreen(onBack = { navController.popBackStack() })
                 }
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
