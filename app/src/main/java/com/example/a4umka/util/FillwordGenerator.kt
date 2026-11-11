@@ -19,16 +19,11 @@ data class FillwordGrid(
 object FillwordGenerator {
     private val alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 
-    fun generate(words: List<String>, manualSize: Int?, allowBackwards: Boolean): FillwordGrid {
+    fun generate(words: List<String>, manualSize: Int?, allowBackwards: Boolean, allowVertical: Boolean = true): FillwordGrid {
         val maxWordLen = words.maxOfOrNull { it.length } ?: 4
-        
-        // Защита от вылета: размер не может быть меньше самого длинного слова
-        val safeMaxWordLen = maxWordLen
         val totalLetters = words.sumOf { it.length }
-        val autoSize = (Math.sqrt((totalLetters * 2.5).toDouble()).toInt() + 1).coerceAtLeast(safeMaxWordLen + 1)
-        
-        // Если выбран ручной размер, но он меньше слова, принудительно увеличиваем
-        val size = (manualSize ?: autoSize).coerceAtLeast(safeMaxWordLen + 1)
+        val autoSize = (Math.sqrt((totalLetters * 2.5).toDouble()).toInt() + 1).coerceAtLeast(maxWordLen + 1)
+        val size = (manualSize ?: autoSize).coerceAtLeast(maxWordLen + 1)
 
         val grid = Array(size) { Array(size) { ' ' } }
         val placedWords = mutableListOf<PlacedWord>()
@@ -40,18 +35,15 @@ object FillwordGenerator {
             var attempts = 0
             while (!placed && attempts < 100) {
                 attempts++
-                val directions = mutableListOf(
-                    Pair(1, 0),  // Вправо
-                    Pair(0, 1)   // Вниз
-                )
+                val directions = mutableListOf(Pair(1, 0)) // Всегда вправо
+                if (allowVertical) directions.add(Pair(0, 1)) // Вниз
                 if (allowBackwards) {
                     directions.add(Pair(-1, 0))
-                    directions.add(Pair(0, -1))
+                    if (allowVertical) directions.add(Pair(0, -1))
                 }
 
                 val (dx, dy) = directions.random()
                 
-                // Безопасное вычисление стартовых координат
                 val maxStartX = if (dx == 1) size - word.length else size - 1
                 val minStartX = if (dx == -1) word.length - 1 else 0
                 val maxStartY = if (dy == 1) size - word.length else size - 1
