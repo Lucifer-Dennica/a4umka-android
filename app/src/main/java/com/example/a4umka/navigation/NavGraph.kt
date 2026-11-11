@@ -49,7 +49,7 @@ object Routes {
     const val FUNNY_STORIES = "funny_stories"
     const val INTERACTIVE_FUNNY_STORY = "interactive_funny_story"
     const val REBUS_CUSTOM = "rebus_custom"
-    const val INTERACTIVE_REBUS = "interactive_rebus/{word}"
+    const val INTERACTIVE_REBUS = "interactive_rebus"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
     const val COPYING = "copying"
@@ -60,7 +60,6 @@ object Routes {
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
     fun letter(letter: String) = "letter/$letter"
     fun pdfExport(letter: String) = "pdf_export/$letter"
-    fun interactiveRebus(word: String) = "interactive_rebus/$word"
 }
 
 @Composable
@@ -68,6 +67,7 @@ fun NavGraph() {
     val navController = rememberNavController()
     var currentFillwordConfig by remember { mutableStateOf(FillwordConfig()) }
     var currentFunnyStory by remember { mutableStateOf<FunnyStory?>(null) }
+    var currentRebusWords by remember { mutableStateOf<List<String>>(emptyList()) }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
@@ -144,8 +144,9 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "rebus_custom" -> {
                     RebusGeneratorScreen(
                         onBack = { navController.popBackStack() },
-                        onPlayInteractive = { word ->
-                            navController.navigate(Routes.interactiveRebus(word))
+                        onPlayInteractive = { words ->
+                            currentRebusWords = words
+                            navController.navigate(Routes.INTERACTIVE_REBUS)
                         }
                     )
                 }
@@ -196,13 +197,9 @@ fun NavGraph() {
             }
         }
 
-        composable(
-            route = Routes.INTERACTIVE_REBUS,
-            arguments = listOf(navArgument("word") { type = NavType.StringType })
-        ) { entry ->
-            val word = entry.arguments?.getString("word").orEmpty()
+        composable(Routes.INTERACTIVE_REBUS) {
             InteractiveRebusScreen(
-                word = word,
+                words = currentRebusWords,
                 onBack = { navController.popBackStack() }
             )
         }
