@@ -75,29 +75,22 @@ object RebusPdfDrawer {
         val linePaint = Paint().apply { color = Color.parseColor("#D0D0D0"); strokeWidth = 1.5f; style = Paint.Style.STROKE }
         
         when (config.wordsPerPage) {
-            1 -> {
-                drawSingleRebus(canvas, config, words[0], margin, 0f, PAGE_WIDTH - margin * 2, PAGE_HEIGHT, 1f)
-            }
+            1 -> drawSingleRebus(canvas, config, words[0], margin, 0f, PAGE_WIDTH - margin * 2, PAGE_HEIGHT, 1f)
             2 -> {
                 val halfH = PAGE_HEIGHT / 2f
                 for (i in words.indices) {
                     val top = i * halfH
-                    drawSingleRebus(canvas, config, words[i], margin, top + 10f, PAGE_WIDTH - margin * 2, halfH - 20f, 0.65f)
-                    // Линия-разделитель снизу (кроме последнего)
-                    if (i < words.size - 1) {
-                        canvas.drawLine(margin, top + halfH, PAGE_WIDTH - margin, top + halfH, linePaint)
-                    }
+                    drawSingleRebus(canvas, config, words[i], margin, top + 10f, PAGE_WIDTH - margin * 2, halfH - 20f, 0.8f)
+                    if (i < words.size - 1) canvas.drawLine(margin, top + halfH, PAGE_WIDTH - margin, top + halfH, linePaint)
                 }
             }
             4 -> {
-                // Все 4 ребуса идут ДРУГ ПОД ДРУГОМ (вертикально)
                 val quarterH = PAGE_HEIGHT / 4f
                 for (i in words.indices) {
                     val top = i * quarterH
-                    drawSingleRebus(canvas, config, words[i], margin, top + 5f, PAGE_WIDTH - margin * 2, quarterH - 10f, 0.42f)
-                    if (i < words.size - 1) {
-                        canvas.drawLine(margin, top + quarterH, PAGE_WIDTH - margin, top + quarterH, linePaint)
-                    }
+                    // Увеличили scale до 0.7f, чтобы картинки были крупнее
+                    drawSingleRebus(canvas, config, words[i], margin, top + 5f, PAGE_WIDTH - margin * 2, quarterH - 10f, 0.7f)
+                    if (i < words.size - 1) canvas.drawLine(margin, top + quarterH, PAGE_WIDTH - margin, top + quarterH, linePaint)
                 }
             }
         }
@@ -108,7 +101,6 @@ object RebusPdfDrawer {
         val textColor = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#33691E")
         val rebuses = RebusData.getRebusWordsForWord(word)
 
-        // Заголовок
         val titleSize = 22f * scale
         val titlePaint = Paint().apply { 
             isAntiAlias = true; textSize = titleSize; color = textColor; 
@@ -116,23 +108,21 @@ object RebusPdfDrawer {
         }
         canvas.drawText(config.title, centerX, top + 20f * scale, titlePaint)
 
-        // Карточки
         val cols = config.cardsPerRow
         val totalCards = rebuses.size
         val rows = (totalCards + cols - 1) / cols
         
         val gridTop = top + 30f * scale
-        val gridWidth = width
-        val cellW = gridWidth / cols
-        // Оставляем место под ответ (примерно 35% высоты)
-        val cellH = minOf(60f * scale, (height * 0.65f) / rows.coerceAtLeast(1))
+        val cellW = width / cols
+        // Увеличили высоту карточки
+        val cellH = minOf(80f * scale, (height * 0.6f) / rows.coerceAtLeast(1))
         
         val cardBorderPaint = Paint().apply { color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#A5D6A7"); style = Paint.Style.STROKE; strokeWidth = 1f }
-        val numPaint = Paint().apply { isAntiAlias = true; textSize = 8f * scale; color = Color.GRAY; typeface = Typeface.DEFAULT }
-        val emojiPaint = Paint().apply { textSize = cellH * 0.5f; textAlign = Paint.Align.CENTER }
+        val numPaint = Paint().apply { isAntiAlias = true; textSize = 9f * scale; color = Color.GRAY; typeface = Typeface.DEFAULT }
+        val emojiPaint = Paint().apply { textSize = cellH * 0.6f; textAlign = Paint.Align.CENTER }
         val letterBoxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
-        val hintPaint = Paint().apply { isAntiAlias = true; textSize = 7f * scale; color = Color.GRAY; textAlign = Paint.Align.CENTER }
-        val readyLetterPaint = Paint().apply { isAntiAlias = true; textSize = cellH * 0.45f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val hintPaint = Paint().apply { isAntiAlias = true; textSize = 8f * scale; color = Color.GRAY; textAlign = Paint.Align.CENTER }
+        val readyLetterPaint = Paint().apply { isAntiAlias = true; textSize = cellH * 0.5f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
 
         rebuses.forEachIndexed { i, rebus ->
             val col = i % cols
@@ -147,7 +137,7 @@ object RebusPdfDrawer {
             if (rebus != null) {
                 canvas.drawText(rebus.emoji, cardCenterX, cardTop + cellH * 0.55f, emojiPaint)
                 if (config.showHints) {
-                    canvas.drawText(rebus.word.lowercase(), cardCenterX, cardTop + cellH * 0.8f, hintPaint)
+                    canvas.drawText(rebus.word.lowercase(), cardCenterX, cardTop + cellH * 0.85f, hintPaint)
                 }
             } else {
                 val letter = word.getOrNull(i)?.toString() ?: " "
@@ -156,19 +146,18 @@ object RebusPdfDrawer {
             
             val boxSize = cellW * 0.3f
             val boxLeft = cardCenterX - boxSize / 2f
-            val boxTop = cardTop + cellH - boxSize - 3f
+            val boxTop = cardTop + cellH - boxSize - 2f
             canvas.drawRect(boxLeft, boxTop, boxLeft + boxSize, boxTop + boxSize, letterBoxPaint)
         }
 
-        // Ответ
-        val answerY = gridTop + rows * cellH + 12f * scale
-        val ansTitlePaint = Paint().apply { isAntiAlias = true; textSize = 13f * scale; color = textColor; typeface = Typeface.create("cursive", Typeface.BOLD) }
+        val answerY = gridTop + rows * cellH + 15f * scale
+        val ansTitlePaint = Paint().apply { isAntiAlias = true; textSize = 14f * scale; color = textColor; typeface = Typeface.create("cursive", Typeface.BOLD) }
         canvas.drawText("Получилось слово:", left, answerY, ansTitlePaint)
 
-        val boxY = answerY + 4f * scale
-        val boxWidth = 16f * scale
-        val boxSpacing = 2f * scale
-        var currentX = left + 130f * scale
+        val boxY = answerY + 5f * scale
+        val boxWidth = 18f * scale
+        val boxSpacing = 3f * scale
+        var currentX = left + 140f * scale
         
         for (i in word.indices) {
             val char = word[i]
@@ -176,7 +165,7 @@ object RebusPdfDrawer {
                 currentX += boxWidth / 2f
                 continue
             }
-            canvas.drawRect(currentX, boxY, currentX + boxWidth, boxY + 18f * scale, letterBoxPaint)
+            canvas.drawRect(currentX, boxY, currentX + boxWidth, boxY + 20f * scale, letterBoxPaint)
             currentX += boxWidth + boxSpacing
         }
     }
@@ -184,14 +173,11 @@ object RebusPdfDrawer {
     private fun drawAnswersPage(canvas: Canvas, config: RebusConfig, words: List<String>) {
         val margin = 40f
         var currentY = 80f
-        
         val titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         canvas.drawText("Ответы для взрослого", PAGE_WIDTH / 2f, currentY, titlePaint)
         currentY += 50f
-        
         val ansPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val subPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.GRAY; typeface = Typeface.DEFAULT }
-        
         for (word in words) {
             canvas.drawText(word, margin, currentY, ansPaint)
             currentY += 20f
