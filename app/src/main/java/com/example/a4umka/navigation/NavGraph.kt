@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.a4umka.data.FillwordConfig
+import com.example.a4umka.data.FunnyStory
 import com.example.a4umka.ui.screens.CategoryScreen
 import com.example.a4umka.ui.screens.HomeScreen
 import com.example.a4umka.ui.screens.SettingsScreen
@@ -21,7 +22,9 @@ import com.example.a4umka.ui.screens.reading.SyllableTableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.AssembleWordGeneratorScreen
 import com.example.a4umka.ui.screens.reading.FillwordGeneratorScreen
 import com.example.a4umka.ui.screens.reading.FillwordKidsGeneratorScreen
+import com.example.a4umka.ui.screens.reading.FunnyStoryGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFillwordScreen
+import com.example.a4umka.ui.screens.reading.InteractiveFunnyStoryScreen
 import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
 import com.example.a4umka.ui.screens.reading.CopyingGeneratorScreen
@@ -41,6 +44,8 @@ object Routes {
     const val FILLWORD = "fillword"
     const val FILLWORD_KIDS = "fillword_kids"
     const val INTERACTIVE_FILLWORD = "interactive_fillword"
+    const val FUNNY_STORIES = "funny_stories"
+    const val INTERACTIVE_FUNNY_STORY = "interactive_funny_story"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
     const val COPYING = "copying"
@@ -57,6 +62,7 @@ object Routes {
 fun NavGraph() {
     val navController = rememberNavController()
     var currentFillwordConfig by remember { mutableStateOf(FillwordConfig()) }
+    var currentFunnyStory by remember { mutableStateOf<FunnyStory?>(null) }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
@@ -121,6 +127,15 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "fillword_kids" -> {
                     FillwordKidsGeneratorScreen(onBack = { navController.popBackStack() })
                 }
+                categoryId == "reading" && taskId == "funny_stories" -> {
+                    FunnyStoryGeneratorScreen(
+                        onBack = { navController.popBackStack() },
+                        onPlayInteractive = { story ->
+                            currentFunnyStory = story
+                            navController.navigate(Routes.INTERACTIVE_FUNNY_STORY)
+                        }
+                    )
+                }
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 }
@@ -157,6 +172,15 @@ fun NavGraph() {
                 config = currentFillwordConfig,
                 onBack = { navController.popBackStack() }
             )
+        }
+
+        composable(Routes.INTERACTIVE_FUNNY_STORY) {
+            currentFunnyStory?.let { story ->
+                InteractiveFunnyStoryScreen(
+                    story = story,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
