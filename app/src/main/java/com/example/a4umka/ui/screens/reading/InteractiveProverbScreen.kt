@@ -24,14 +24,14 @@ import com.example.a4umka.data.ProverbData
 import com.example.a4umka.data.ProverbTask
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun InteractiveProverbScreen(
     config: ProverbConfig,
     onBack: () -> Unit
 ) {
     var currentTask by remember { mutableStateOf<ProverbTask?>(null) }
-    var selectedCards by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) } // Выбранные по порядку
+    var selectedCards by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isSolved by remember { mutableStateOf(false) }
 
     fun loadNewTask() {
@@ -46,12 +46,10 @@ fun InteractiveProverbScreen(
 
     fun checkSolution() {
         val task = currentTask ?: return
-        // Проверяем, совпадает ли выбранный порядок с правильным
         val isCorrect = selectedCards.map { it.first } == task.correctSequence
         if (isCorrect) {
             isSolved = true
         } else {
-            // Если ошибка, сбрасываем выбор
             selectedCards = emptyList()
         }
     }
@@ -87,7 +85,6 @@ fun InteractiveProverbScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Область для выбранных карточек (по порядку)
                 Text("Твой порядок:", style = MaterialTheme.typography.labelLarge)
                 Box(
                     modifier = Modifier
@@ -100,7 +97,7 @@ fun InteractiveProverbScreen(
                         Text("Нажимай на карточки внизу в правильном порядке", color = Color.Gray, modifier = Modifier.align(Alignment.Center))
                     } else {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            selectedCards.forEachIndexed { index, card ->
+                            selectedCards.forEach { card ->
                                 Card(
                                     modifier = Modifier.width(60.dp),
                                     colors = CardDefaults.cardColors(containerColor = Color(0xFF81C784))
@@ -117,7 +114,6 @@ fun InteractiveProverbScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Кнопка проверки
                 if (selectedCards.isNotEmpty()) {
                     Button(
                         onClick = { checkSolution() },
@@ -150,7 +146,6 @@ fun InteractiveProverbScreen(
                 Text("Доступные карточки:", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Доступные карточки
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val availableCards = task.cards.filter { card -> !selectedCards.contains(card) }
                     availableCards.forEach { card ->
