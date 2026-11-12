@@ -130,6 +130,12 @@ object PdfExporter {
         return saveDocument(context, document, "fairy_tales_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportAnagram(context: Context, config: AnagramConfig): String? {
+        val document = PdfDocument()
+        AnagramPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "anagrams_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
