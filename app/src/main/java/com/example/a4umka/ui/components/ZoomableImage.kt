@@ -39,7 +39,6 @@ fun ZoomableImage(
                         if (!canceled) {
                             val zoomChange = event.calculateZoom()
                             val panChange = event.calculatePan()
-
                             if (zoomChange != 1f) {
                                 val newScale = (scale * zoomChange).coerceIn(1f, 5f)
                                 if (newScale > 1f) {
@@ -47,12 +46,10 @@ fun ZoomableImage(
                                     offset += panChange
                                     event.changes.forEach { it.consume() }
                                 } else {
-                                    // Если уменьшили до стандартного - сбрасываем в центр
                                     scale = 1f
                                     offset = Offset.Zero
                                 }
                             } else if (scale > 1f) {
-                                // Двигаем только если есть зум
                                 offset += panChange
                                 event.changes.forEach { it.consume() }
                             }
