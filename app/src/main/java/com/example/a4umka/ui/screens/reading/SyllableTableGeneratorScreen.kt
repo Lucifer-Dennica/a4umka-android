@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.PdfExporter
 import com.example.a4umka.util.SyllableTablePdfDrawer
 import kotlinx.coroutines.delay
@@ -173,12 +174,11 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(SyllableTablePdfDrawer.PAGE_WIDTH / SyllableTablePdfDrawer.PAGE_HEIGHT)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(...)
                     ) { page ->
                         if (page < previewPages.size) {
-                            Image(
-                                bitmap = previewPages[page].asImageBitmap(),
-                                contentDescription = "Предпросмотр",
+                            ZoomableImage(
+                                bitmap = previewPages[page],
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
