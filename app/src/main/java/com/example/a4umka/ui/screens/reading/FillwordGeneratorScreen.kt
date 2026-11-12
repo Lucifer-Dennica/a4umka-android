@@ -1,8 +1,8 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -16,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,7 +27,7 @@ import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FillwordGeneratorScreen(
     onBack: () -> Unit,
@@ -48,6 +47,7 @@ fun FillwordGeneratorScreen(
     }
 
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
+    val words = config.getParsedWords()
 
     Scaffold(
         topBar = {
@@ -88,10 +88,9 @@ fun FillwordGeneratorScreen(
                     modifier = Modifier.fillMaxWidth().height(100.dp),
                     placeholder = { Text("МЕДВЕДЬ, ЛИСА, ВОЛК...") }
                 )
-                Text("Слов: ${config.getParsedWords().size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                
-                Spacer(modifier = Modifier.height(16.dp))
+                Text("Слов: ${words.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
 
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Размер сетки:", style = MaterialTheme.typography.labelLarge)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = config.sizeMode == FillwordSizeMode.AUTO, onClick = { config = config.copy(sizeMode = FillwordSizeMode.AUTO) })
@@ -103,7 +102,7 @@ fun FillwordGeneratorScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = config.manualSize.toString(),
-                        onValueChange = { 
+                        onValueChange = {
                             val num = it.toIntOrNull() ?: 11
                             config = config.copy(manualSize = num.coerceIn(7, 20))
                         },
@@ -127,14 +126,13 @@ fun FillwordGeneratorScreen(
                     label = { Text("Заголовок листа") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.showNameField, onCheckedChange = { config = config.copy(showNameField = it) })
                     Text("Строка «Имя ____»")
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.showWordList, onCheckedChange = { config = config.copy(showWordList = it) })
-                    Text("Печатать список слов (без него сложнее)")
+                    Text("Печатать список слов")
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
@@ -150,7 +148,6 @@ fun FillwordGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                
                 Button(
                     onClick = { onPlayInteractive(config) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -166,6 +163,7 @@ fun FillwordGeneratorScreen(
                 if (previewPages.size > 1) {
                     Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -173,7 +171,7 @@ fun FillwordGeneratorScreen(
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(...)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(FillwordPdfDrawer.PAGE_WIDTH / FillwordPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
                             ZoomableImage(
@@ -193,21 +191,14 @@ fun FillwordGeneratorScreen(
                     Text("Филворд из своих слов", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "На этой странице можно создать филворд из своих слов и сразу распечатать его на A4 — бесплатно и без регистрации. Вы вписываете любые слова, а генератор сам прячет их в сетку букв, подбирает размер поля и печатает второй лист с ответом. Готовых наборов ждать не нужно: слова берутся ваши, поэтому лист получается точно под ваше занятие — словарные слова на неделю, слова на нужный звук, тема утренника или имена гостей на дне рождения.\n\n" +
-                        "Обычный филворд — это задание, которое кто-то придумал за вас. Здесь наоборот: задание придумываете вы, а работу по укладке слов, заливке пустых клеток и проверке делает генератор.\n\n" +
+                        "На этой странице можно создать филворд из своих слов и сразу распечатать его на A4. Вы вписываете любые слова, а генератор сам прячет их в сетку букв.\n\n" +
                         "Что можно настроить:\n" +
-                        "• Размер сетки — подобрать автоматически под ваши слова или задать от 7×7 до 15×15;\n" +
-                        "• направления — слова читаются слева направо и сверху вниз, а по галочке ещё и в обратную сторону;\n" +
-                        "• заголовок листа — своё название вместо слова «Филворд»;\n" +
-                        "• строка «Имя ____» — если раздаёте листы группе;\n" +
-                        "• список слов на листе — оставить (проще) или убрать (сложнее);\n" +
-                        "• лист с ответами — отдельной страницей в конце, для взрослого;\n" +
-                        "• 1, 2 или 4 варианта — те же слова, но другая раскладка, чтобы соседи по парте не списали.\n\n" +
-                        "Советы взрослым:\n" +
-                        "• Начните с малого: 5 слов найти и обвести приятнее, чем застрять на пятнадцати;\n" +
-                        "• слова берите знакомые — филворд закрепляет написание, а не учит новым значениям;\n" +
-                        "• не смешивайте в одном листе слова разной длины слишком сильно;\n" +
-                        "• если ребёнок застрял, подскажите первую букву и её строку.",
+                        "• Размер сетки;\n" +
+                        "• направления (← и ↑);\n" +
+                        "• заголовок листа;\n" +
+                        "• список слов на листе;\n" +
+                        "• лист с ответами;\n" +
+                        "• 1, 2 или 4 варианта.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
