@@ -94,7 +94,12 @@ object AnagramPdfDrawer {
         }
         canvas.drawText("Анаграммы", PAGE_WIDTH / 2f, 90f, titlePaint)
 
-        val subPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_ITALIC }
+        // ИСПРАВЛЕНИЕ: используем Typeface.create для курсива
+        val italicTypeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
+        val subPaint = Paint().apply { 
+            isAntiAlias = true; textSize = 12f; color = Color.GRAY; 
+            textAlign = Paint.Align.CENTER; typeface = italicTypeface 
+        }
         canvas.drawText("переставь ${if (config.type == com.example.a4umka.data.AnagramType.SYLLABLES) "слоги" else "буквы"} и впиши слово — подскажет картинка", PAGE_WIDTH / 2f, 110f, subPaint)
 
         // Список заданий
@@ -106,7 +111,6 @@ object AnagramPdfDrawer {
         val boxBorderPaint = Paint().apply { color = Color.parseColor("#81C784"); style = Paint.Style.STROKE; strokeWidth = 1f }
         val partPaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         val emptyBoxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 4f), 0f) }
-        val arrowPaint = Paint().apply { color = Color.GRAY; strokeWidth = 1.5f }
 
         for (task in tasks) {
             if (currentY > PAGE_HEIGHT - 60f) break
@@ -116,7 +120,6 @@ object AnagramPdfDrawer {
 
             // Перемешанные части
             var currentX = margin + 60f
-            val boxSize = 28f
             val boxSpacing = 4f
 
             for (part in task.shuffledParts) {
@@ -133,6 +136,7 @@ object AnagramPdfDrawer {
 
             // Пустые клеточки для ответа
             val answerPartsCount = if (config.type == com.example.a4umka.data.AnagramType.SYLLABLES) task.word.syllables.size else task.word.letters.size
+            val boxSize = 28f
             for (i in 0 until answerPartsCount) {
                 canvas.drawRect(currentX, currentY - 15f, currentX + boxSize, currentY + 15f, emptyBoxPaint)
                 currentX += boxSize + boxSpacing
