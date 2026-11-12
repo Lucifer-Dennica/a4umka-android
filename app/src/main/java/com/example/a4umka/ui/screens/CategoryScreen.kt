@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.AppContent
 import com.example.a4umka.data.TaskItem
 
@@ -22,6 +24,7 @@ fun CategoryScreen(
     onTaskClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
+    // Жестко кешируем данные, чтобы они не пересчитывались при скролле
     val category = remember(categoryId) { AppContent.categoryById(categoryId) }
     val tasks = remember(categoryId) { AppContent.tasksFor(categoryId) }
 
@@ -55,15 +58,15 @@ fun CategoryScreen(
 
 @Composable
 private fun TaskTile(task: TaskItem, onClick: () -> Unit) {
-    // Заменили ElevatedCard на Card с фоном - это сильно быстрее для списков
-    Card(
+    // Используем Surface вместо Card - это значительно легче для рендера
+    Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp
     ) {
         Column(
             modifier = Modifier
@@ -74,13 +77,18 @@ private fun TaskTile(task: TaskItem, onClick: () -> Unit) {
             Text(
                 text = task.title,
                 style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Start
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+                maxLines = 2,
+                lineHeight = 18.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Start
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                textAlign = TextAlign.Start,
+                maxLines = 3
             )
         }
     }
