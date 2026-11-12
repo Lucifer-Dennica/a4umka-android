@@ -10,7 +10,6 @@ import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import com.example.a4umka.data.CrosswordConfig
 import com.example.a4umka.data.CrosswordData
-import com.example.a4umka.data.CrosswordDifficulty
 import com.example.a4umka.data.CrosswordGrid
 
 object CrosswordPdfDrawer {
@@ -19,19 +18,19 @@ object CrosswordPdfDrawer {
 
     fun generatePreview(config: CrosswordConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
-        val grid = CrosswordData.generateGrid(config.difficulty)
+        
+        val grid1 = CrosswordData.generateGrid(config.difficulty)
+        val grid2 = if (config.perPage == 2) CrosswordData.generateGrid(config.difficulty) else null
 
         val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.parseColor("#FAFAFA"))
         
         if (config.perPage == 1) {
-            drawSingleCrossword(canvas, grid, 0f, PAGE_HEIGHT / 2f, config)
+            drawSingleCrossword(canvas, grid1, 0f, PAGE_HEIGHT, config)
         } else {
-            // 2 на страницу
-            drawSingleCrossword(canvas, grid, -PAGE_HEIGHT / 4f, PAGE_HEIGHT / 4f, config)
-            val grid2 = CrosswordData.generateGrid(config.difficulty)
-            drawSingleCrossword(canvas, grid2, PAGE_HEIGHT / 4f, PAGE_HEIGHT / 4f, config)
+            drawSingleCrossword(canvas, grid1, 0f, PAGE_HEIGHT / 2f, config)
+            grid2?.let { drawSingleCrossword(canvas, it, PAGE_HEIGHT / 2f, PAGE_HEIGHT / 2f, config) }
         }
         
         pages.add(bmp)
@@ -40,7 +39,8 @@ object CrosswordPdfDrawer {
             val ansBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
             val ansCanvas = Canvas(ansBmp)
             ansCanvas.drawColor(Color.WHITE)
-            drawAnswers(ansCanvas, grid) // Для простоты ответ только на первый
+            drawAnswers(ansCanvas, grid1, 0f, PAGE_HEIGHT / 2f)
+            grid2?.let { drawAnswers(ansCanvas, it, PAGE_HEIGHT / 2f, PAGE_HEIGHT / 2f) }
             pages.add(ansBmp)
         }
 
@@ -48,18 +48,18 @@ object CrosswordPdfDrawer {
     }
 
     fun drawDocument(document: PdfDocument, config: CrosswordConfig, context: Context) {
-        val grid = CrosswordData.generateGrid(config.difficulty)
+        val grid1 = CrosswordData.generateGrid(config.difficulty)
+        val grid2 = if (config.perPage == 2) CrosswordData.generateGrid(config.difficulty) else null
 
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), 1).create()
         val page = document.startPage(pageInfo)
         page.canvas.drawColor(Color.parseColor("#FAFAFA"))
         
         if (config.perPage == 1) {
-            drawSingleCrossword(page.canvas, grid, 0f, PAGE_HEIGHT / 2f, config)
+            drawSingleCrossword(page.canvas, grid1, 0f, PAGE_HEIGHT, config)
         } else {
-            drawSingleCrossword(page.canvas, grid, -PAGE_HEIGHT / 4f, PAGE_HEIGHT / 4f, config)
-            val grid2 = CrosswordData.generateGrid(config.difficulty)
-            drawSingleCrossword(page.canvas, grid2, PAGE_HEIGHT / 4f, PAGE_HEIGHT / 4f, config)
+            drawSingleCrossword(page.canvas, grid1, 0f, PAGE_HEIGHT / 2f, config)
+            grid2?.let { drawSingleCrossword(page.canvas, it, PAGE_HEIGHT / 2f, PAGE_HEIGHT / 2f, config) }
         }
         
         document.finishPage(page)
@@ -68,92 +68,126 @@ object CrosswordPdfDrawer {
             val ansPageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), 2).create()
             val ansPage = document.startPage(ansPageInfo)
             ansPage.canvas.drawColor(Color.WHITE)
-            drawAnswers(ansPage.canvas, grid)
+            drawAnswers(ansPage.canvas, grid1, 0f, PAGE_HEIGHT / 2f)
+            grid2?.let { drawAnswers(ansPage.canvas, it, PAGE_HEIGHT / 2f, PAGE_HEIGHT / 2f) }
             document.finishPage(ansPage)
         }
     }
 
-    private fun drawSingleCrossword(canvas: Canvas, grid: CrosswordGrid, yOffset: Float, availableHeight: Float, config: CrosswordConfig) {
+    private fun drawSingleCrossword(canvas: Canvas, grid: CrosswordGrid, topOffset: Float, availableHeight: Float, config: CrosswordConfig) {
         val textColor = Color.parseColor("#33691E")
-        val scale = if (config.perPage == 1) 1f else 0.6f
         
-        val centerY = availableHeight / 2f + yOffset
-        val titleY = centerY - (availableHeight * 0.4f)
-
-        // Заголовок
         val titlePaint = Paint().apply { 
-            isAntiAlias = true; textSize = 36f * scale; color = textColor; 
+            isAntiAlias = true; textSize = 24f; color = textColor; 
             typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER 
         }
+        val titleY = topOffset + 30f
         canvas.drawText("Кроссворд по картинкам", PAGE_WIDTH / 2f, titleY, titlePaint)
 
-        // Отрисовка сетки
-        val cellSize = 30f * scale
-        val gridStartX = PAGE_WIDTH / 2f - (5 * cellSize) // примерно по центру
-        val gridStartY = titleY + 40f * scale
+        val minX = grid.cells.keys.minOfOrNull { it.first } ?: 0
+        val maxX = grid.cells.keys.maxOfOrNull { it.first } ?: 0
+        val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
+        val maxY = grid.cells.keys.maxOfOrNull { it.second } ?: 0
+
+        val cols = maxX - minX + 1
+        val rows = maxY - minY + 1
+        
+        val cellSize = minOf(24f, (availableHeight - 150f) / rows, (PAGE_WIDTH - 100f) / cols)
+        
+        val gridWidth = cols * cellSize
+        val gridHeight = rows * cellSize
+        
+        val gridStartX = (PAGE_WIDTH - gridWidth) / 2f
+        val gridStartY = titleY + 20f + (availableHeight - 100f - gridHeight) / 3f
 
         val boxPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
         val linePaint = Paint().apply { color = Color.GRAY; strokeWidth = 1.5f; style = Paint.Style.STROKE }
-        val numPaint = Paint().apply { isAntiAlias = true; textSize = 10f * scale; color = Color.parseColor("#D32F2F"); typeface = Typeface.DEFAULT_BOLD }
-        val letterPaint = Paint().apply { isAntiAlias = true; textSize = 20f * scale; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val numPaint = Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.parseColor("#D32F2F"); typeface = Typeface.DEFAULT_BOLD }
+
+        // 1. Рисуем ПУСТЫЕ клетки
+        for ((pos, _) in grid.cells) {
+            val cx = gridStartX + (pos.first - minX) * cellSize
+            val cy = gridStartY + (pos.second - minY) * cellSize
+            canvas.drawRect(cx, cy, cx + cellSize, cy + cellSize, boxPaint)
+            canvas.drawRect(cx, cy, cx + cellSize, cy + cellSize, linePaint)
+        }
+
+        // 2. Номера
+        for (word in grid.words) {
+            val cx = gridStartX + (word.x - minX) * cellSize
+            val cy = gridStartY + (word.y - minY) * cellSize
+            canvas.drawText(word.num.toString(), cx + 2f, cy + 10f, numPaint)
+        }
+
+        // 3. Вопросы
+        val clueStartY = gridStartY + gridHeight + 20f
+        val clueTitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+        canvas.drawText("По горизонтали →", 40f, clueStartY, clueTitlePaint)
+        canvas.drawText("По вертикали ↓", PAGE_WIDTH / 2f + 20f, clueStartY, clueTitlePaint)
+        
+        val cluePaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.BLACK }
+        val emojiPaint = Paint().apply { textSize = 14f }
+        
+        var acrossY = clueStartY + 15f
+        var downY = clueStartY + 15f
+
+        for (word in grid.words) {
+            if (word.isAcross) {
+                canvas.drawText("${word.num}.", 40f, acrossY, cluePaint)
+                canvas.drawText(word.emoji, 60f, acrossY, emojiPaint)
+                if (config.showWordsInClues) canvas.drawText(word.word, 80f, acrossY, cluePaint)
+                acrossY += 15f
+            } else {
+                canvas.drawText("${word.num}.", PAGE_WIDTH / 2f + 20f, downY, cluePaint)
+                canvas.drawText(word.emoji, PAGE_WIDTH / 2f + 40f, downY, emojiPaint)
+                if (config.showWordsInClues) canvas.drawText(word.word, PAGE_WIDTH / 2f + 60f, downY, cluePaint)
+                downY += 15f
+            }
+        }
+    }
+
+    private fun drawAnswers(canvas: Canvas, grid: CrosswordGrid, topOffset: Float, availableHeight: Float) {
+        val textColor = Color.parseColor("#33691E")
+        
+        val titlePaint = Paint().apply { 
+            isAntiAlias = true; textSize = 20f; color = Color.GRAY; 
+            typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER 
+        }
+        val titleY = topOffset + 30f
+        canvas.drawText("Ответы", PAGE_WIDTH / 2f, titleY, titlePaint)
+
+        val minX = grid.cells.keys.minOfOrNull { it.first } ?: 0
+        val maxX = grid.cells.keys.maxOfOrNull { it.first } ?: 0
+        val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
+        val maxY = grid.cells.keys.maxOfOrNull { it.second } ?: 0
+
+        val cols = maxX - minX + 1
+        val rows = maxY - minY + 1
+        
+        val cellSize = minOf(24f, (availableHeight - 100f) / rows, (PAGE_WIDTH - 100f) / cols)
+        val gridWidth = cols * cellSize
+        val gridHeight = rows * cellSize
+        
+        val gridStartX = (PAGE_WIDTH - gridWidth) / 2f
+        val gridStartY = titleY + 20f
+
+        val boxPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+        val linePaint = Paint().apply { color = Color.GRAY; strokeWidth = 1.5f; style = Paint.Style.STROKE }
+        val letterPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val numPaint = Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.parseColor("#D32F2F"); typeface = Typeface.DEFAULT_BOLD }
 
         for ((pos, char) in grid.cells) {
-            val cx = gridStartX + pos.first * cellSize
-            val cy = gridStartY + pos.second * cellSize
-
+            val cx = gridStartX + (pos.first - minX) * cellSize
+            val cy = gridStartY + (pos.second - minY) * cellSize
             canvas.drawRect(cx, cy, cx + cellSize, cy + cellSize, boxPaint)
             canvas.drawRect(cx, cy, cx + cellSize, cy + cellSize, linePaint)
             canvas.drawText(char.toString(), cx + cellSize / 2f, cy + cellSize * 0.7f, letterPaint)
         }
 
-        // Номера
         for (word in grid.words) {
-            val cx = gridStartX + word.x * cellSize
-            val cy = gridStartY + word.y * cellSize
-            canvas.drawText(word.num.toString(), cx + 2f, cy + 10f * scale, numPaint)
-        }
-
-        // Список вопросов
-        var clueY = gridStartY + 9 * cellSize + 20f
-        val clueTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f * scale; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
-        
-        canvas.drawText("По горизонтали →", 40f, clueY, clueTitlePaint)
-        canvas.drawText("По вертикали ↓", PAGE_WIDTH / 2f + 20f, clueY, clueTitlePaint)
-        clueY += 20f * scale
-
-        val cluePaint = Paint().apply { isAntiAlias = true; textSize = 14f * scale; color = Color.BLACK }
-        val emojiPaint = Paint().apply { textSize = 20f * scale }
-        
-        var acrossY = clueY
-        var downY = clueY
-
-        for (word in grid.words) {
-            if (word.isAcross) {
-                canvas.drawText("${word.num}.", 40f, acrossY, cluePaint)
-                canvas.drawText(word.emoji, 70f, acrossY, emojiPaint)
-                if (config.showWordsInClues) canvas.drawText(word.word, 100f, acrossY, cluePaint)
-                acrossY += 25f * scale
-            } else {
-                canvas.drawText("${word.num}.", PAGE_WIDTH / 2f + 20f, downY, cluePaint)
-                canvas.drawText(word.emoji, PAGE_WIDTH / 2f + 50f, downY, emojiPaint)
-                if (config.showWordsInClues) canvas.drawText(word.word, PAGE_WIDTH / 2f + 80f, downY, cluePaint)
-                downY += 25f * scale
-            }
-        }
-    }
-
-    private fun drawAnswers(canvas: Canvas, grid: CrosswordGrid) {
-        val margin = 40f
-        var currentY = 60f
-        val titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        canvas.drawText("Ответы", PAGE_WIDTH / 2f, currentY, titlePaint)
-        currentY += 40f
-        
-        val ansPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.BLACK; typeface = Typeface.DEFAULT }
-        
-        for (word in grid.words) {
-            canvas.drawText("${word.num} ${if (word.isAcross) "→" else "↓"} ${word.emoji} ${word.word}", margin, currentY, ansPaint)
-            currentY += 25f
+            val cx = gridStartX + (word.x - minX) * cellSize
+            val cy = gridStartY + (word.y - minY) * cellSize
+            canvas.drawText(word.num.toString(), cx + 2f, cy + 10f, numPaint)
         }
     }
 }
