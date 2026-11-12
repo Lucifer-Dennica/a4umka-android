@@ -2,10 +2,10 @@ package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField // <-- ДОБАВЛЕН ИМПОРТ
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,14 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.CustomCrosswordConfig
 import com.example.a4umka.data.CustomCrosswordData
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardCapitalization
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,9 +33,10 @@ fun InteractiveCustomCrosswordScreen(
     val pairs = remember { CustomCrosswordData.parseInput(config.wordsInput) }
     val grid = remember(config.seed) { CustomCrosswordData.generateGrid(pairs, config.seed) }
     
-    // Состояние введенных букв: Pair(x, y) -> Char
+    // Состояние введенных букв: Pair(x, y) -> String
     val userInputs = remember { mutableStateMapOf<Pair<Int, Int>, String>() }
     var isSolved by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf(false) }
     
     fun checkSolution() {
         var allCorrect = true
@@ -45,7 +46,12 @@ fun InteractiveCustomCrosswordScreen(
                 break
             }
         }
-        if (allCorrect) isSolved = true
+        if (allCorrect) {
+            isSolved = true
+            showError = false
+        } else {
+            showError = true
+        }
     }
 
     Scaffold(
@@ -58,7 +64,11 @@ fun InteractiveCustomCrosswordScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { userInputs.clear(); isSolved = false }) {
+                    IconButton(onClick = { 
+                        userInputs.clear()
+                        isSolved = false 
+                        showError = false
+                    }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Очистить")
                     }
                 }
@@ -79,10 +89,7 @@ fun InteractiveCustomCrosswordScreen(
             val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
             val maxY = grid.cells.keys.maxOfOrNull { it.second } ?: 0
 
-            val cols = maxX - minX + 1
-            val rows = maxY - minY + 1
-
-            // Отрисовка сетки (упрощенно через Column/Row для интерактива)
+            // Отрисовка сетки
             Column(modifier = Modifier.border(1.dp, Color.Gray)) {
                 for (y in minY..maxY) {
                     Row {
@@ -92,11 +99,18 @@ fun InteractiveCustomCrosswordScreen(
                             
                             if (isCell) {
                                 val wordNum = grid.words.find { it.x == x && it.y == y }?.num
+                                val currentText = userInputs[pos] ?: ""
+                                val isCorrect = currentText.uppercase() == grid.cells[pos].toString()
+                                
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
                                         .border(0.5.dp, Color.Gray)
-                                        .background(if (userInputs[pos]?.uppercase() == grid.cells[pos].toString()) Color(0xFFC8E6C9) else Color.White),
+                                        .background(
+                                            if (isSolved && isCorrect) Color(0xFFC8E6C9) 
+                                            else if (isSolved && !isCorrect) Color(0xFFFFCDD2)
+                                            else Color.White
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (wordNum != null) {
@@ -108,20 +122,22 @@ fun InteractiveCustomCrosswordScreen(
                                         )
                                     }
                                     BasicTextField(
-                                        value = userInputs[pos] ?: "",
-                                        onValueChange = { 
-                                            if (it.length <= 1) {
-                                                userInputs[pos] = it.uppercase()
-                                                isSolved = false
-                                            }
+                                        value = currentText,
+                                        onValueChange = { newValue ->
+                                            // Берем только 1 символ и переводим в верхний регистр
+                                            val filtered = newValue.take(1).uppercase()
+                                            userInputs[pos] = filtered
+                                            isSolved = false
+                                            showError = false
                                         },
-                                        textStyle = androidx.compose.ui.text.TextStyle(
+                                        textStyle = TextStyle(
                                             fontSize = 18.sp,
                                             textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black
                                         ),
                                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
-                                        modifier = Modifier.fillMaxSize()
+                                        modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)
                                     )
                                 }
                             } else {
@@ -133,6 +149,11 @@ fun InteractiveCustomCrosswordScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            if (showError) {
+                Text("Есть ошибки, проверь выделенные красным клетки!", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             if (isSolved) {
                 Text("🎉 Молодец! Кроссворд решен!", color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -149,7 +170,11 @@ fun InteractiveCustomCrosswordScreen(
             
             grid.words.forEach { word ->
                 val question = pairs.find { it.word == word.word }?.question ?: ""
-                Text("${word.num} ${if (word.isAcross) "→" else "↓"} $question", fontSize = 14.sp, modifier = Modifier.padding(vertical = 4.dp).align(Alignment.Start))
+                Text(
+                    text = "${word.num} ${if (word.isAcross) "→" else "↓"} $question", 
+                    fontSize = 14.sp, 
+                    modifier = Modifier.padding(vertical = 4.dp).align(Alignment.Start)
+                )
             }
         }
     }
