@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -15,9 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
@@ -85,14 +82,13 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // СОГЛАСНЫЕ
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Согласные (до 8):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { config = config.copy(consonants = SyllableTableData.firstConsonants.toSet()) }) { Text("Первые (М Н Л Р С)", fontSize = 10.sp) }
-                    TextButton(onClick = { config = config.copy(consonants = SyllableTableData.allConsonants.take(8).toSet()) }) { Text("Первые 8", fontSize = 10.sp) }
-                    TextButton(onClick = { config = config.copy(consonants = emptySet()) }) { Text("Снять всё", fontSize = 10.sp) }
+                    TextButton(onClick = { config = config.copy(consonants = SyllableTableData.firstConsonants.toSet()) }) { Text("Первые", fontSize = 10.sp) }
+                    TextButton(onClick = { config = config.copy(consonants = SyllableTableData.allConsonants.take(8).toSet()) }) { Text("8", fontSize = 10.sp) }
+                    TextButton(onClick = { config = config.copy(consonants = emptySet()) }) { Text("Снять", fontSize = 10.sp) }
                 }
-                
+
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SyllableTableData.allConsonants.forEach { letter ->
                         val isSelected = config.consonants.contains(letter)
@@ -112,8 +108,6 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // ГЛАСНЫЕ
                 Text("Гласные:", style = MaterialTheme.typography.labelLarge)
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -127,8 +121,6 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // ТИП СЛОГА
                 Text("Тип слога:", style = MaterialTheme.typography.labelLarge)
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -150,8 +142,6 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // ДОПОЛНИТЕЛЬНО
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.shuffle, onCheckedChange = { config = config.copy(shuffle = it) })
                     Text("Вперемешку (слоги вразброс)")
@@ -167,6 +157,10 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+                if (previewPages.size > 1) {
+                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -174,7 +168,7 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(...)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(SyllableTablePdfDrawer.PAGE_WIDTH / SyllableTablePdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
                             ZoomableImage(
@@ -188,27 +182,15 @@ fun SyllableTableGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // ИНФО (С ПОЛНЫМ ТЕКСТОМ)
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Слоговые таблицы", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("Слоговые таблицы", style = MaterialTheme.typography.headlineSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Чтение начинается не с букв, а со слогов. Ребёнок может бойко называть все буквы алфавита, но застывать на месте, когда нужно соединить «М» и «А» в живое «МА». Именно слияние двух звуков в один слог — самый сложный и самый важный шаг на пути к чтению.\n\n" +
-                        "Наш генератор создаёт готовые листы для такой тренировки. Вы выбираете согласные и гласные, нажимаете кнопку — и получаете новую таблицу, которую можно распечатать бесплатно на A4. Каждое нажатие — новый вариант.\n\n" +
-                        "Почему в таблице бывают пустые клетки?\n" +
-                        "Если выбрать Ж, Ш, Ч или Щ вместе с гласными Ы, Я, Ю, часть клеток останется пустой. Сочетаний ЖЫ, ЩЮ, ЧЯ в русском языке не существует — это правила «жи-ши пиши с И», «ча-ща с А», «чу-щу с У». Генератор такие слоги не печатает, но клетку оставляет — чтобы сетка не съезжала.\n\n" +
-                        "Слоговые таблицы для 1 класса:\n" +
-                        "В первом классе задача меняется: буквы уже знакомы, и нужна не тренировка слияния, а техника чтения — скорость и автоматизм. Поэтому первокласснику берите сразу восемь согласных и все десять гласных, включая мягкие.\n\n" +
-                        "Слоговые таблицы для скорочтения:\n" +
-                        "Когда ребёнок читает таблицу по порядку, он быстро запоминает строку наизусть и начинает не читать, а рассказывать по памяти. Для этого есть режим «вперемешку»: те же самые слоги, но расставленные вразброс. Заучить такую таблицу невозможно, каждый слог приходится действительно прочитывать.\n\n" +
-                        "Советы родителям:\n" +
-                        "• Начинайте с малого: 1–2 согласных и только твёрдые гласные.\n" +
-                        "• Читайте вслух вместе.\n" +
-                        "• Используйте «слог дня».\n" +
-                        "• Превращайте в игру (режим «найди слог»).\n" +
-                        "• Хвалите за процесс, а не только за скорость.",
+                        "Чтение начинается не с букв, а со слогов. Ребёнок может бойко называть все буквы алфавита, но застывать на месте, когда нужно соединить «М» и «А» в живое «МА».\n\n" +
+                        "Наш генератор создаёт готовые листы для такой тренировки. Вы выбираете согласные и гласные — и получаете новую таблицу.\n\n" +
+                        "Почему в таблице бывают пустые клетки? Сочетаний ЖЫ, ЩЮ, ЧЯ в русском языке не существует — это правила «жи-ши», «ча-ща», «чу-щу».",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
