@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -16,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.LetterMathConfig
 import com.example.a4umka.data.LetterMathDifficulty
 import com.example.a4umka.data.LetterMathHint
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.LetterMathPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.delay
@@ -99,7 +98,6 @@ fun LetterMathGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Text("Картинка-подсказка:", style = MaterialTheme.typography.labelLarge)
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -113,7 +111,6 @@ fun LetterMathGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Text("Сколько листов:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(1, 2, 3).forEach { count ->
@@ -126,7 +123,6 @@ fun LetterMathGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Button(
                     onClick = { onPlayInteractive(config) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -144,6 +140,7 @@ fun LetterMathGeneratorScreen(
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -154,9 +151,8 @@ fun LetterMathGeneratorScreen(
                         modifier = Modifier.fillMaxWidth().aspectRatio(LetterMathPdfDrawer.PAGE_WIDTH / LetterMathPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
-                            Image(
-                                bitmap = previewPages[page].asImageBitmap(),
-                                contentDescription = "Предпросмотр",
+                            ZoomableImage(
+                                bitmap = previewPages[page],
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -173,7 +169,7 @@ fun LetterMathGeneratorScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         "Похоже на пример по математике, только вместо чисел буквы. Прибавить — значит дописать буквы в конец, вычесть — вычеркнуть их. Если всё сделать правильно, получится настоящее слово.\n\n" +
-                        "У этого задания есть редкое свойство: оно проверяет само себя. Если в конце вышла бессмыслица, ребёнок сам видит, что такого слова нет, и ищет, где ошибся. Взрослому не нужно говорить «неправильно», это и так понятно.\n\n" +
+                        "У этого задания есть редкое свойство: оно проверяет само себя. Если в конце вышла бессмыслица, ребёнок сам видит, что такого слова нет, и ищет, где ошибся.\n\n" +
                         "Задания тренируют чтение, внимание, рабочую память и порядок действий.",
                         style = MaterialTheme.typography.bodyLarge
                     )
