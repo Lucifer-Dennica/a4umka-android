@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,15 +16,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.ComprehensionConfig
 import com.example.a4umka.data.ReadingComprehensionData
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.ComprehensionPdfDrawer
 import com.example.a4umka.util.PdfExporter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,8 +45,10 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
         }
     }
 
-    val previewPages = remember(config) {
-        ComprehensionPdfDrawer.generatePreviewPages(config, context)
+    var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
+    LaunchedEffect(config) {
+        delay(300)
+        previewPages = ComprehensionPdfDrawer.generatePreviewPages(config, context)
     }
 
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
@@ -89,10 +91,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         FilterChip(
                             selected = config.grade == grade,
                             onClick = {
-                                config = config.copy(
-                                    grade = grade,
-                                    selectedStory = ReadingComprehensionData.getRandomStory(grade)
-                                )
+                                config = config.copy(grade = grade, selectedStory = ReadingComprehensionData.getRandomStory(grade))
                                 dropdownExpanded = false
                             },
                             label = { Text(grade.toString()) }
@@ -112,20 +111,17 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         Text("Случайный")
                     }
                 }
-                
+
                 val stories = ReadingComprehensionData.getStoriesByGrade(config.grade)
-                
-                ExposedDropdownMenuBox(
-                    expanded = dropdownExpanded,
-                    onExpandedChange = { dropdownExpanded = it }
-                ) {
+
+                ExposedDropdownMenuBox(expanded = dropdownExpanded, onExpandedChange = { dropdownExpanded = it }) {
                     OutlinedTextField(
                         value = config.selectedStory?.title ?: "Выберите рассказ",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
-                        label = { 
+                        label = {
                             if (config.selectedStory != null) {
                                 Text("${config.selectedStory!!.text.split(" ").size} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
                             }
@@ -138,7 +134,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     ) {
                         stories.forEach { story ->
                             DropdownMenuItem(
-                                text = { 
+                                text = {
                                     Column {
                                         Text(story.title, fontWeight = FontWeight.Bold)
                                         Text("${story.text.split(" ").size} слов", fontSize = 12.sp, color = Color.Gray)
@@ -158,7 +154,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
-                
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Количество слов справа", modifier = Modifier.weight(1f))
                     Switch(checked = config.showWordCount, onCheckedChange = { config = config.copy(showWordCount = it) })
@@ -178,6 +173,10 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+                if (previewPages.size > 1) {
+                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -187,11 +186,12 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         state = pagerState,
                         modifier = Modifier.fillMaxWidth().aspectRatio(ComprehensionPdfDrawer.PAGE_WIDTH / ComprehensionPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
-                        Image(
-                            bitmap = previewPages[page].asImageBitmap(),
-                            contentDescription = "Предпросмотр",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        if (page < previewPages.size) {
+                            ZoomableImage(
+                                bitmap = previewPages[page],
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }
@@ -206,30 +206,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     Text(
                         "Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Этот раздел помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.\n\n" +
                         "В подборке 100 рассказов — по 25 для каждого класса. Выберите конкретную историю или случайный вариант.\n\n" +
-                        "• Количество слов по строкам — дополнительная разметка для проверки техники чтения. Число справа показывает сумму слов от начала рассказа. Числа можно отключить.\n\n" +
-                        "• Отдельный лист ответов добавит вторую страницу с подсказками для взрослого и полями для записи ответов ребёнка.\n\n" +
-                        "• Цветная или чёрно-белая печать — выберите подходящее оформление перед созданием листа.",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("Класс — ориентир сложности", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "1 класс — 51–58 слов. Первые короткие истории. Вопросы предлагают вспомнить героев и простую причину события.\n\n" +
-                        "2 класс — 82–97 слов. События и поступки. Ребёнок объясняет поступки героев и находит подтверждение в тексте.\n\n" +
-                        "3 класс — 114–135 слов. Наблюдения и выводы. Нужно связать детали рассказа и заметить, как изменилось отношение героя.\n\n" +
-                        "4 класс — 154–175 слов. Причины и главная мысль. Важны точность деталей, причинные связи и смысл поступков.",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("Как обсуждать прочитанное", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "• Начните с устного ответа. Дайте ребёнку время обдумать содержание.\n" +
-                        "• Попросите показать предложение, на которое он опирается.\n" +
-                        "• Перечитайте трудный фрагмент вместе, если ответить пока не получается.\n" +
-                        "• Запишите короткий ответ, если хотите потренировать письменную речь.\n\n" +
-                        "Ответы на листе взрослого — смысловые ориентиры. Важны понимание истории и соответствие тексту, а не дословное повторение.",
+                        "• Количество слов по строкам — дополнительная разметка для проверки техники чтения.\n" +
+                        "• Отдельный лист ответов добавит вторую страницу с подсказками для взрослого.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
