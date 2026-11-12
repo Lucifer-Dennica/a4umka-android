@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.ProverbConfig
 import com.example.a4umka.data.ProverbData
 import com.example.a4umka.data.ProverbTask
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -85,7 +84,7 @@ fun InteractiveProverbScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Твой порядок:", style = MaterialTheme.typography.labelLarge)
+                Text("Твой порядок (нажми, чтобы убрать):", style = MaterialTheme.typography.labelLarge)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -99,7 +98,12 @@ fun InteractiveProverbScreen(
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             selectedCards.forEach { card ->
                                 Card(
-                                    modifier = Modifier.width(60.dp),
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .clickable(enabled = !isSolved) {
+                                            // Удаляем карточку из выбранных
+                                            selectedCards = selectedCards - card
+                                        },
                                     colors = CardDefaults.cardColors(containerColor = Color(0xFF81C784))
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
@@ -114,7 +118,7 @@ fun InteractiveProverbScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (selectedCards.isNotEmpty()) {
+                if (selectedCards.isNotEmpty() && !isSolved) {
                     Button(
                         onClick = { checkSolution() },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
