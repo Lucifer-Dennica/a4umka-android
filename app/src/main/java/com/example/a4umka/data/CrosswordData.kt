@@ -16,7 +16,6 @@ object CrosswordData {
             CrosswordDifficulty.HARD -> hardWords.shuffled()
         }
 
-        // Упрощенный алгоритм: ставим первое слово горизонтально, остальные ищем куда приткнуть
         val placed = mutableListOf<PlacedWord>()
         val cells = mutableMapOf<Pair<Int, Int>, Char>()
         var numCounter = 1
@@ -29,14 +28,15 @@ object CrosswordData {
 
         for (wordObj in words.drop(1)) {
             var foundSpot = false
-            // Ищем пересечения
-            for (pw in placed) {
+            // ИСПРАВЛЕНИЕ: Берем безопасную копию списка, чтобы не было ConcurrentModificationException
+            val placedSnapshot = placed.toList() 
+            
+            for (pw in placedSnapshot) {
                 if (foundSpot) break
                 for (i in pw.word.indices) {
                     val char = pw.word[i]
                     val intersectIndex = wordObj.word.indexOf(char)
                     if (intersectIndex != -1) {
-                        // Пытаемся поставить перпендикулярно
                         if (pw.isAcross) {
                             val nx = pw.x + i
                             val ny = pw.y - intersectIndex
