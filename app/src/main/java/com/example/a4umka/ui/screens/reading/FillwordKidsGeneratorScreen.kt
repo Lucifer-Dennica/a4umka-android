@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.FillwordKidsConfig
 import com.example.a4umka.data.FillwordKidsDifficulty
 import com.example.a4umka.util.FillwordKidsPdfDrawer
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -126,12 +127,11 @@ fun FillwordKidsGeneratorScreen(onBack: () -> Unit) {
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(FillwordKidsPdfDrawer.PAGE_WIDTH / FillwordKidsPdfDrawer.PAGE_HEIGHT)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(...)
                     ) { page ->
                         if (page < previewPages.size) {
-                            Image(
-                                bitmap = previewPages[page].asImageBitmap(),
-                                contentDescription = "Предпросмотр",
+                            ZoomableImage(
+                                bitmap = previewPages[page],
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
