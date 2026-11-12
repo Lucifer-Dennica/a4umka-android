@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField // <-- ДОБАВЛЕН ИМПОРТ
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -13,7 +13,11 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -23,8 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.CustomCrosswordConfig
 import com.example.a4umka.data.CustomCrosswordData
+import com.example.a4umka.data.PlacedWord
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun InteractiveCustomCrosswordScreen(
     config: CustomCrosswordConfig,
@@ -33,10 +38,22 @@ fun InteractiveCustomCrosswordScreen(
     val pairs = remember { CustomCrosswordData.parseInput(config.wordsInput) }
     val grid = remember(config.seed) { CustomCrosswordData.generateGrid(pairs, config.seed) }
     
-    // Состояние введенных букв: Pair(x, y) -> String
     val userInputs = remember { mutableStateMapOf<Pair<Int, Int>, String>() }
     var isSolved by remember { mutableStateOf(false) }
     var showError by remember { mutableStateOf(false) }
+    
+    // Для автоперехода
+    val focusRequesters = remember { mutableMapOf<Pair<Int, Int>, FocusRequester>() }
+    var focusedCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var currentWord by remember { mutableStateOf<PlacedWord?>(null) }
+
+    LaunchedEffect(focusedCell) {
+        focusedCell?.let { pos ->
+            if (focusRequesters.containsKey(pos)) {
+                focusRequesters[pos]?.requestFocus()
+            }
+        }
+    }
     
     fun checkSolution() {
         var allCorrect = true
@@ -124,11 +141,20 @@ fun InteractiveCustomCrosswordScreen(
                                     BasicTextField(
                                         value = currentText,
                                         onValueChange = { newValue ->
-                                            // Берем только 1 символ и переводим в верхний регистр
                                             val filtered = newValue.take(1).uppercase()
                                             userInputs[pos] = filtered
                                             isSolved = false
                                             showError = false
+
+                                            // Автопереход
+                                            if (filtered.isNotEmpty() && currentWord != null) {
+                                                val word = currentWord!!
+                                                val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
+                                                if (index < word.word.length - 1) {
+                                                    val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
+                                                    focusedCell = nextPos
+                                                }
+                                            }
                                         },
                                         textStyle = TextStyle(
                                             fontSize = 18.sp,
@@ -137,7 +163,23 @@ fun InteractiveCustomCrosswordScreen(
                                             color = Color.Black
                                         ),
                                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
-                                        modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .wrapContentHeight(Alignment.CenterVertically)
+                                            .focusRequester(focusRequesters.getOrPut(pos) { FocusRequester() })
+                                            .onFocusChanged { state ->
+                                                if (state.isFocused) {
+                                                    focusedCell = pos
+                                                    var word = grid.words.find { it.x == pos.first && it.y == pos.second }
+                                                    if (word == null) {
+                                                        word = grid.words.find { w ->
+                                                            if (w.isAcross) pos.second == w.y && pos.first >= w.x && pos.first < w.x + w.word.length
+                                                            else pos.first == w.x && pos.second >= w.y && pos.second < w.y + w.word.length
+                                                        }
+                                                    }
+                                                    currentWord = word
+                                                }
+                                            }
                                     )
                                 }
                             } else {
