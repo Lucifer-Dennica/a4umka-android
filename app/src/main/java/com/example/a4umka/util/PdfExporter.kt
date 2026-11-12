@@ -124,10 +124,10 @@ object PdfExporter {
         return saveDocument(context, document, "booklet_${System.currentTimeMillis()}.pdf")
     }
 
-    fun exportFairyTale(context: Context, config: com.example.a4umka.data.FairyTaleConfig): String? {
-         val document = PdfDocument()
-         com.example.a4umka.util.FairyTalePdfDrawer.drawDocument(document, config, context)
-         return saveDocument(context, document, "fairy_tales_${System.currentTimeMillis()}.pdf")
+    fun exportFairyTale(context: Context, config: FairyTaleConfig): String? {
+        val document = PdfDocument()
+        FairyTalePdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "fairy_tales_${System.currentTimeMillis()}.pdf")
     }
 
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
