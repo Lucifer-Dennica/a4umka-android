@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -15,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -77,7 +75,6 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ТИП ЗАДАНИЯ
                 Text("Тип задания:", style = MaterialTheme.typography.labelLarge)
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -90,13 +87,11 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = config.taskType == AssembleTaskType.CARDS, onClick = { config = config.copy(taskType = AssembleTaskType.CARDS) })
-                        Text("Карточки-резалки (вырезать и сложить)")
+                        Text("Карточки-резалки")
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // СЛОЖНОСТЬ
                 Text("Сложность:", style = MaterialTheme.typography.labelLarge)
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -109,7 +104,7 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = config.difficulty == AssembleDifficulty.HARD, onClick = { config = config.copy(difficulty = AssembleDifficulty.HARD) })
-                        Text("Сложно (2 и 3 слога вперемешку)")
+                        Text("Сложно (2 и 3 вперемешку)")
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = config.difficulty == AssembleDifficulty.SUPER_HARD, onClick = { config = config.copy(difficulty = AssembleDifficulty.SUPER_HARD) })
@@ -118,15 +113,13 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // НАСТРОЙКИ
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.colorSyllables, onCheckedChange = { config = config.copy(colorSyllables = it) })
                     Text("Раскраска слогов (гласные красные)", fontSize = 14.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.firstStepVowelsOnly, onCheckedChange = { config = config.copy(firstStepVowelsOnly = it) })
-                    Text("Только гласные первой ступени (А О У Ы И)", fontSize = 14.sp)
+                    Text("Только гласные первой ступени", fontSize = 14.sp)
                 }
                 if (config.taskType == AssembleTaskType.CONNECT) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,6 +137,7 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
                 if (previewPages.size > 1) {
                     Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -151,7 +145,7 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(...)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(AssembleWordPdfDrawer.PAGE_WIDTH / AssembleWordPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
                             ZoomableImage(
@@ -165,7 +159,6 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // ИНФО
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
@@ -173,22 +166,11 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         "Чтение начинается не с целого слова, а с маленького кирпичика — слога. Когда ребёнок учится складывать КО и ЗА в понятное «коза», в его голове происходит важная работа: он перестаёт угадывать слова по первой букве и начинает читать осознанно.\n\n" +
-                        "Наш генератор «Собери слово из слогов» создаёт готовые печатные листы формата A4, где рассыпанные слоги нужно соединить в настоящие слова. Нажали кнопку — получили новый лист с заданиями, распечатали, дали ребёнку.\n\n" +
                         "Три типа заданий:\n" +
-                        "1. Соедини слоги линиями. Слоги расположены в двух столбцах, и ребёнку нужно провести линию от слога слева к подходящему слогу справа, чтобы получилось слово — например, КО соединить с ЗА.\n" +
-                        "2. Собери по картинке. Рядом с заданием стоит эмодзи-подсказка (картинка предмета), под ней — слоги вразброс и пустые клеточки.\n" +
-                        "3. Карточки-резалки. Лист содержит слоги, которые нужно вырезать ножницами, а затем складывать из них слова на столе.\n\n" +
-                        "Сложность задаётся длиной слова:\n" +
-                        "• Легко — двусложные слова: КО-ЗА, ЛУ-НА.\n" +
-                        "• Средне — трёхсложные: МА-ШИ-НА.\n" +
-                        "• Сложно — двух- и трёхсложные вперемешку.\n" +
-                        "• Суперсложно — четырёхсложные: ЧЕ-РЕ-ПА-ХА.\n\n" +
-                        "Советы родителям:\n" +
-                        "• Короткие занятия чаще, чем длинные изредка (10–15 минут).\n" +
-                        "• Начинайте с лёгкого уровня.\n" +
-                        "• Проговаривайте вслух: «КО… ЗА… коза!»\n" +
-                        "• Хвалите за процесс, а не только за результат.\n" +
-                        "• Меняйте формат, чтобы не было однообразия.",
+                        "1. Соедини слоги линиями.\n" +
+                        "2. Собери по картинке.\n" +
+                        "3. Карточки-резалки.\n\n" +
+                        "Сложность задаётся длиной слова: от 2 до 4 слогов.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
