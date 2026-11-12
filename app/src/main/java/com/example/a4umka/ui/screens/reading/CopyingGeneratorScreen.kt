@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,8 +23,10 @@ import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.CopyingConfig
 import com.example.a4umka.data.CopyingData
 import com.example.a4umka.data.CopyingMode
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.CopyingPdfDrawer
 import com.example.a4umka.util.PdfExporter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +43,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     var volumeFilter by remember { mutableStateOf("Любой объём") }
     var themeFilter by remember { mutableStateOf("Все темы") }
 
-    // ОПТИМИЗАЦИЯ: remember для фильтрации, чтобы не лагало при скролле
     val filteredStories = remember(searchQuery, volumeFilter, themeFilter, config.grade) {
         val allStories = CopyingData.getStories(config.grade)
         allStories.filter { story ->
@@ -62,9 +61,12 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
         }
     }
 
-    val previewPages = remember(config) {
-        CopyingPdfDrawer.generatePreview(config, context)
+    var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
+    LaunchedEffect(config) {
+        delay(300)
+        previewPages = CopyingPdfDrawer.generatePreview(config, context)
     }
+
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
@@ -108,9 +110,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     listOf(1, 2, 3, 4).forEach { grade ->
                         FilterChip(
                             selected = config.grade == grade,
-                            onClick = { 
-                                config = config.copy(grade = grade, selectedStories = emptyList())
-                            },
+                            onClick = { config = config.copy(grade = grade, selectedStories = emptyList()) },
                             label = { Text(grade.toString()) }
                         )
                     }
@@ -161,11 +161,9 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Подходит: ${filteredStories.size}. Выбрано: ${config.selectedStories.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ОПТИМИЗАЦИЯ: добавлен key для списка
             items(filteredStories, key = { it.id }) { story ->
                 val isSelected = config.selectedStories.contains(story)
                 Card(
@@ -197,30 +195,19 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
 
                 Text("Как работаем:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = config.mode == CopyingMode.COPYING,
-                        onClick = { config = config.copy(mode = CopyingMode.COPYING) },
-                        label = { Text("Списываем") }
-                    )
-                    FilterChip(
-                        selected = config.mode == CopyingMode.DICTATION,
-                        onClick = { config = config.copy(mode = CopyingMode.DICTATION) },
-                        label = { Text("Диктант") }
-                    )
+                    FilterChip(selected = config.mode == CopyingMode.COPYING, onClick = { config = config.copy(mode = CopyingMode.COPYING) }, label = { Text("Списываем") })
+                    FilterChip(selected = config.mode == CopyingMode.DICTATION, onClick = { config = config.copy(mode = CopyingMode.DICTATION) }, label = { Text("Диктант") })
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Настройки листа:", style = MaterialTheme.typography.labelLarge)
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Печатать несколько текстов на одном листе")
                         Text("Для экономии бумаги (тексты идут подряд)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                     }
-                    Switch(
-                        checked = config.combineOnOnePage,
-                        onCheckedChange = { config = config.copy(combineOnOnePage = it) }
-                    )
+                    Switch(checked = config.combineOnOnePage, onCheckedChange = { config = config.copy(combineOnOnePage = it) })
                 }
 
                 if (!config.combineOnOnePage) {
@@ -276,7 +263,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     Text("Чёрно-белый вариант", modifier = Modifier.weight(1f))
                     Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
                 }
-                
+
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
                     Slider(
@@ -294,6 +281,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -303,11 +291,12 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                         state = pagerState,
                         modifier = Modifier.fillMaxWidth().aspectRatio(CopyingPdfDrawer.PAGE_WIDTH / CopyingPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
-                        Image(
-                            bitmap = previewPages[page].asImageBitmap(),
-                            contentDescription = "Предпросмотр",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        if (page < previewPages.size) {
+                            ZoomableImage(
+                                bitmap = previewPages[page],
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }
@@ -320,15 +309,9 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     Text("Тексты для списывания и диктантов", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Для письменного занятия нужен понятный образец, подходящий объём и достаточно места для своего почерка. Здесь собраны 100 авторских текстов для списывания и диктантов: по 25 для каждого класса с первого по четвёртый. Рассказы содержат от 22 до 84 слов. Выберите нужные, настройте разлиновку и подготовьте комплект на A4.\n\n" +
-                        "Класс здесь служит ориентиром при поиске. Он не означает соответствия конкретной школьной программе. Сначала прочитайте рассказ целиком: понятны ли слова, знакома ли ситуация, удобно ли ребёнку удерживать такие предложения.\n\n" +
-                        "Объём выбирается отдельно. В каждом классе есть варианты до 50 слов и больше 50 слов.\n\n" +
-                        "Доступны две темы: «Природа и наблюдения» и «Дом и общие дела». Поиск работает по названию и самому тексту.\n\n" +
-                        "Списывание: на детском листе напечатан весь выбранный рассказ. Ребёнок читает его и переносит в строки, возвращаясь к образцу.\n\n" +
-                        "Диктант: на детском листе нет рассказа для подсматривания. Взрослый читает полный текст с общего листа, затем диктует предложения.\n\n" +
-                        "На выбор есть шаг строк 8 или 10 мм. При 10 мм расстояние между основными линиями больше; при 8 мм на той же высоте помещается больше строк. Выбирайте по привычному размеру письма.\n\n" +
-                        "Если ребёнок пишет крупно или выбран длинный рассказ, включите дополнительный лист. Для каждого выбранного текста каждому ребёнку добавится ещё одна разлинованная страница.\n\n" +
-                        "Включите «Печатать несколько текстов на одном листе», если хотите напечатать несколько коротких текстов на одной странице подряд для экономии бумаги.",
+                        "Для письменного занятия нужен понятный образец, подходящий объём и достаточно места для своего почерка.\n\n" +
+                        "Списывание: на детском листе напечатан весь выбранный рассказ. Ребёнок читает его и переносит в строки.\n\n" +
+                        "Диктант: на детском листе нет рассказа для подсматривания. Взрослый читает полный текст, затем диктует предложения.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
