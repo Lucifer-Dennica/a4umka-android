@@ -32,6 +32,7 @@ object Routes {
     const val INTERACTIVE_FAIRY_TALE = "interactive_fairy_tale"
     const val INTERACTIVE_ANAGRAM = "interactive_anagram"
     const val INTERACTIVE_WORD_IN_WORD = "interactive_word_in_word"
+    const val INTERACTIVE_CUSTOM_CROSSWORD = "interactive_custom_crossword"
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -49,6 +50,7 @@ fun NavGraph() {
     var currentProverbConfig by remember { mutableStateOf(ProverbConfig()) }
     var currentFairyTaleConfig by remember { mutableStateOf(FairyTaleConfig()) }
     var currentAnagramConfig by remember { mutableStateOf(AnagramConfig()) }
+    var currentCustomCrosswordConfig by remember { mutableStateOf(CustomCrosswordConfig()) }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
@@ -96,9 +98,16 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "proverb_order" -> ProverbGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { currentProverbConfig = it; navController.navigate(Routes.INTERACTIVE_PROVERB) })
                 categoryId == "reading" && taskId == "fairy_tales" -> FairyTaleGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { currentFairyTaleConfig = it; navController.navigate(Routes.INTERACTIVE_FAIRY_TALE) })
                 categoryId == "reading" && taskId == "anagrams" -> AnagramGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { currentAnagramConfig = it; navController.navigate(Routes.INTERACTIVE_ANAGRAM) })
-                
                 categoryId == "reading" && taskId == "word_in_word" -> WordInWordGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_WORD_IN_WORD) })
                 categoryId == "reading" && taskId == "crossword" -> CrosswordGeneratorScreen(onBack = { navController.popBackStack() })
+                
+                categoryId == "reading" && taskId == "custom_crossword" -> CustomCrosswordGeneratorScreen(
+                    onBack = { navController.popBackStack() },
+                    onPlayInteractive = { config -> 
+                        currentCustomCrosswordConfig = config
+                        navController.navigate(Routes.INTERACTIVE_CUSTOM_CROSSWORD) 
+                    }
+                )
 
                 categoryId == "reading" && taskId == "syllables" -> SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "comprehension" -> ComprehensionGeneratorScreen(onBack = { navController.popBackStack() })
@@ -118,8 +127,14 @@ fun NavGraph() {
         composable(Routes.INTERACTIVE_PROVERB) { InteractiveProverbScreen(currentProverbConfig, onBack = { navController.popBackStack() }) }
         composable(Routes.INTERACTIVE_FAIRY_TALE) { InteractiveFairyTaleScreen(currentFairyTaleConfig, onBack = { navController.popBackStack() }) }
         composable(Routes.INTERACTIVE_ANAGRAM) { InteractiveAnagramScreen(currentAnagramConfig, onBack = { navController.popBackStack() }) }
-        
         composable(Routes.INTERACTIVE_WORD_IN_WORD) { InteractiveWordInWordScreen(onBack = { navController.popBackStack() }) }
+        
+        composable(Routes.INTERACTIVE_CUSTOM_CROSSWORD) { 
+            InteractiveCustomCrosswordScreen(
+                config = currentCustomCrosswordConfig,
+                onBack = { navController.popBackStack() }
+            ) 
+        }
 
         composable(
             route = Routes.LETTER,
