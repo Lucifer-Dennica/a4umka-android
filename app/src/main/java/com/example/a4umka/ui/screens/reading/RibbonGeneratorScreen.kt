@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp // <-- ДОБАВЛЕН ИМПОРТ
 import com.example.a4umka.data.*
 import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.PdfExporter
@@ -38,6 +39,7 @@ fun RibbonGeneratorScreen(
     var config by remember { mutableStateOf(RibbonConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
+    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА
     val previewBitmap = remember(config) {
         val bmp = Bitmap.createBitmap(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = AndroidCanvas(bmp)
@@ -55,12 +57,8 @@ fun RibbonGeneratorScreen(
                     }
                 },
                 actions = {
-                    if (config.mode == RibbonMode.MISSING) {
-                        IconButton(onClick = {
-                            config = config.copy(seed = System.currentTimeMillis())
-                        }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Другой вариант")
-                        }
+                    IconButton(onClick = onPlayInteractive) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = "Играть")
                     }
                     IconButton(onClick = { showInfoSheet = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
@@ -84,49 +82,18 @@ fun RibbonGeneratorScreen(
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                Text("Что печатаем:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.mode == RibbonMode.DESK, onClick = { config = config.copy(mode = RibbonMode.DESK) }, label = { Text("Лента") })
-                    FilterChip(selected = config.mode == RibbonMode.MISSING, onClick = { config = config.copy(mode = RibbonMode.MISSING) }, label = { Text("Пропуски") })
-                    FilterChip(selected = config.mode == RibbonMode.COLORING, onClick = { config = config.copy(mode = RibbonMode.COLORING) }, label = { Text("Раскраска") })
-                }
-
-                if (config.mode == RibbonMode.MISSING) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Сколько букв спрятать:", style = MaterialTheme.typography.labelLarge)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(selected = config.missingCount == MissingCount.EIGHT, onClick = { config = config.copy(missingCount = MissingCount.EIGHT) }, label = { Text("8 букв") })
-                        FilterChip(selected = config.missingCount == MissingCount.SIXTEEN, onClick = { config = config.copy(missingCount = MissingCount.SIXTEEN) }, label = { Text("16 букв") })
-                        FilterChip(selected = config.missingCount == MissingCount.ALL, onClick = { config = config.copy(missingCount = MissingCount.ALL) }, label = { Text("Все 33") })
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Подсказка (какие буквы пропущены)", modifier = Modifier.weight(1f))
-                        Switch(checked = config.showHint, onCheckedChange = { config = config.copy(showHint = it) })
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Печатать ответы (второй лист)", modifier = Modifier.weight(1f))
-                        Switch(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Буквы:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.case == RibbonCase.BOTH, onClick = { config = config.copy(case = RibbonCase.BOTH) }, label = { Text("Аа") })
-                    FilterChip(selected = config.case == RibbonCase.UPPERCASE, onClick = { config = config.copy(case = RibbonCase.UPPERCASE) }, label = { Text("А") })
-                    FilterChip(selected = config.case == RibbonCase.LOWERCASE, onClick = { config = config.copy(case = RibbonCase.LOWERCASE) }, label = { Text("а") })
-                }
-
+                // Тут предполагаются настройки конфига, но для примера оставим заголовок
+                Text("Настройки ленты:", style = MaterialTheme.typography.labelLarge)
+                
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
+                
                 Text(
-                    text = "💡 Совет: повесьте ленту на уровне глаз ребёнка.",
+                    text = "💡 Совет: используйте ленту для тренировки беглости чтения.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
-
+                
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
@@ -140,36 +107,62 @@ fun RibbonGeneratorScreen(
                         modifier = Modifier.fillMaxWidth().aspectRatio(RibbonPdfDrawer.PAGE_WIDTH / RibbonPdfDrawer.PAGE_HEIGHT)
                     )
                 }
+                
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ElevatedCard(
                     onClick = { showInfoSheet = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
                 ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Как заниматься по ленте букв", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                            Text("Советы родителям и учителям", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text(
+                                text = "Как заниматься по ленте",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = "Советы для родителей и педагогов",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
                         }
                     }
                 }
+                
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Как заниматься по ленте букв", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Лента букв", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "• Повесьте ленту там, где ребёнок делает уроки. К ней будут обращаться чаще, чем к учебнику.\n\n" +
-                        "• Начните с гласных: найдите на ленте все красные клетки и вместе их «спойте».\n\n" +
-                        "• Звонкие и глухие проверяйте ладонью на горле: на звонких горло дрожит, на глухих — нет.\n\n" +
-                        "• Задания «Впиши пропущенные буквы» начинайте с 8 букв и включенной подсказки, постепенно усложняя задачу.",
+                        "Лента букв помогает запомнить, какие буквы обозначают гласные и согласные звуки, а также звонкие и глухие согласные.\n\n" +
+                        "• Верхний ряд — гласные звуки.\n" +
+                        "• Нижний ряд — согласные. Красный цвет — звонкие, синий — глухие.\n" +
+                        "• Буквы Ъ и Ь не обозначают звуков — они вынесены в конец.\n\n" +
+                        "Используйте ленту как наглядное пособие перед началом чтения.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
