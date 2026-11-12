@@ -136,6 +136,18 @@ object PdfExporter {
         return saveDocument(context, document, "anagrams_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportWordInWord(context: Context, config: WordInWordConfig): String? {
+        val document = PdfDocument()
+        WordInWordPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "word_in_word_${System.currentTimeMillis()}.pdf")
+    }
+
+    fun exportCrossword(context: Context, config: CrosswordConfig): String? {
+        val document = PdfDocument()
+        CrosswordPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "crossword_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
