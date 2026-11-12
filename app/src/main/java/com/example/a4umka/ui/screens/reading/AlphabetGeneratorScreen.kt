@@ -2,8 +2,6 @@ package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -17,11 +15,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.a4umka.data.*
+import com.example.a4umka.ui.components.ZoomableImage // <-- ДОБАВЛЕН ИМПОРТ
 import com.example.a4umka.util.AlphabetPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.launch
@@ -162,15 +160,16 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             // ПРЕДПРОСМОТР И КНОПКА ПОД НИМ
             item {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Image(
-                        bitmap = previewBitmap.asImageBitmap(),
-                        contentDescription = "Предпросмотр",
+                    // ЗАМЕНЕНО НА ZOOMABLE IMAGE
+                    ZoomableImage(
+                        bitmap = previewBitmap,
                         modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
                     )
                 }
