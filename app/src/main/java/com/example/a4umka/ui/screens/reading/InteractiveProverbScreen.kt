@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,18 +38,12 @@ fun InteractiveProverbScreen(
         isSolved = false
     }
 
-    LaunchedEffect(Unit) {
-        loadNewTask()
-    }
+    LaunchedEffect(Unit) { loadNewTask() }
 
     fun checkSolution() {
         val task = currentTask ?: return
         val isCorrect = selectedCards.map { it.first } == task.correctSequence
-        if (isCorrect) {
-            isSolved = true
-        } else {
-            selectedCards = emptyList()
-        }
+        if (isCorrect) isSolved = true else selectedCards = emptyList()
     }
 
     Scaffold(
@@ -84,7 +77,7 @@ fun InteractiveProverbScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Твой порядок (нажми, чтобы убрать):", style = MaterialTheme.typography.labelLarge)
+                Text("Твой порядок (нажми на карточку, чтобы убрать):", style = MaterialTheme.typography.labelLarge)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -101,7 +94,6 @@ fun InteractiveProverbScreen(
                                     modifier = Modifier
                                         .width(60.dp)
                                         .clickable(enabled = !isSolved) {
-                                            // Удаляем карточку из выбранных
                                             selectedCards = selectedCards - card
                                         },
                                     colors = CardDefaults.cardColors(containerColor = Color(0xFF81C784))
@@ -157,9 +149,7 @@ fun InteractiveProverbScreen(
                             modifier = Modifier
                                 .width(60.dp)
                                 .clickable {
-                                    if (!isSolved) {
-                                        selectedCards = selectedCards + card
-                                    }
+                                    if (!isSolved) selectedCards = selectedCards + card
                                 },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
