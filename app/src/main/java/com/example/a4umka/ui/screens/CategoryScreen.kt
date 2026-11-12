@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,8 +22,9 @@ fun CategoryScreen(
     onTaskClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val category = AppContent.categoryById(categoryId)
-    val tasks = AppContent.tasksFor(categoryId)
+    // Кешируем данные, чтобы они не пересоздавались при каждой перерисовке экрана
+    val category = remember(categoryId) { AppContent.categoryById(categoryId) }
+    val tasks = remember(categoryId) { AppContent.tasksFor(categoryId) }
 
     Scaffold(
         topBar = {
@@ -45,7 +47,8 @@ fun CategoryScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(tasks) { task ->
+            // Добавляем key для оптимизации списка
+            items(tasks, key = { it.id }) { task ->
                 TaskTile(task = task, onClick = { onTaskClick(task.id) })
             }
         }
