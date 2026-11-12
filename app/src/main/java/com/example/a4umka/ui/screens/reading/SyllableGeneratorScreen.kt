@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -10,6 +9,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border // <-- ДОБАВЛЕН ИМПОРТ
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -113,6 +113,8 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         selectedCategory.texts.forEach { textObj ->
                             val isSelected = config.selectedTexts.contains(textObj)
+                            // ИСПРАВЛЕНИЕ: ElevatedCard не поддерживает параметр border.
+                            // Используем Modifier.border для условной рамки.
                             ElevatedCard(
                                 onClick = {
                                     if (config.isMultiSelectMode) {
@@ -123,8 +125,15 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                         config = config.copy(selectedTexts = listOf(textObj))
                                     }
                                 },
-                                modifier = Modifier.fillMaxWidth(),
-                                border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (isSelected) Modifier.border(
+                                            2.dp,
+                                            MaterialTheme.colorScheme.primary,
+                                            CardDefaults.elevatedShape
+                                        ) else Modifier
+                                    )
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
