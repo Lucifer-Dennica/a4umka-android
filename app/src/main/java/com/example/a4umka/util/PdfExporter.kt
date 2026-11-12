@@ -12,6 +12,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 
 object PdfExporter {
+    // ... (Предыдущие методы остаются без изменений)
 
     fun exportWorksheet(context: Context, letter: String, config: PdfExportConfig): String? {
         val document = PdfDocument()
@@ -146,6 +147,12 @@ object PdfExporter {
         val document = PdfDocument()
         CrosswordPdfDrawer.drawDocument(document, config, context)
         return saveDocument(context, document, "crossword_${System.currentTimeMillis()}.pdf")
+    }
+
+    fun exportCustomCrossword(context: Context, config: CustomCrosswordConfig): String? {
+        val document = PdfDocument()
+        CustomCrosswordPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "custom_crossword_${System.currentTimeMillis()}.pdf")
     }
 
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
