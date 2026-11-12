@@ -10,6 +10,7 @@ import com.example.a4umka.data.FillwordConfig
 import com.example.a4umka.data.FunnyStory
 import com.example.a4umka.data.LetterMathConfig
 import com.example.a4umka.data.ProverbConfig
+import com.example.a4umka.data.FairyTaleConfig
 import com.example.a4umka.ui.screens.CategoryScreen
 import com.example.a4umka.ui.screens.HomeScreen
 import com.example.a4umka.ui.screens.SettingsScreen
@@ -29,11 +30,13 @@ import com.example.a4umka.ui.screens.reading.RebusGeneratorScreen
 import com.example.a4umka.ui.screens.reading.SimpleRebusGeneratorScreen
 import com.example.a4umka.ui.screens.reading.LetterMathGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ProverbGeneratorScreen
+import com.example.a4umka.ui.screens.reading.FairyTaleGeneratorScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFillwordScreen
 import com.example.a4umka.ui.screens.reading.InteractiveFunnyStoryScreen
 import com.example.a4umka.ui.screens.reading.InteractiveRebusScreen
 import com.example.a4umka.ui.screens.reading.InteractiveLetterMathScreen
 import com.example.a4umka.ui.screens.reading.InteractiveProverbScreen
+import com.example.a4umka.ui.screens.reading.InteractiveFairyTaleScreen
 import com.example.a4umka.ui.screens.reading.SyllableGeneratorScreen
 import com.example.a4umka.ui.screens.reading.ComprehensionGeneratorScreen
 import com.example.a4umka.ui.screens.reading.CopyingGeneratorScreen
@@ -62,6 +65,8 @@ object Routes {
     const val INTERACTIVE_LETTER_MATH = "interactive_letter_math"
     const val PROVERB_ORDER = "proverb_order"
     const val INTERACTIVE_PROVERB = "interactive_proverb"
+    const val FAIRY_TALES = "fairy_tales"
+    const val INTERACTIVE_FAIRY_TALE = "interactive_fairy_tale"
     const val SYLLABLE_READING = "syllable_reading"
     const val COMPREHENSION = "comprehension"
     const val COPYING = "copying"
@@ -82,6 +87,7 @@ fun NavGraph() {
     var currentRebusWords by remember { mutableStateOf<List<String>>(emptyList()) }
     var currentLetterMathConfig by remember { mutableStateOf(LetterMathConfig()) }
     var currentProverbConfig by remember { mutableStateOf(ProverbConfig()) }
+    var currentFairyTaleConfig by remember { mutableStateOf(FairyTaleConfig()) }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
@@ -185,6 +191,15 @@ fun NavGraph() {
                         }
                     )
                 }
+                categoryId == "reading" && taskId == "fairy_tales" -> {
+                    FairyTaleGeneratorScreen(
+                        onBack = { navController.popBackStack() },
+                        onPlayInteractive = { config ->
+                            currentFairyTaleConfig = config
+                            navController.navigate(Routes.INTERACTIVE_FAIRY_TALE)
+                        }
+                    )
+                }
                 categoryId == "reading" && taskId == "syllables" -> {
                     SyllableGeneratorScreen(onBack = { navController.popBackStack() })
                 }
@@ -211,7 +226,7 @@ fun NavGraph() {
                 }
             }
         }
-        
+
         composable(Routes.INTERACTIVE_RIBBON) {
             InteractiveRibbonScreen(onBack = { navController.popBackStack() })
         }
@@ -249,6 +264,13 @@ fun NavGraph() {
         composable(Routes.INTERACTIVE_PROVERB) {
             InteractiveProverbScreen(
                 config = currentProverbConfig,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.INTERACTIVE_FAIRY_TALE) {
+            InteractiveFairyTaleScreen(
+                config = currentFairyTaleConfig,
                 onBack = { navController.popBackStack() }
             )
         }
