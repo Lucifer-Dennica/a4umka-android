@@ -2,7 +2,6 @@ package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -11,18 +10,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.a4umka.data.*
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.PdfExporter
 import com.example.a4umka.util.RibbonPdfDrawer
 import kotlinx.coroutines.launch
@@ -31,7 +29,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun RibbonGeneratorScreen(
     onBack: () -> Unit,
-    onPlayInteractive: () -> Unit // <-- НОВЫЙ КОЛБЭК
+    onPlayInteractive: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -58,8 +56,8 @@ fun RibbonGeneratorScreen(
                 },
                 actions = {
                     if (config.mode == RibbonMode.MISSING) {
-                        IconButton(onClick = { 
-                            config = config.copy(seed = System.currentTimeMillis()) 
+                        IconButton(onClick = {
+                            config = config.copy(seed = System.currentTimeMillis())
                         }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Другой вариант")
                         }
@@ -121,44 +119,29 @@ fun RibbonGeneratorScreen(
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                
+
                 Text(
                     text = "💡 Совет: повесьте ленту на уровне глаз ребёнка.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             item {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Image(
-                        bitmap = previewBitmap.asImageBitmap(),
-                        contentDescription = "Предпросмотр",
+                    ZoomableImage(
+                        bitmap = previewBitmap,
                         modifier = Modifier.fillMaxWidth().aspectRatio(RibbonPdfDrawer.PAGE_WIDTH / RibbonPdfDrawer.PAGE_HEIGHT)
                     )
                 }
-                
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // КНОПКА "РЕШАТЬ НА ЭКРАНЕ" (появляется только в режиме Пропусков)
-                if (config.mode == RibbonMode.MISSING) {
-                    Button(
-                        onClick = onPlayInteractive,
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Решать на экране", style = MaterialTheme.typography.titleMedium)
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                
+
                 ElevatedCard(
                     onClick = { showInfoSheet = true },
                     modifier = Modifier.fillMaxWidth(),
