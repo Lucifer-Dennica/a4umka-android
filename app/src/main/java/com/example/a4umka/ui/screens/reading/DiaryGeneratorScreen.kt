@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -15,14 +14,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.DiaryPdfDrawer
 import com.example.a4umka.util.PdfExporter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -35,9 +35,12 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(DiaryConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    val previewPages = remember(config) {
-        DiaryPdfDrawer.generatePreview(config, context)
+    var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
+    LaunchedEffect(config) {
+        delay(300)
+        previewPages = DiaryPdfDrawer.generatePreview(config, context)
     }
+
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
@@ -72,24 +75,14 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ВИД СТРАНИЦЫ
                 Text("Вид страницы книги:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = config.pageType == DiaryPageType.SCHOOL,
-                        onClick = { config = config.copy(pageType = DiaryPageType.SCHOOL) },
-                        label = { Text("Школьная") }
-                    )
-                    FilterChip(
-                        selected = config.pageType == DiaryPageType.PICTURES,
-                        onClick = { config = config.copy(pageType = DiaryPageType.PICTURES) },
-                        label = { Text("В картинках") }
-                    )
+                    FilterChip(selected = config.pageType == DiaryPageType.SCHOOL, onClick = { config = config.copy(pageType = DiaryPageType.SCHOOL) }, label = { Text("Школьная") })
+                    FilterChip(selected = config.pageType == DiaryPageType.PICTURES, onClick = { config = config.copy(pageType = DiaryPageType.PICTURES) }, label = { Text("В картинках") })
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ДАННЫЕ РЕБЁНКА
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = config.childName,
@@ -114,7 +107,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // НАСТРОЙКИ ЛИСТА
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     var pagesExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = pagesExpanded, onExpandedChange = { pagesExpanded = it }, modifier = Modifier.weight(1f)) {
@@ -130,7 +122,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                             }
                         }
                     }
-                    
+
                     var rulingExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(expanded = rulingExpanded, onExpandedChange = { rulingExpanded = it }, modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
@@ -190,7 +182,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ЧТО ЕЩЕ ВЛОЖИТЬ
                 Text("Что ещё вложить в дневник:", style = MaterialTheme.typography.labelLarge)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.includeTitlePage, onCheckedChange = { config = config.copy(includeTitlePage = it) })
@@ -206,8 +197,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // ЧТО ПЕЧАТАТЬ НА СТРАНИЦЕ
                 if (config.pageType == DiaryPageType.SCHOOL) {
                     Text("Что печатать на странице книги:", style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -227,7 +216,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                         )
                         fields.forEachIndexed { index, (name, checked) ->
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.widthIn(max = 160.dp)) {
-                                Checkbox(checked = checked, onCheckedChange = { 
+                                Checkbox(checked = checked, onCheckedChange = {
                                     config = when(index) {
                                         0 -> config.copy(showAuthor = it)
                                         1 -> config.copy(showTitle = it)
@@ -251,10 +240,13 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge)
-                if (previewPages.size > 1) {
-                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -264,11 +256,12 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                         state = pagerState,
                         modifier = Modifier.fillMaxWidth().aspectRatio(DiaryPdfDrawer.PAGE_WIDTH / DiaryPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
-                        Image(
-                            bitmap = previewPages[page].asImageBitmap(),
-                            contentDescription = "Предпросмотр",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        if (page < previewPages.size) {
+                            ZoomableImage(
+                                bitmap = previewPages[page],
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }
@@ -281,13 +274,8 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     Text("Читательский дневник", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Читательский дневник задают почти в каждой школе. Этот генератор устроен иначе — вы собираете дневник под своего ребёнка и распечатываете его целиком на A4: титульный лист, страницы для книг, список прочитанного и лист техники чтения.\n\n" +
-                        "• Титульный лист — имя, класс, учебный год и рамка, чтобы нарисовать обложку любимой книги.\n\n" +
-                        "• Школьная страница книги — до двенадцати полей на выбор, лишние снимаются галочкой, оставшиеся растягиваются на весь лист.\n\n" +
-                        "• Страница в картинках — для тех, кто читает по слогам: рисунок на пол-листа, две строки крупно, оценка смайликом.\n\n" +
-                        "• Список прочитанного — таблица на 8–18 строк: дата, автор и название, страниц, оценка, подпись взрослого.\n\n" +
-                        "• Лист техники чтения — двенадцать замеров: дата, что читал, слов в минуту, отметка взрослого.\n\n" +
-                        "Вы можете выбрать разлиновку (обычная, широкая для 1 класса, клетка, без линий) и цвет листа (розовый, зеленый, синий, оранжевый, ч/б).",
+                        "Читательский дневник задают почти в каждой школе. Этот генератор устроен иначе — вы собираете дневник под своего ребёнка и распечатываете его целиком на A4.\n\n" +
+                        "Вы можете выбрать разлиновку (обычная, широкая, клетка, без линий) и цвет листа (розовый, зеленый, синий, оранжевый, ч/б).",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
