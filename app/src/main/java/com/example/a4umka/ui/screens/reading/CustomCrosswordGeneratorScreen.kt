@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.a4umka.data.CrosswordMode
 import com.example.a4umka.data.CustomCrosswordConfig
 import com.example.a4umka.data.CustomCrosswordData
 import com.example.a4umka.ui.components.ZoomableImage
@@ -81,6 +83,27 @@ fun CustomCrosswordGeneratorScreen(
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { config = config.copy(mode = CrosswordMode.STANDARD) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) { Text("Кроссворд") }
+                    
+                    Button(
+                        onClick = { config = config.copy(mode = CrosswordMode.SCANWORD) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) { Text("Сканворд") }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Заголовок листа:", style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = config.title,
@@ -126,13 +149,18 @@ fun CustomCrosswordGeneratorScreen(
                     Text("Добавить лист с ответами")
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Если сетка кажется неудобной, нажмите «Перемешать сетку», чтобы программа попробовала уложить слова по-другому.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Spacer(modifier = Modifier.height(8.dp))
+                
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
+                    OutlinedButton(
                         onClick = { config = config.copy(seed = System.currentTimeMillis()) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Другая раскладка")
+                        Icon(Icons.Default.Shuffle, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Перемешать сетку")
                     }
                     Button(
                         onClick = { onPlayInteractive(config) },
@@ -140,6 +168,8 @@ fun CustomCrosswordGeneratorScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                         enabled = CustomCrosswordData.parseInput(config.wordsInput).isNotEmpty()
                     ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text("Решать онлайн")
                     }
                 }
@@ -186,6 +216,9 @@ fun CustomCrosswordGeneratorScreen(
                         "• Вы можете закрепить словарные слова или тему урока.\n" +
                         "• Ребенок читает вопрос, вспоминает слово и вписывает его по буквам.\n" +
                         "• Можно составить кроссворд про именинника или гостей на празднике.\n\n" +
+                        "Режимы:\n" +
+                        "• Кроссворд — вопросы списком под сеткой.\n" +
+                        "• Сканворд — вопросы написаны прямо в клетках (для опытных).\n\n" +
                         "Как заполнять:\n" +
                         "Пишите по одной паре на строку в формате: СЛОВО — Вопрос. Разделитель может быть тире, дефис или двоеточие. Слова должны быть на кириллице, от 3 до 12 букв.",
                         style = MaterialTheme.typography.bodyLarge
