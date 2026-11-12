@@ -1,8 +1,8 @@
 package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.a4umka.R
 import com.example.a4umka.data.*
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.BookletPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.delay
@@ -47,7 +48,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(BookletConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var showFoldInstructions by remember { mutableStateOf(false) }
-    
     var zoomImageRes by remember { mutableStateOf<Int?>(null) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -126,7 +126,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                
                 var charExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = charExpanded, onExpandedChange = { charExpanded = it }) {
                     OutlinedTextField(
@@ -145,10 +144,7 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                             BookletCharacter.BOY to "Мальчик",
                             BookletCharacter.GIRL to "Девочка"
                         ).forEach { (c, name) ->
-                            DropdownMenuItem(text = { Text(name) }, onClick = {
-                                config = config.copy(character = c)
-                                charExpanded = false
-                            })
+                            DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(character = c); charExpanded = false })
                         }
                     }
                 }
@@ -182,7 +178,6 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                
                 OutlinedButton(
                     onClick = { showFoldInstructions = true },
                     modifier = Modifier.fillMaxWidth()
@@ -193,7 +188,13 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листа A4 (альбомный):", style = MaterialTheme.typography.labelLarge)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр листа A4 (альбомный):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
+                }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -204,9 +205,8 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().aspectRatio(BookletPdfDrawer.PAGE_WIDTH / BookletPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
-                            Image(
-                                bitmap = previewPages[page].asImageBitmap(),
-                                contentDescription = "Предпросмотр",
+                            ZoomableImage(
+                                bitmap = previewPages[page],
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -216,13 +216,12 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // МОДАЛЬНОЕ ОКНО С ИНСТРУКЦИЕЙ
         if (showFoldInstructions) {
             ModalBottomSheet(onDismissRequest = { showFoldInstructions = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
                     Text("Как сложить книжку", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text("1. Отрежьте нижнюю полоску с инструкцией.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(modifier = Modifier.height(4.dp))
                     Image(
@@ -261,7 +260,7 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().height(150.dp).clickable { zoomImageRes = R.drawable.booklet_step4 },
                         contentScale = ContentScale.Fit
                     )
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         "💡 Совет: страницы нижнего ряда напечатаны перевёрнутыми — так и задумано! После складывания они встанут правильной стороной.",
@@ -273,12 +272,10 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // ДИАЛОГ ДЛЯ УВЕЛИЧЕНИЯ КАРТИНКИ С ЗУМОМ
         if (zoomImageRes != null) {
             Dialog(onDismissRequest = { zoomImageRes = null }) {
                 Card(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f)) {
                     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
-                        
                         var scale by remember { mutableFloatStateOf(1f) }
                         var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -322,52 +319,15 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
-        
-        // ИНФО (ПОЛНЫЙ ТЕКСТ)
+
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
                     Text("Книжка-малышка своими руками", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
-                    
                     Text(
-                        "Генератор собирает лист A4, который складывается в книжку-малышку на восемь страниц — без клея, скотча и степлера. Нужны только принтер и ножницы: сделать сгибы по разметке, надрезать по отмеченной линии, сложить ещё раз — и в руках настоящая маленькая книжка с обложкой, страницами и словом «Конец» в конце.\n\n" +
-                        "Внутри может быть своя сказка, книжка про себя или загадки — вид выбираете вы. На обложке печатаются название и имя автора, так что книжка сразу получается именной.\n\n" +
-                        "Зачем делать книжку с ребёнком:\n" +
-                        "• связная речь: придумать историю и уложить её в шесть страниц;\n" +
-                        "• мелкая моторика — складывание по сгибу и работа ножницами;\n" +
-                        "• понимание, как устроена книга: обложка, страницы, порядок, конец;\n" +
-                        "• рисование по замыслу, а не по образцу;\n" +
-                        "• письмо: подписать страницу своими словами — законный повод писать.\n\n" +
-                        "Для какого возраста:\n" +
-                        "• 5 лет. Книжка с рисунками: ребёнок рисует, взрослый записывает под диктовку. Складывает лист тоже взрослый — сгибы получаются аккуратнее.\n" +
-                        "• 6 лет. «Книжка про меня»: на каждой странице подсказка — «Меня зовут», «Моя семья», «Мой день». Отвечать на такие вопросы можно сразу, не задумываясь.\n" +
-                        "• 7 лет и старше. Своя сказка от начала до конца и книжка с загадками — её приятно давать разгадывать другим: загадка на странице, отгадка на следующей.\n\n" +
-                        "Как пользоваться генератором:\n" +
-                        "Выберите, что внутри, впишите название и имя автора, задайте разлиновку. Нажмите «Сохранить в PDF» и печатайте альбомно, масштаб 100%, без «вписать в страницу».\n\n" +
-                        "Что можно настроить:\n" +
-                        "• Своя сказка — рамка под рисунок и строки для текста;\n" +
-                        "• Книжка про меня — шесть подсказок;\n" +
-                        "• Моя семья — страницы с подсказками про близких;\n" +
-                        "• Подарок бабушке — рисунки, воспоминания и пожелания;\n" +
-                        "• Загадки — готовый банк загадок;\n" +
-                        "• Чистая — только рамки и строки, без подписей;\n" +
-                        "• разлиновка: линия 8 мм, широкая 10 мм, клетка 5 мм или без линий;\n" +
-                        "• чёрно-белый режим и линии сгиба с надрезом.\n\n" +
-                        "Как сложить:\n" +
-                        "1. отрежьте нижнюю полоску с инструкцией;\n" +
-                        "2. сложите лист пополам поперёк, потом ещё пополам и ещё раз — выйдет восемь клеток;\n" +
-                        "3. разверните до первого сгиба и надрежьте по жирной линии в середине;\n" +
-                        "4. разверните лист, сложите вдоль и сдвиньте края друг к другу — надрез раскроется;\n" +
-                        "5. сложите книжку и прогладьте сгибы: страницы встанут по порядку сами.\n\n" +
-                        "Какой навык развивает:\n" +
-                        "Главное здесь — доведение замысла до конца. Придумать начало легко, а вот дотянуть историю до восьмой страницы, где написано «Конец», уже работа. Заодно ребёнок на собственных руках понимает, почему в книге страницы идут по порядку.\n\n" +
-                        "Советы родителям:\n" +
-                        "• первую книжку сложите сами, пока ребёнок смотрит;\n" +
-                        "• не исправляйте орфографию в его книжке: она авторская;\n" +
-                        "• печатайте на обычной бумаге — плотная плохо держит тройной сгиб;\n" +
-                        "• делайте серию: «книжка про лето», «книжка про кота»;\n" +
-                        "• если книжка делается в сад, впишите имя автора на обложке сразу.",
+                        "Генератор собирает лист A4, который складывается в книжку-малышку на восемь страниц — без клея, скотча и степлера. Нужны только принтер и ножницы.\n\n" +
+                        "Внутри может быть своя сказка, книжка про себя или загадки — вид выбираете вы. На обложке печатаются название и имя автора, так что книжка сразу получается именной.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
