@@ -9,7 +9,6 @@ object ProverbData {
     private val numbers30 = (1..30).map { it.toString() }
     private val letters = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ".map { it.toString() }
 
-    // Фразы разбиты на слоги (для 5-6 лет короткие, для 6-7 длинные)
     private val proverbsShort = listOf(
         "де|лу вре|мя, по|те|хе час",
         "ти|ше е|дешь — даль|ше бу|дешь",
@@ -31,33 +30,31 @@ object ProverbData {
         if (config.sortTypes.isEmpty()) return null
 
         val type = config.sortTypes.random()
+        // Убрали .shuffled() отсюда, чтобы сохранить правильный порядок чисел
         val sourceItems = when (type) {
-            ProverbSortType.NUMBERS -> if (config.age == ProverbAge.AGE_5_6) numbers10 else numbers30.shuffled()
+            ProverbSortType.NUMBERS -> if (config.age == ProverbAge.AGE_5_6) numbers10 else numbers30
             ProverbSortType.DAYS -> days
             ProverbSortType.MONTHS -> months
             ProverbSortType.LETTERS -> letters
         }
 
-        // Выбираем фразу
         val phrasePool = if (config.age == ProverbAge.AGE_5_6) proverbsShort else proverbsLong
         val phraseRaw = phrasePool.random()
-        
         val syllables = phraseRaw.split("|")
-        
-        // Если слогов больше, чем предметов, отбрасываем эту фразу (или берем другую)
+
         if (syllables.size > sourceItems.size) return null
 
-        // Берем нужное количество предметов и перемешиваем их для карточек
-        val selectedItems = sourceItems.shuffled().take(syllables.size).sorted()
-        val shuffledItems = selectedItems.shuffled()
+        // 1. Берем случайные элементы (например, месяцы)
+        val selectedItems = sourceItems.shuffled().take(syllables.size)
 
-        // Сопоставляем предметы и слоги в правильном порядке
-        val correctOrder = selectedItems // Они уже отсортированы
-        val cards = selectedItems.mapIndexed { index, item ->
+        // 2. Сортируем их ПРАВИЛЬНО (по индексу в изначальном списке, а не по алфавиту)
+        val correctOrder = selectedItems.sortedBy { sourceItems.indexOf(it) }
+
+        // 3. Привязываем слоги к ПРАВИЛЬНОМУ порядку (Январь = первый слог, Февраль = второй и т.д.)
+        val cards = correctOrder.mapIndexed { index, item ->
             Pair(item, syllables[index].uppercase())
-        }.shuffled() // Перемешиваем для вывода на экран
+        }.shuffled()
 
-        // Считаем пробелы (по исходной строке)
         val wordBreaks = mutableListOf<Int>()
         var currentIndex = 0
         for (word in phraseRaw.split(" ")) {
