@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -16,13 +15,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.RebusConfig
 import com.example.a4umka.data.RebusData
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.PdfExporter
 import com.example.a4umka.util.RebusPdfDrawer
 import kotlinx.coroutines.delay
@@ -90,7 +89,6 @@ fun RebusGeneratorScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Text("Ваши слова или короткие фразы:", style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = config.wordsInput,
@@ -101,7 +99,6 @@ fun RebusGeneratorScreen(
                 Text("Слов: ${words.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 var layoutExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = layoutExpanded, onExpandedChange = { layoutExpanded = it }) {
                     OutlinedTextField(
@@ -120,7 +117,6 @@ fun RebusGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-
                 var perPageExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = perPageExpanded, onExpandedChange = { perPageExpanded = it }) {
                     OutlinedTextField(
@@ -139,7 +135,6 @@ fun RebusGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.showHints, onCheckedChange = { config = config.copy(showHints = it) })
                     Text("Подписать названия картинок", fontSize = 14.sp)
@@ -154,7 +149,6 @@ fun RebusGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 if (words.isNotEmpty()) {
                     Button(
                         onClick = { onPlayInteractive(words) },
@@ -174,6 +168,7 @@ fun RebusGeneratorScreen(
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -184,9 +179,8 @@ fun RebusGeneratorScreen(
                         modifier = Modifier.fillMaxWidth().aspectRatio(RebusPdfDrawer.PAGE_WIDTH / RebusPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
-                            Image(
-                                bitmap = previewPages[page].asImageBitmap(),
-                                contentDescription = "Предпросмотр",
+                            ZoomableImage(
+                                bitmap = previewPages[page],
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -203,8 +197,7 @@ fun RebusGeneratorScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         "Введите имя, тему урока или короткую фразу — и получите ребус из своего слова на A4.\n\n" +
-                        "Каждая картинка обозначает первую букву своего названия. Например: кот, облако, торт дают К, О, Т — слово «КОТ».\n\n" +
-                        "Теперь можно разместить 2 или 4 ребуса на одном листе (таблицей) для экономии бумаги. А с помощью кнопки «Решать на экране» ребёнок может вписать буквы прямо в приложении и проверить себя.",
+                        "Каждая картинка обозначает первую букву своего названия.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
