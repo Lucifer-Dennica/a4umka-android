@@ -1,6 +1,5 @@
 package com.example.a4umka.ui.screens.reading
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,16 +16,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.a4umka.data.FunnyStory
-import com.example.a4umka.data.FunnyStoryConfig
-import com.example.a4umka.data.FunnyStoryData
-import com.example.a4umka.data.FunnyStoryTheme
-import com.example.a4umka.data.FunnyStoryWriter
+import com.example.a4umka.data.*
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.FunnyStoryPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.delay
@@ -45,7 +40,6 @@ fun FunnyStoryGeneratorScreen(
     var config by remember { mutableStateOf(FunnyStoryConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    // Инициализация историй
     LaunchedEffect(config.theme, config.count) {
         if (config.currentStories.isEmpty() || config.currentStories.size != config.count) {
             config = config.copy(currentStories = FunnyStoryData.getStoriesForTheme(config.theme, config.count))
@@ -92,7 +86,6 @@ fun FunnyStoryGeneratorScreen(
             contentPadding = PaddingValues(16.dp)
         ) {
             item {
-                // ТЕМА
                 var themeExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
                     OutlinedTextField(
@@ -124,7 +117,6 @@ fun FunnyStoryGeneratorScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // КОЛИЧЕСТВО
                 var countExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(expanded = countExpanded, onExpandedChange = { countExpanded = it }) {
                     OutlinedTextField(
@@ -149,8 +141,6 @@ fun FunnyStoryGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // КТО ВПИСЫВАЕТ
                 Text("Кто вписывает слова:", style = MaterialTheme.typography.labelLarge)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = config.writer == FunnyStoryWriter.ADULT, onClick = { config = config.copy(writer = FunnyStoryWriter.ADULT) })
@@ -168,11 +158,9 @@ fun FunnyStoryGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // КНОПКИ
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
-                        onClick = { 
+                        onClick = {
                             if (config.currentStories.isNotEmpty()) {
                                 onPlayInteractive(config.currentStories.first())
                             }
@@ -208,6 +196,7 @@ fun FunnyStoryGeneratorScreen(
                         Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
                 }
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -218,9 +207,8 @@ fun FunnyStoryGeneratorScreen(
                         modifier = Modifier.fillMaxWidth().aspectRatio(FunnyStoryPdfDrawer.PAGE_WIDTH / FunnyStoryPdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
-                            Image(
-                                bitmap = previewPages[page].asImageBitmap(),
-                                contentDescription = "Предпросмотр",
+                            ZoomableImage(
+                                bitmap = previewPages[page],
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -236,14 +224,7 @@ fun FunnyStoryGeneratorScreen(
                     Text("Весёлые истории", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Взрослый спрашивает слова — «назови животное», «назови смешное слово», — а ребёнок отвечает наугад, не видя текста. Потом слова вставляются в историю, и она читается вслух. Получается полная чепуха, и это очень смешно! Читать и писать ребёнку не нужно: работает с 4 лет.\n\n" +
-                        "Как играть:\n" +
-                        "1. Распечатайте лист — сверху вопросы, снизу текст истории.\n" +
-                        "2. Закройте нижнюю половину листа ладонью или загните.\n" +
-                        "3. Спросите слова по порядку и запишите их в строчки.\n" +
-                        "4. Впишите слова в пропуски и прочитайте историю вслух.\n" +
-                        "5. Внизу листа есть рамка: пусть ребёнок нарисует самый смешной момент.\n\n" +
-                        "Главное правило: не показывайте текст заранее. Как только ребёнок видит, куда попадёт слово, он начинает подбирать «правильное» — и вся игра пропадает.",
+                        "Взрослый спрашивает слова — «назови животное», «назови смешное слово», — а ребёнок отвечает наугад, не видя текста. Потом слова вставляются в историю, и она читается вслух.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
