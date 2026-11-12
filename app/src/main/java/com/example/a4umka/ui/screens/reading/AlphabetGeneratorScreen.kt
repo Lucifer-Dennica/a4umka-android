@@ -18,8 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp // <-- ДОБАВЛЕН ИМПОРТ
 import com.example.a4umka.data.*
-import com.example.a4umka.ui.components.ZoomableImage // <-- ДОБАВЛЕН ИМПОРТ
+import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.AlphabetPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.launch
@@ -164,10 +165,8 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ПРЕДПРОСМОТР И КНОПКА ПОД НИМ
             item {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    // ЗАМЕНЕНО НА ZOOMABLE IMAGE
                     ZoomableImage(
                         bitmap = previewBitmap,
                         modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
@@ -176,7 +175,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // КНОПКА ИНФО ПОД ПРЕДПРОСМОТРОМ
                 ElevatedCard(
                     onClick = { showInfoSheet = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -214,7 +212,6 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-        // ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ С ТЕКСТОМ
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
