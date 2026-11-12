@@ -11,7 +11,7 @@ import android.graphics.pdf.PdfDocument
 import com.example.a4umka.data.ProverbConfig
 import com.example.a4umka.data.ProverbData
 import com.example.a4umka.data.ProverbTask
-import kotlin.math.floor
+import kotlin.math.max
 
 object ProverbPdfDrawer {
     const val PAGE_WIDTH = 595f
@@ -110,7 +110,7 @@ object ProverbPdfDrawer {
         canvas.drawText("Если всё верно, из слогов сложится пословица или скороговорка", PAGE_WIDTH / 2f, 110f, subPaint)
 
         var currentY = 140f
-        // Увеличили высоту блока, так как карточки теперь могут переноситься
+        // Высота блока задачи
         val taskHeight = 320f 
 
         for ((index, task) in tasks.withIndex()) {
@@ -138,42 +138,50 @@ object ProverbPdfDrawer {
         val instPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
         canvas.drawText(task.instruction, left + 40f, top + 30f, instPaint)
 
-        // Карточки (с переносом)
-        val cardW = 45f
-        val cardH = 50f
-        val gap = 8f
-        val startX = left + 20f
-        val startY = top + 50f
-        
-        // Сколько карточек влезает в один ряд
-        val maxCols = floor((width - 40f) / (cardW + gap)).toInt()
-
+        // Карточки (с переносом и динамической шириной)
+        val itemTextPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.WHITE; textAlign = Paint.Align.CENTER }
+        val syllTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
         val itemBgPaint = Paint().apply { color = Color.parseColor("#64B5F6"); style = Paint.Style.FILL }
         val syllBgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
         val borderPaint = Paint().apply { color = Color.GRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
-        val itemTextPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.WHITE; textAlign = Paint.Align.CENTER }
-        val syllTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
+        
+        val cardH = 50f
+        val gap = 8f
+        val startX = left + 20f
+        val maxX = left + width - 20f
+        var currentX = startX
+        var currentY = top + 50f
 
         for (i in task.cards.indices) {
-            val col = i % maxCols
-            val row = i / maxCols
-            val cardX = startX + col * (cardW + gap)
-            val cardY = startY + row * (cardH + gap)
-            
             val card = task.cards[i]
             
-            canvas.drawRoundRect(RectF(cardX, cardY, cardX + cardW, cardY + cardH / 2), 4f, 4f, itemBgPaint)
-            canvas.drawText(card.first, cardX + cardW / 2f, cardY + cardH / 4f + 4f, itemTextPaint)
+            // Считаем ширину для конкретной карточки
+            val itemW = itemTextPaint.measureText(card.first)
+            val syllW = syllTextPaint.measureText(card.second)
+            val cardW = max(itemW, syllW) + 20f // +20f это отступы внутри карточки
             
-            canvas.drawRoundRect(RectF(cardX, cardY + cardH / 2, cardX + cardW, cardY + cardH), 4f, 4f, syllBgPaint)
-            canvas.drawText(card.second, cardX + cardW / 2f, cardY + cardH * 0.8f, syllTextPaint)
+            // Если не влезает, переносим на новую строку
+            if (currentX + cardW > maxX) {
+                currentX = startX
+                currentY += cardH + gap
+            }
+
+            // Рисуем верхнюю часть (название предмета)
+            canvas.drawRoundRect(RectF(currentX, currentY, currentX + cardW, currentY + cardH / 2), 4f, 4f, itemBgPaint)
+            canvas.drawText(card.first, currentX + cardW / 2f, currentY + cardH / 4f + 4f, itemTextPaint)
             
-            canvas.drawRoundRect(RectF(cardX, cardY, cardX + cardW, cardY + cardH), 4f, 4f, borderPaint)
+            // Рисуем нижнюю часть (слог)
+            canvas.drawRoundRect(RectF(currentX, currentY + cardH / 2, currentX + cardW, currentY + cardH), 4f, 4f, syllBgPaint)
+            canvas.drawText(card.second, currentX + cardW / 2f, currentY + cardH * 0.8f, syllTextPaint)
+            
+            // Рамка
+            canvas.drawRoundRect(RectF(currentX, currentY, currentX + cardW, currentY + cardH), 4f, 4f, borderPaint)
+
+            currentX += cardW + gap
         }
 
-        // Сдвигаем клеточки для ответа вниз, в зависимости от того, сколько рядов карточек получилось
-        val rowsCount = (task.cards.size + maxCols - 1) / maxCols
-        val boxY = startY + rowsCount * (cardH + gap) + 20f
+        // Сдвигаем клеточки для ответа вниз
+        val boxY = currentY + cardH + 20f
         
         val boxSize = 18f
         val boxSpacing = 2f
@@ -185,7 +193,6 @@ object ProverbPdfDrawer {
         canvas.drawText("Выпиши слоги по порядку в клеточки:", left + 20f, boxY - 10f, hintPaint)
 
         for (i in task.cards.indices) {
-            // Если клеточки начинают вылезать за край, переносим их (маловероятно, но на всякий случай)
             if (boxX + boxSize > left + width - 20f) {
                 boxX = left + 20f
             }
