@@ -22,7 +22,6 @@ fun CategoryScreen(
     onTaskClick: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    // Кешируем данные, чтобы они не пересоздавались при каждой перерисовке экрана
     val category = remember(categoryId) { AppContent.categoryById(categoryId) }
     val tasks = remember(categoryId) { AppContent.tasksFor(categoryId) }
 
@@ -47,7 +46,6 @@ fun CategoryScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Добавляем key для оптимизации списка
             items(tasks, key = { it.id }) { task ->
                 TaskTile(task = task, onClick = { onTaskClick(task.id) })
             }
@@ -57,11 +55,15 @@ fun CategoryScreen(
 
 @Composable
 private fun TaskTile(task: TaskItem, onClick: () -> Unit) {
-    ElevatedCard(
+    // Заменили ElevatedCard на Card с фоном - это сильно быстрее для списков
+    Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(120.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(
             modifier = Modifier
