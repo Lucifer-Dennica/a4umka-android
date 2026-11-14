@@ -74,6 +74,7 @@ fun InteractiveCustomCrosswordScreen(
         }
     }
 
+    // Даем UI время обновиться перед сменой фокуса
     LaunchedEffect(focusedCell) {
         focusedCell?.let { pos ->
             if (focusRequesters.containsKey(pos)) {
@@ -200,12 +201,10 @@ fun InteractiveCustomCrosswordScreen(
                                             isSolved = false
                                             showError = false
 
-                                            // Логика автоперехода при вводе
-                                            if (currentWord != null) {
-                                                val word = currentWord!!
-                                                val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
-                                                
-                                                if (filtered.length > oldValue.length) {
+                                            if (filtered.length > oldValue.length) {
+                                                if (currentWord != null) {
+                                                    val word = currentWord!!
+                                                    val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
                                                     if (index < word.word.length - 1) {
                                                         val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
                                                         focusedCell = nextPos
@@ -238,7 +237,8 @@ fun InteractiveCustomCrosswordScreen(
                                                     }
                                                 }
                                             }
-                                            .onPreviewKeyEvent { event ->
+                                            // Используем onKeyEvent вместо onPreviewKeyEvent для более надежной обработки
+                                            .onKeyEvent { event ->
                                                 if (event.type == KeyEventType.KeyDown && event.key == Key.Backspace) {
                                                     if (currentText.isEmpty() && currentWord != null) {
                                                         val word = currentWord!!
@@ -246,7 +246,7 @@ fun InteractiveCustomCrosswordScreen(
                                                         if (index > 0) {
                                                             val prevPos = if (word.isAcross) Pair(pos.first - 1, pos.second) else Pair(pos.first, pos.second - 1)
                                                             focusedCell = prevPos
-                                                            return@onPreviewKeyEvent true // Событие обработано
+                                                            return@onKeyEvent true
                                                         }
                                                     }
                                                 }
