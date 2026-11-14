@@ -3,9 +3,10 @@ package com.example.a4umka.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -42,34 +43,22 @@ fun CategoryScreen(
             )
         }
     ) { padding ->
-        // Вместо LazyVerticalGrid используем обычную колонку.
-        // Все кнопки создаются один раз при входе в раздел и просто скроллятся.
-        Column(
+        // Используем LazyVerticalGrid для оптимизации и устранения лагов при скролле
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(padding),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Разбиваем список на пары для сетки из 2 колонок
-            tasks.chunked(2).forEach { rowTasks ->
-                Row(
+            items(tasks, key = { it.id }) { task ->
+                TaskTile(
+                    task = task,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    rowTasks.forEach { task ->
-                        TaskTile(
-                            task = task,
-                            modifier = Modifier.weight(1f),
-                            onClick = { onTaskClick(task.id) }
-                        )
-                    }
-                    // Если в ряду только 1 элемент (например, последний), добавляем пустоту, чтобы он был той же ширины
-                    if (rowTasks.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
+                    onClick = { onTaskClick(task.id) }
+                )
             }
         }
     }
@@ -81,7 +70,6 @@ private fun TaskTile(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    // Простой Box без теней и elevation - самый быстрый рендер
     Box(
         modifier = modifier
             .height(120.dp)
