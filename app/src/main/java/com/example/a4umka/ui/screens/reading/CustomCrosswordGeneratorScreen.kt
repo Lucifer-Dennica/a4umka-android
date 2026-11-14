@@ -44,6 +44,12 @@ fun CustomCrosswordGeneratorScreen(
     var themeExpanded by remember { mutableStateOf(false) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
+    
+    // Вычисляем сетку, чтобы показать ошибки
+    val pairs = remember(config.wordsInput) { CustomCrosswordData.parseInput(config.wordsInput) }
+    val grid = remember(config.seed, pairs) { CustomCrosswordData.generateGrid(pairs, config.seed) }
+    val failedWords = grid.failedWords
+
     LaunchedEffect(config) {
         delay(300)
         previewPages = CustomCrosswordPdfDrawer.generatePreview(config, context)
@@ -85,7 +91,10 @@ fun CustomCrosswordGeneratorScreen(
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
-                        onClick = { config = config.copy(mode = CrosswordMode.STANDARD) },
+                        onClick = { 
+                            val newTitle = if (config.title == "Мой сканворд") "Мой кроссворд" else config.title
+                            config = config.copy(mode = CrosswordMode.STANDARD, title = newTitle) 
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
@@ -94,7 +103,10 @@ fun CustomCrosswordGeneratorScreen(
                     ) { Text("Кроссворд") }
                     
                     Button(
-                        onClick = { config = config.copy(mode = CrosswordMode.SCANWORD) },
+                        onClick = { 
+                            val newTitle = if (config.title == "Мой кроссворд") "Мой сканворд" else config.title
+                            config = config.copy(mode = CrosswordMode.SCANWORD, title = newTitle) 
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
@@ -120,6 +132,15 @@ fun CustomCrosswordGeneratorScreen(
                     modifier = Modifier.fillMaxWidth().height(150.dp),
                     placeholder = { Text("ЛИСА — Рыжая плутовка\nКОСМОС — Где летают ракеты\nБАБУШКА — Мама моей мамы") }
                 )
+
+                if (failedWords.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "⚠️ Не удалось вставить слова (нет общих букв): ${failedWords.joinToString(", ")}",
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
@@ -150,7 +171,7 @@ fun CustomCrosswordGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Если сетка кажется неудобной, нажмите «Перемешать сетку», чтобы программа попробовала уложить слова по-другому.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Text("Если сетка кажется неудобной, нажмите «Перемешать сетку».", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -166,7 +187,7 @@ fun CustomCrosswordGeneratorScreen(
                         onClick = { onPlayInteractive(config) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                        enabled = CustomCrosswordData.parseInput(config.wordsInput).isNotEmpty()
+                        enabled = pairs.isNotEmpty()
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -215,8 +236,7 @@ fun CustomCrosswordGeneratorScreen(
                         "Режимы:\n" +
                         "• Кроссворд — классический вид, вопросы списком под сеткой.\n" +
                         "• Сканворд — вопросы и стрелки направления находятся прямо внутри клеток сетки.\n\n" +
-                        "Как заполнять:\n" +
-                        "Пишите по одной паре на строку в формате: СЛОВО — Вопрос. Разделитель может быть тире, дефис или двоеточие. Слова должны быть на кириллице, от 3 до 12 букв.",
+                        "Важно: Слова могут не влезть в сетку, если у них нет общих букв с другими словами. Добавьте более длинные слова с частыми буквами (О, А, Е, И).",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
