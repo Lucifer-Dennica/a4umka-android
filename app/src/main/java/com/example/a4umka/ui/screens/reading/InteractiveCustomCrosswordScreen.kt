@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.a4umka.data.CrosswordMode
 import com.example.a4umka.data.CustomCrosswordConfig
 import com.example.a4umka.data.CustomCrosswordData
 import com.example.a4umka.data.PlacedWord
@@ -46,6 +47,34 @@ fun InteractiveCustomCrosswordScreen(
     val focusRequesters = remember { mutableMapOf<Pair<Int, Int>, FocusRequester>() }
     var focusedCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var currentWord by remember { mutableStateOf<PlacedWord?>(null) }
+
+    // Инициализация FocusRequester для всех ячеек
+    LaunchedEffect(grid) {
+        val minX = grid.cells.keys.minOfOrNull { it.first } ?: 0
+        val maxX = grid.cells.keys.maxOfOrNull { it.first } ?: 0
+        val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
+        val maxY = grid.cells.keys.maxOfOrNull { it.second } ?: 0
+        
+        for (y in minY..maxY) {
+            for (x in minX..maxX) {
+                val pos = Pair(x, y)
+                if (grid.cells.containsKey(pos)) {
+                    if (!focusRequesters.containsKey(pos)) {
+                        focusRequesters[pos] = FocusRequester()
+                    }
+                }
+            }
+        }
+        
+        // Ставим фокус на первую клетку
+        if (focusedCell == null) {
+            val firstCell = grid.cells.keys.firstOrNull()
+            if (firstCell != null) {
+                focusedCell = firstCell
+                currentWord = grid.words.firstOrNull()
+            }
+        }
+    }
 
     LaunchedEffect(focusedCell) {
         focusedCell?.let { pos ->
@@ -106,6 +135,22 @@ fun InteractiveCustomCrosswordScreen(
             val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
             val maxY = grid.cells.keys.maxOfOrNull { it.second } ?: 0
 
+            // Показываем текущий вопрос для сканворда
+            if (config.mode == CrosswordMode.SCANWORD && currentWord != null) {
+                val question = pairs.find { it.word == currentWord!!.word }?.question ?: ""
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Text(
+                        text = "${currentWord!!.num} ${if (currentWord!!.isAcross) "→" else "↓"} $question",
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             // Отрисовка сетки
             Column(modifier = Modifier.border(1.dp, Color.Gray)) {
                 for (y in minY..maxY) {
@@ -119,15 +164,18 @@ fun InteractiveCustomCrosswordScreen(
                                 val currentText = userInputs[pos] ?: ""
                                 val isCorrect = currentText.uppercase() == grid.cells[pos].toString()
                                 
+                                // Логика подсветки
+                                val bgColor = when {
+                                    showError && !isCorrect -> Color(0xFFFFCDD2) // Красный при ошибке
+                                    isSolved && isCorrect -> Color(0xFFC8E6C9) // Зеленый при успехе
+                                    else -> Color.White
+                                }
+
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
                                         .border(0.5.dp, Color.Gray)
-                                        .background(
-                                            if (isSolved && isCorrect) Color(0xFFC8E6C9) 
-                                            else if (isSolved && !isCorrect) Color(0xFFFFCDD2)
-                                            else Color.White
-                                        ),
+                                        .background(bgColor),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (wordNum != null) {
@@ -138,21 +186,42 @@ fun InteractiveCustomCrosswordScreen(
                                             modifier = Modifier.align(Alignment.TopStart).padding(2.dp)
                                         )
                                     }
+                                    
+                                    // Стрелочки для сканворда
+                                    if (config.mode == CrosswordMode.SCANWORD) {
+                                        if (grid.words.any { it.isAcross && it.x == x && it.y == y }) {
+                                            Text("→", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.BottomEnd))
+                                        }
+                                        if (grid.words.any { !it.isAcross && it.x == x && it.y == y }) {
+                                            Text("↓", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.TopEnd))
+                                        }
+                                    }
+
                                     BasicTextField(
                                         value = currentText,
                                         onValueChange = { newValue ->
+                                            val oldValue = currentText
                                             val filtered = newValue.take(1).uppercase()
                                             userInputs[pos] = filtered
                                             isSolved = false
                                             showError = false
 
-                                            // Автопереход
-                                            if (filtered.isNotEmpty() && currentWord != null) {
+                                            if (currentWord != null) {
                                                 val word = currentWord!!
                                                 val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
-                                                if (index < word.word.length - 1) {
-                                                    val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
-                                                    focusedCell = nextPos
+                                                
+                                                if (filtered.length > oldValue.length) {
+                                                    // Ввод буквы -> вперед
+                                                    if (index < word.word.length - 1) {
+                                                        val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
+                                                        focusedCell = nextPos
+                                                    }
+                                                } else if (filtered.isEmpty() && oldValue.isNotEmpty()) {
+                                                    // Удаление буквы -> назад
+                                                    if (index > 0) {
+                                                        val prevPos = if (word.isAcross) Pair(pos.first - 1, pos.second) else Pair(pos.first, pos.second - 1)
+                                                        focusedCell = prevPos
+                                                    }
                                                 }
                                             }
                                         },
@@ -170,14 +239,17 @@ fun InteractiveCustomCrosswordScreen(
                                             .onFocusChanged { state ->
                                                 if (state.isFocused) {
                                                     focusedCell = pos
-                                                    var word = grid.words.find { it.x == pos.first && it.y == pos.second }
-                                                    if (word == null) {
-                                                        word = grid.words.find { w ->
-                                                            if (w.isAcross) pos.second == w.y && pos.first >= w.x && pos.first < w.x + w.word.length
-                                                            else pos.first == w.x && pos.second >= w.y && pos.second < w.y + w.word.length
+                                                    val wordsHere = grid.words.filter { w ->
+                                                        if (w.isAcross) pos.second == w.y && pos.first >= w.x && pos.first < w.x + w.word.length
+                                                        else pos.first == w.x && pos.second >= w.y && pos.second < w.y + w.word.length
+                                                    }
+                                                    
+                                                    if (wordsHere.isNotEmpty()) {
+                                                        // Если текущее слово здесь, оставляем его, иначе берем первое
+                                                        if (!wordsHere.contains(currentWord)) {
+                                                            currentWord = wordsHere.firstOrNull { it.x == pos.first && it.y == pos.second } ?: wordsHere.first()
                                                         }
                                                     }
-                                                    currentWord = word
                                                 }
                                             }
                                     )
@@ -207,16 +279,19 @@ fun InteractiveCustomCrosswordScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Text("Вопросы:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            grid.words.forEach { word ->
-                val question = pairs.find { it.word == word.word }?.question ?: ""
-                Text(
-                    text = "${word.num} ${if (word.isAcross) "→" else "↓"} $question", 
-                    fontSize = 14.sp, 
-                    modifier = Modifier.padding(vertical = 4.dp).align(Alignment.Start)
-                )
+            // Список вопросов внизу только для классического кроссворда
+            if (config.mode == CrosswordMode.STANDARD) {
+                Text("Вопросы:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                grid.words.forEach { word ->
+                    val question = pairs.find { it.word == word.word }?.question ?: ""
+                    Text(
+                        text = "${word.num} ${if (word.isAcross) "→" else "↓"} $question", 
+                        fontSize = 14.sp, 
+                        modifier = Modifier.padding(vertical = 4.dp).align(Alignment.Start)
+                    )
+                }
             }
         }
     }
