@@ -24,16 +24,23 @@ object CustomCrosswordPdfDrawer {
         if (pairs.isEmpty()) return pages
 
         val grid = CustomCrosswordData.generateGrid(pairs, config.seed)
+        
+        // Рендерим в 2x разрешении для четкости
+        val scale = 2f
+        val pw = (PAGE_WIDTH * scale).toInt()
+        val ph = (PAGE_HEIGHT * scale).toInt()
 
-        val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+        val bmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
+        canvas.scale(scale, scale)
         canvas.drawColor(Color.parseColor("#FAFAFA"))
         drawPage(canvas, grid, pairs, config, isAnswers = false)
         pages.add(bmp)
 
         if (config.showAnswers) {
-            val ansBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+            val ansBmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
             val ansCanvas = Canvas(ansBmp)
+            ansCanvas.scale(scale, scale)
             ansCanvas.drawColor(Color.WHITE) // Фон ответов белый
             drawPage(ansCanvas, grid, pairs, config, isAnswers = true)
             pages.add(ansBmp)
@@ -86,14 +93,16 @@ object CustomCrosswordPdfDrawer {
             isAntiAlias = true; textSize = 30f; color = textColor; 
             typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER 
         }
-        canvas.drawText(config.title, PAGE_WIDTH / 2f, 90f, titlePaint)
+        // Если это ответы, меняем заголовок
+        val titleText = if (isAnswers) "Ответы: ${config.title}" else config.title
+        canvas.drawText(titleText, PAGE_WIDTH / 2f, 90f, titlePaint)
 
         val italicTypeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
         val subPaint = Paint().apply { 
             isAntiAlias = true; textSize = 12f; color = Color.GRAY; 
             textAlign = Paint.Align.CENTER; typeface = italicTypeface 
         }
-        canvas.drawText(if (isAnswers) "ответы" else "разгадай вопросы и впиши слова в клетки", PAGE_WIDTH / 2f, 110f, subPaint)
+        canvas.drawText(if (isAnswers) "" else if (config.mode == CrosswordMode.SCANWORD) "вопросы и стрелки прямо в клетках" else "разгадай вопросы и впиши слова в клетки", PAGE_WIDTH / 2f, 110f, subPaint)
 
         // Сетка
         val minX = grid.cells.keys.minOfOrNull { it.first } ?: 0
@@ -124,7 +133,6 @@ object CustomCrosswordPdfDrawer {
             canvas.drawRect(cx, cy, cx + cellSize, cy + cellSize, boxPaint)
             canvas.drawRect(cx, cy, cx + cellSize, cy + cellSize, borderPaint)
             
-            // Если это ответы - рисуем буквы
             if (isAnswers) {
                 canvas.drawText(char.toString(), cx + cellSize / 2f, cy + cellSize * 0.7f, letterPaint)
             }
@@ -136,14 +144,10 @@ object CustomCrosswordPdfDrawer {
             val cy = gridStartY + (word.y - minY) * cellSize
             canvas.drawText(word.num.toString(), cx + 2f, cy + 10f, numPaint)
 
-            // Если это сканворд и не ответы - рисуем вопрос прямо в клетке
             if (config.mode == CrosswordMode.SCANWORD && !isAnswers) {
                 val question = pairs.find { it.word == word.word }?.question ?: ""
                 val arrow = if (word.isAcross) "→" else "↓"
-                // Рисуем стрелочку
                 canvas.drawText(arrow, cx + cellSize - 8f, cy + 10f, Paint(numPaint).apply { color = Color.BLUE })
-                // Рисуем текст вопроса очень мелко
-                // (в реальности он будет обрезаться, но это базовая реализация)
                 canvas.drawText(question.take(8), cx + 2f, cy + cellSize - 2f, scanwordTextPaint)
             }
         }
