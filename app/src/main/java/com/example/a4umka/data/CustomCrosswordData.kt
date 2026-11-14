@@ -2,9 +2,6 @@ package com.example.a4umka.data
 
 import kotlin.random.Random
 
-data class PlacedWord(val word: String, val emoji: String, val x: Int, val y: Int, val isAcross: Boolean, val num: Int)
-data class CrosswordGrid(val cells: Map<Pair<Int, Int>, Char>, val words: List<PlacedWord>, val failedWords: List<String> = emptyList())
-
 object CustomCrosswordData {
     val themes = mapOf(
         "Животные" to """
@@ -176,7 +173,7 @@ object CustomCrosswordData {
         val failedWords = mutableListOf<String>()
         var numCounter = 1
 
-        if (words.isEmpty()) return CrosswordGrid(cells, placed)
+        if (words.isEmpty()) return CrosswordGrid(cells, placed, failedWords)
 
         // Сортируем по длине (сначала длинные)
         val sortedWords = words.sortedByDescending { it.word.length }
