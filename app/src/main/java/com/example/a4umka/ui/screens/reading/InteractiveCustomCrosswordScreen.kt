@@ -19,6 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -43,12 +44,10 @@ fun InteractiveCustomCrosswordScreen(
     var isSolved by remember { mutableStateOf(false) }
     var showError by remember { mutableStateOf(false) }
     
-    // Для автоперехода
     val focusRequesters = remember { mutableMapOf<Pair<Int, Int>, FocusRequester>() }
     var focusedCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var currentWord by remember { mutableStateOf<PlacedWord?>(null) }
 
-    // Инициализация FocusRequester для всех ячеек
     LaunchedEffect(grid) {
         val minX = grid.cells.keys.minOfOrNull { it.first } ?: 0
         val maxX = grid.cells.keys.maxOfOrNull { it.first } ?: 0
@@ -66,7 +65,6 @@ fun InteractiveCustomCrosswordScreen(
             }
         }
         
-        // Ставим фокус на первую клетку
         if (focusedCell == null) {
             val firstCell = grid.cells.keys.firstOrNull()
             if (firstCell != null) {
@@ -135,7 +133,6 @@ fun InteractiveCustomCrosswordScreen(
             val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
             val maxY = grid.cells.keys.maxOfOrNull { it.second } ?: 0
 
-            // Показываем текущий вопрос для сканворда
             if (config.mode == CrosswordMode.SCANWORD && currentWord != null) {
                 val question = pairs.find { it.word == currentWord!!.word }?.question ?: ""
                 Card(
@@ -151,7 +148,6 @@ fun InteractiveCustomCrosswordScreen(
                 }
             }
 
-            // Отрисовка сетки
             Column(modifier = Modifier.border(1.dp, Color.Gray)) {
                 for (y in minY..maxY) {
                     Row {
@@ -164,10 +160,9 @@ fun InteractiveCustomCrosswordScreen(
                                 val currentText = userInputs[pos] ?: ""
                                 val isCorrect = currentText.uppercase() == grid.cells[pos].toString()
                                 
-                                // Логика подсветки
                                 val bgColor = when {
-                                    showError && !isCorrect -> Color(0xFFFFCDD2) // Красный при ошибке
-                                    isSolved && isCorrect -> Color(0xFFC8E6C9) // Зеленый при успехе
+                                    showError && !isCorrect -> Color(0xFFFFCDD2)
+                                    isSolved && isCorrect -> Color(0xFFC8E6C9)
                                     else -> Color.White
                                 }
 
@@ -187,7 +182,6 @@ fun InteractiveCustomCrosswordScreen(
                                         )
                                     }
                                     
-                                    // Стрелочки для сканворда
                                     if (config.mode == CrosswordMode.SCANWORD) {
                                         if (grid.words.any { it.isAcross && it.x == x && it.y == y }) {
                                             Text("→", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.BottomEnd))
@@ -206,21 +200,15 @@ fun InteractiveCustomCrosswordScreen(
                                             isSolved = false
                                             showError = false
 
+                                            // Логика автоперехода при вводе
                                             if (currentWord != null) {
                                                 val word = currentWord!!
                                                 val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
                                                 
                                                 if (filtered.length > oldValue.length) {
-                                                    // Ввод буквы -> вперед
                                                     if (index < word.word.length - 1) {
                                                         val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
                                                         focusedCell = nextPos
-                                                    }
-                                                } else if (filtered.isEmpty() && oldValue.isNotEmpty()) {
-                                                    // Удаление буквы -> назад
-                                                    if (index > 0) {
-                                                        val prevPos = if (word.isAcross) Pair(pos.first - 1, pos.second) else Pair(pos.first, pos.second - 1)
-                                                        focusedCell = prevPos
                                                     }
                                                 }
                                             }
@@ -243,14 +231,26 @@ fun InteractiveCustomCrosswordScreen(
                                                         if (w.isAcross) pos.second == w.y && pos.first >= w.x && pos.first < w.x + w.word.length
                                                         else pos.first == w.x && pos.second >= w.y && pos.second < w.y + w.word.length
                                                     }
-                                                    
                                                     if (wordsHere.isNotEmpty()) {
-                                                        // Если текущее слово здесь, оставляем его, иначе берем первое
                                                         if (!wordsHere.contains(currentWord)) {
                                                             currentWord = wordsHere.firstOrNull { it.x == pos.first && it.y == pos.second } ?: wordsHere.first()
                                                         }
                                                     }
                                                 }
+                                            }
+                                            .onPreviewKeyEvent { event ->
+                                                if (event.type == KeyEventType.KeyDown && event.key == Key.Backspace) {
+                                                    if (currentText.isEmpty() && currentWord != null) {
+                                                        val word = currentWord!!
+                                                        val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
+                                                        if (index > 0) {
+                                                            val prevPos = if (word.isAcross) Pair(pos.first - 1, pos.second) else Pair(pos.first, pos.second - 1)
+                                                            focusedCell = prevPos
+                                                            return@onPreviewKeyEvent true // Событие обработано
+                                                        }
+                                                    }
+                                                }
+                                                false
                                             }
                                     )
                                 }
@@ -279,7 +279,6 @@ fun InteractiveCustomCrosswordScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Список вопросов внизу только для классического кроссворда
             if (config.mode == CrosswordMode.STANDARD) {
                 Text("Вопросы:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
                 Spacer(modifier = Modifier.height(8.dp))
