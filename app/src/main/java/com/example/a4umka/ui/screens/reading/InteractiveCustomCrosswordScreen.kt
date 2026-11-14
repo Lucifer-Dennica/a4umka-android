@@ -2,6 +2,7 @@ package com.example.a4umka.ui.screens.reading
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -48,7 +49,14 @@ fun InteractiveCustomCrosswordScreen(
     var focusedCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var currentWord by remember { mutableStateOf<PlacedWord?>(null) }
 
+    // Состояние скролла для сетки
+    val horizontalScrollState = rememberScrollState()
+    val verticalScrollState = rememberScrollState()
+
     LaunchedEffect(grid) {
+        // Очищаем старые реквестеры при генерации новой сетки
+        focusRequesters.clear()
+
         val minX = grid.cells.keys.minOfOrNull { it.first } ?: 0
         val maxX = grid.cells.keys.maxOfOrNull { it.first } ?: 0
         val minY = grid.cells.keys.minOfOrNull { it.second } ?: 0
@@ -120,7 +128,11 @@ fun InteractiveCustomCrosswordScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(verticalScrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (grid.cells.isEmpty()) {
@@ -148,113 +160,119 @@ fun InteractiveCustomCrosswordScreen(
                 }
             }
 
-            Column(modifier = Modifier.border(1.dp, Color.Gray)) {
-                for (y in minY..maxY) {
-                    Row {
-                        for (x in minX..maxX) {
-                            val pos = Pair(x, y)
-                            val isCell = grid.cells.containsKey(pos)
-                            
-                            if (isCell) {
-                                val wordNum = grid.words.find { it.x == x && it.y == y }?.num
-                                val currentText = userInputs[pos] ?: ""
-                                val isCorrect = currentText.uppercase() == grid.cells[pos].toString()
+            // Оборачиваем сетку в Box с горизонтальным скроллом
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(horizontalScrollState)
+            ) {
+                Column(modifier = Modifier.border(1.dp, Color.Gray)) {
+                    for (y in minY..maxY) {
+                        Row {
+                            for (x in minX..maxX) {
+                                val pos = Pair(x, y)
+                                val isCell = grid.cells.containsKey(pos)
                                 
-                                val bgColor = when {
-                                    showError && !isCorrect -> Color(0xFFFFCDD2)
-                                    isSolved && isCorrect -> Color(0xFFC8E6C9)
-                                    else -> Color.White
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .border(0.5.dp, Color.Gray)
-                                        .background(bgColor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (wordNum != null) {
-                                        Text(
-                                            text = wordNum.toString(),
-                                            fontSize = 8.sp,
-                                            color = Color.Red,
-                                            modifier = Modifier.align(Alignment.TopStart).padding(2.dp)
-                                        )
-                                    }
+                                if (isCell) {
+                                    val wordNum = grid.words.find { it.x == x && it.y == y }?.num
+                                    val currentText = userInputs[pos] ?: ""
+                                    val isCorrect = currentText.uppercase() == grid.cells[pos].toString()
                                     
-                                    if (config.mode == CrosswordMode.SCANWORD) {
-                                        if (grid.words.any { it.isAcross && it.x == x && it.y == y }) {
-                                            Text("→", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.BottomEnd).padding(1.dp))
-                                        }
-                                        if (grid.words.any { !it.isAcross && it.x == x && it.y == y }) {
-                                            Text("↓", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.TopEnd).padding(1.dp))
-                                        }
+                                    val bgColor = when {
+                                        showError && !isCorrect -> Color(0xFFFFCDD2)
+                                        isSolved && isCorrect -> Color(0xFFC8E6C9)
+                                        else -> Color.White
                                     }
 
-                                    BasicTextField(
-                                        value = currentText,
-                                        onValueChange = { newValue ->
-                                            val oldValue = currentText
-                                            val filtered = newValue.take(1).uppercase()
-                                            userInputs[pos] = filtered
-                                            isSolved = false
-                                            showError = false
-
-                                            if (filtered.length > oldValue.length) {
-                                                if (currentWord != null) {
-                                                    val word = currentWord!!
-                                                    val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
-                                                    if (index < word.word.length - 1) {
-                                                        val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
-                                                        focusedCell = nextPos
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        textStyle = TextStyle(
-                                            fontSize = 18.sp,
-                                            textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.Black
-                                        ),
-                                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                                    Box(
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .wrapContentHeight(Alignment.CenterVertically)
-                                            .focusRequester(focusRequesters.getOrPut(pos) { FocusRequester() })
-                                            .onFocusChanged { state ->
-                                                if (state.isFocused) {
-                                                    focusedCell = pos
-                                                    val wordsHere = grid.words.filter { w ->
-                                                        if (w.isAcross) pos.second == w.y && pos.first >= w.x && pos.first < w.x + w.word.length
-                                                        else pos.first == w.x && pos.second >= w.y && pos.second < w.y + w.word.length
-                                                    }
-                                                    if (wordsHere.isNotEmpty()) {
-                                                        if (!wordsHere.contains(currentWord)) {
-                                                            currentWord = wordsHere.firstOrNull { it.x == pos.first && it.y == pos.second } ?: wordsHere.first()
-                                                        }
-                                                    }
-                                                }
+                                            .size(36.dp)
+                                            .border(0.5.dp, Color.Gray)
+                                            .background(bgColor),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (wordNum != null) {
+                                            Text(
+                                                text = wordNum.toString(),
+                                                fontSize = 8.sp,
+                                                color = Color.Red,
+                                                modifier = Modifier.align(Alignment.TopStart).padding(2.dp)
+                                            )
+                                        }
+                                        
+                                        if (config.mode == CrosswordMode.SCANWORD) {
+                                            if (grid.words.any { it.isAcross && it.x == x && it.y == y }) {
+                                                Text("→", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.BottomEnd).padding(1.dp))
                                             }
-                                            .onPreviewKeyEvent { event ->
-                                                // Перехватываем Backspace ДО того, как он попадет в BasicTextField
-                                                if (event.type == KeyEventType.KeyDown && event.key == Key.Backspace) {
-                                                    if (currentText.isEmpty() && currentWord != null) {
+                                            if (grid.words.any { !it.isAcross && it.x == x && it.y == y }) {
+                                                Text("↓", fontSize = 8.sp, color = Color.Blue, modifier = Modifier.align(Alignment.TopEnd).padding(1.dp))
+                                            }
+                                        }
+
+                                        BasicTextField(
+                                            value = currentText,
+                                            onValueChange = { newValue ->
+                                                val oldValue = currentText
+                                                val filtered = newValue.take(1).uppercase()
+                                                userInputs[pos] = filtered
+                                                isSolved = false
+                                                showError = false
+
+                                                if (filtered.length > oldValue.length) {
+                                                    if (currentWord != null) {
                                                         val word = currentWord!!
                                                         val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
-                                                        if (index > 0) {
-                                                            val prevPos = if (word.isAcross) Pair(pos.first - 1, pos.second) else Pair(pos.first, pos.second - 1)
-                                                            focusedCell = prevPos
-                                                            return@onPreviewKeyEvent true // Поглощаем нажатие, чтобы клавиатура не закрылась
+                                                        if (index < word.word.length - 1) {
+                                                            val nextPos = if (word.isAcross) Pair(pos.first + 1, pos.second) else Pair(pos.first, pos.second + 1)
+                                                            focusedCell = nextPos
                                                         }
                                                     }
                                                 }
-                                                false
-                                            }
-                                    )
+                                            },
+                                            textStyle = TextStyle(
+                                                fontSize = 18.sp,
+                                                textAlign = TextAlign.Center,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.Black
+                                            ),
+                                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .wrapContentHeight(Alignment.CenterVertically)
+                                                .focusRequester(focusRequesters.getOrPut(pos) { FocusRequester() })
+                                                .onFocusChanged { state ->
+                                                    if (state.isFocused) {
+                                                        focusedCell = pos
+                                                        val wordsHere = grid.words.filter { w ->
+                                                            if (w.isAcross) pos.second == w.y && pos.first >= w.x && pos.first < w.x + w.word.length
+                                                            else pos.first == w.x && pos.second >= w.y && pos.second < w.y + w.word.length
+                                                        }
+                                                        if (wordsHere.isNotEmpty()) {
+                                                            if (!wordsHere.contains(currentWord)) {
+                                                                currentWord = wordsHere.firstOrNull { it.x == pos.first && it.y == pos.second } ?: wordsHere.first()
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                .onPreviewKeyEvent { event ->
+                                                    if (event.type == KeyEventType.KeyDown && event.key == Key.Backspace) {
+                                                        if (currentText.isEmpty() && currentWord != null) {
+                                                            val word = currentWord!!
+                                                            val index = if (word.isAcross) pos.first - word.x else pos.second - word.y
+                                                            if (index > 0) {
+                                                                val prevPos = if (word.isAcross) Pair(pos.first - 1, pos.second) else Pair(pos.first, pos.second - 1)
+                                                                focusedCell = prevPos
+                                                                return@onPreviewKeyEvent true
+                                                            }
+                                                        }
+                                                    }
+                                                    false
+                                                }
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.size(36.dp))
                                 }
-                            } else {
-                                Spacer(modifier = Modifier.size(36.dp))
                             }
                         }
                     }
