@@ -31,6 +31,7 @@ import com.example.a4umka.data.CrosswordMode
 import com.example.a4umka.data.CustomCrosswordConfig
 import com.example.a4umka.data.CustomCrosswordData
 import com.example.a4umka.data.PlacedWord
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -84,8 +85,14 @@ fun InteractiveCustomCrosswordScreen(
 
     LaunchedEffect(focusedCell) {
         focusedCell?.let { pos ->
+            // Небольшая задержка, чтобы UI успел отрисоваться перед запросом фокуса
+            delay(100)
             if (focusRequesters.containsKey(pos)) {
-                focusRequesters[pos]?.requestFocus()
+                try {
+                    focusRequesters[pos]?.requestFocus()
+                } catch (e: IllegalStateException) {
+                    // Игнорируем ошибку, если поле еще не привязано к экрану
+                }
             }
         }
     }
