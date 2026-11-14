@@ -87,6 +87,7 @@ fun NavGraph() {
             when {
                 categoryId == "reading" && taskId == "alphabet_poster" -> AlphabetGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "letter_ribbon" -> RibbonGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_RIBBON) })
+                categoryId == "reading" && taskId == "prepositions" -> PrepositionGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "syllable_tables" -> SyllableTableGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "assemble_word" -> AssembleWordGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "fillword" -> FillwordGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { currentFillwordConfig = it; navController.navigate(Routes.INTERACTIVE_FILLWORD) })
