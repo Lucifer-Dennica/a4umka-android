@@ -2,10 +2,13 @@ package com.example.a4umka.data
 
 import kotlin.random.Random
 
+data class PlacedWord(val word: String, val emoji: String, val x: Int, val y: Int, val isAcross: Boolean, val num: Int)
+data class CrosswordGrid(val cells: Map<Pair<Int, Int>, Char>, val words: List<PlacedWord>, val failedWords: List<String> = emptyList())
+
 object CustomCrosswordData {
-    // Готовые темы
+    // ... (темы остаются без изменений)
     val themes = mapOf(
-        "Животные" to "ЛИСА — Рыжая плутовка из сказок\nВОЛК — Серый разбойник\nЗАЯЦ — Трусишка с длинными ушами\nМЕДВЕДЬ — Спит всю зиму в берлоге\nЁЖ — Колючий клубок\nБЕЛКА — Прыгает по веткам с орешком",
+        "Животные" to "ЛИСА — Рыжая плутовка из сказок\nВОЛК — Серый разбойник\nЗАЯЦ — Трусишка с длинными ушами\nМЕДВЕДЬ — Спит всю зиму в берлоге\nЕЖ — Колючий клубок\nБЕЛКА — Прыгает по веткам с орешком",
         "Школа" to "РУЧКА — Пишет синим по бумаге\nТЕТРАДЬ — В ней пишут домашнее задание\nДОСКА — На ней пишут мелом\nПОРТФЕЛЬ — В нем носят учебники\nЗВОНОК — Зовет на урок и с урока\nУРОК — Время, когда учитель объясняет",
         "Еда" to "ЯБЛОКО — Фрукт, который упал на Ньютона\nХЛЕБ — Всему голова\nМОЛОКО — Белый напиток от коровы\nСУП — Первое блюдо\nСЫР — Продукт с дырками\nБАНАН — Желтый фрукт для обезьян",
         "Транспорт" to "МАШИНА — Едет по дороге на четырех колесах\nСАМОЛЕТ — Летает в небе\nКОРАБЛЬ — Плавает по морю\nПОЕЗД — Едет по рельсам\nВЕЛОСИПЕД — У него есть педали\nАВТОБУС — Везет пассажиров по городу",
@@ -29,12 +32,13 @@ object CustomCrosswordData {
         val random = Random(seed)
         val placed = mutableListOf<PlacedWord>()
         val cells = mutableMapOf<Pair<Int, Int>, Char>()
+        val failedWords = mutableListOf<String>()
         var numCounter = 1
+
+        if (words.isEmpty()) return CrosswordGrid(cells, placed)
 
         // Сортируем по длине (сначала длинные)
         val sortedWords = words.sortedByDescending { it.word.length }
-
-        if (sortedWords.isEmpty()) return CrosswordGrid(cells, placed)
 
         // Ставим первое слово
         val first = sortedWords.first()
@@ -46,7 +50,8 @@ object CustomCrosswordData {
         // Пытаемся пристроить остальные
         for (wordObj in sortedWords.drop(1)) {
             var foundSpot = false
-            val placedSnapshot = placed.toList().shuffled(random) // перемешиваем для разных раскладок
+            // Перемешиваем существующие слова для разной раскладки
+            val placedSnapshot = placed.toList().shuffled(random) 
             
             for (pw in placedSnapshot) {
                 if (foundSpot) break
@@ -80,8 +85,11 @@ object CustomCrosswordData {
                     }
                 }
             }
+            if (!foundSpot) {
+                failedWords.add(wordObj.word)
+            }
         }
-        return CrosswordGrid(cells, placed)
+        return CrosswordGrid(cells, placed, failedWords)
     }
 
     private fun isValidPlacement(cells: Map<Pair<Int, Int>, Char>, word: String, x: Int, y: Int, isAcross: Boolean): Boolean {
