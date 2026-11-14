@@ -45,7 +45,6 @@ fun CustomCrosswordGeneratorScreen(
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     
-    // Вычисляем сетку, чтобы показать ошибки
     val pairs = remember(config.wordsInput) { CustomCrosswordData.parseInput(config.wordsInput) }
     val grid = remember(config.seed, pairs) { CustomCrosswordData.generateGrid(pairs, config.seed) }
     val failedWords = grid.failedWords
@@ -125,12 +124,12 @@ fun CustomCrosswordGeneratorScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Слова и вопросы (СЛОВО — Вопрос, по одной паре на строку):", style = MaterialTheme.typography.labelLarge)
+                Text("Слова и вопросы (СЛОВО — Вопрос):", style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = config.wordsInput,
                     onValueChange = { config = config.copy(wordsInput = it) },
                     modifier = Modifier.fillMaxWidth().height(150.dp),
-                    placeholder = { Text("ЛИСА — Рыжая плутовка\nКОСМОС — Где летают ракеты\nБАБУШКА — Мама моей мамы") }
+                    placeholder = { Text("ЛИСА — Рыжая плутовка\nКОСМОС — Где летают ракеты") }
                 )
 
                 if (failedWords.isNotEmpty()) {
@@ -145,13 +144,18 @@ fun CustomCrosswordGeneratorScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
                     OutlinedTextField(
-                        value = "Взять готовую тему...",
+                        value = "Взять готовую тему (10+ слов)...",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
+                    // Ограничиваем высоту меню, чтобы оно было скроллируемым
+                    ExposedDropdownMenu(
+                        expanded = themeExpanded, 
+                        onDismissRequest = { themeExpanded = false },
+                        modifier = Modifier.heightIn(max = 300.dp)
+                    ) {
                         CustomCrosswordData.themes.forEach { (name, text) ->
                             DropdownMenuItem(
                                 text = { Text(name) },
@@ -171,9 +175,6 @@ fun CustomCrosswordGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Если сетка кажется неудобной, нажмите «Перемешать сетку».", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                Spacer(modifier = Modifier.height(8.dp))
-                
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
                         onClick = { config = config.copy(seed = System.currentTimeMillis()) },
@@ -232,11 +233,11 @@ fun CustomCrosswordGeneratorScreen(
                     Text("Кроссворд из своих слов", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Этот раздел позволяет вам создать уникальный кроссворд, вписав свои слова и вопросы к ним.\n\n" +
-                        "Режимы:\n" +
+                        "Этот раздел позволяет вам создать уникальный кроссворд. У вас есть два режима:\n" +
                         "• Кроссворд — классический вид, вопросы списком под сеткой.\n" +
                         "• Сканворд — вопросы и стрелки направления находятся прямо внутри клеток сетки.\n\n" +
-                        "Важно: Слова могут не влезть в сетку, если у них нет общих букв с другими словами. Добавьте более длинные слова с частыми буквами (О, А, Е, И).",
+                        "В выпадающем списке «Взять готовую тему» уже есть 10 наборов слов (животные, школа, сказки, профессии и др.) с готовыми вопросами по 10–15 штук. Вам не нужно ничего придумывать!\n\n" +
+                        "Если вы вводите свои слова, пишите их по одной паре на строку в формате: СЛОВО — Вопрос.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
