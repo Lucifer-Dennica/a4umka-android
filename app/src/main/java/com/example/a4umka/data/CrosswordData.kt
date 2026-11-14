@@ -2,7 +2,7 @@ package com.example.a4umka.data
 
 data class CrosswordWord(val word: String, val emoji: String)
 data class PlacedWord(val word: String, val emoji: String, val x: Int, val y: Int, val isAcross: Boolean, val num: Int)
-data class CrosswordGrid(val cells: Map<Pair<Int, Int>, Char>, val words: List<PlacedWord>)
+data class CrosswordGrid(val cells: Map<Pair<Int, Int>, Char>, val words: List<PlacedWord>, val failedWords: List<String> = emptyList())
 
 object CrosswordData {
     private val easyWords = listOf(CrosswordWord("КОТ", "🐱"), CrosswordWord("РАК", "🦞"), CrosswordWord("ДОМ", "🏠"), CrosswordWord("ЛУК", "🧅"))
@@ -28,7 +28,6 @@ object CrosswordData {
 
         for (wordObj in words.drop(1)) {
             var foundSpot = false
-            // ИСПРАВЛЕНИЕ: Берем безопасную копию списка, чтобы не было ConcurrentModificationException
             val placedSnapshot = placed.toList() 
             
             for (pw in placedSnapshot) {
