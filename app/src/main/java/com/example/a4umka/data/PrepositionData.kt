@@ -2,16 +2,22 @@ package com.example.a4umka.data
 
 import kotlin.random.Random
 
+data class BaseObject(
+    val emoji: String,
+    val nominative: String,    // Именительный (стол)
+    val prepositional: String, // Предложный (на столе, в коробке)
+    val instrumental: String   // Творительный (под столом, за коробкой)
+)
+
 data class PrepositionTask(
     val preposition: String,
     val targetEmoji: String,
     val targetName: String,
-    val baseEmoji: String,
-    val baseName: String,
+    val base: BaseObject,
     val question: String,
     val correctAnswer: String,
     val options: List<String>,
-    val wrongPrepositions: List<String> // Для режима "Найди картинку"
+    val wrongPrepositions: List<String>
 )
 
 object PrepositionData {
@@ -30,13 +36,18 @@ object PrepositionData {
     )
 
     private val bases = listOf(
-        Pair("🪵", "столом"),
-        Pair("🪑", "стулом"),
-        Pair("📦", "коробкой"),
-        Pair("🧺", "корзиной"),
-        Pair("🌳", "деревом"),
-        Pair("🪜", "полкой")
+        BaseObject("🪵", "стол", "столе", "столом"),
+        BaseObject("🪑", "стул", "стуле", "стулом"),
+        BaseObject("📦", "коробка", "коробке", "коробкой"),
+        BaseObject("🧺", "корзина", "корзине", "корзиной"),
+        BaseObject("🌳", "дерево", "дереве", "деревом"),
+        BaseObject("🪜", "полка", "полке", "полкой")
     )
+
+    private fun getAnswer(prep: String, base: BaseObject): String {
+        val baseWord = if (prep == "на" || prep == "в") base.prepositional else base.instrumental
+        return "$prep $baseWord"
+    }
 
     fun generateTasks(config: PrepositionConfig): List<PrepositionTask> {
         val tasks = mutableListOf<PrepositionTask>()
@@ -51,18 +62,7 @@ object PrepositionData {
             val target = targets.random()
             val base = bases.random()
             
-            val correctAnswer = when (prep) {
-                "на" -> "на ${base.second}"
-                "под" -> "под ${base.second}"
-                "в" -> "в ${base.second}"
-                "над" -> "над ${base.second}"
-                "за" -> "за ${base.second}"
-                "перед" -> "перед ${base.second}"
-                "между" -> "между ${base.second}" 
-                "слева от" -> "слева от ${base.second}"
-                "справа от" -> "справа от ${base.second}"
-                else -> "на ${base.second}"
-            }
+            val correctAnswer = getAnswer(prep, base)
 
             val wrongOptions = mutableSetOf<String>()
             val wrongPreps = mutableSetOf<String>()
@@ -70,18 +70,7 @@ object PrepositionData {
             while (wrongOptions.size < 2) {
                 val wrongPrep = prepositionsToUse.random()
                 if (wrongPrep != prep) {
-                    val wrongAns = when (wrongPrep) {
-                        "на" -> "на ${base.second}"
-                        "под" -> "под ${base.second}"
-                        "в" -> "в ${base.second}"
-                        "над" -> "над ${base.second}"
-                        "за" -> "за ${base.second}"
-                        "перед" -> "перед ${base.second}"
-                        "между" -> "между ${base.second}"
-                        "слева от" -> "слева от ${base.second}"
-                        "справа от" -> "справа от ${base.second}"
-                        else -> "на ${base.second}"
-                    }
+                    val wrongAns = getAnswer(wrongPrep, base)
                     wrongOptions.add(wrongAns)
                     wrongPreps.add(wrongPrep)
                 }
@@ -94,8 +83,7 @@ object PrepositionData {
                     preposition = prep,
                     targetEmoji = target.first,
                     targetName = target.second,
-                    baseEmoji = base.first,
-                    baseName = base.second,
+                    base = base,
                     question = "Где ${target.second}?",
                     correctAnswer = correctAnswer,
                     options = allOptions,
