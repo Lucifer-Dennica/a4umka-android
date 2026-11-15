@@ -115,95 +115,119 @@ object PrepositionPdfDrawer {
             canvas.drawCircle(left + 20f, top + 20f, 12f, numCirclePaint)
             canvas.drawText("${i + 1}", left + 20f, top + 25f, numPaint)
 
-            // Контент карточки
-            if (config.taskType == PrepositionTaskType.FIND_WORD) {
-                drawFindWordTask(canvas, task, left, top, right, bottom)
-            } else if (config.taskType == PrepositionTaskType.FIND_PICTURE) {
-                drawFindPictureTask(canvas, task, left, top, right, bottom)
-            } else {
-                drawDrawSelfTask(canvas, task, left, top, right, bottom)
+            val cx = left + (right - left) / 2f
+            val cy = top + (bottom - top) * 0.35f
+
+            when (config.taskType) {
+                PrepositionTaskType.FIND_WORD -> {
+                    drawScene(canvas, task.targetEmoji, task.baseEmoji, task.preposition, cx, cy)
+                    
+                    val qPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText(task.question, cx, cy + 45f, qPaint)
+
+                    val optionPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
+                    val bubblePaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+                    val bubbleBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
+
+                    var optionY = cy + 60f
+                    val boxWidth = right - left - 40f
+                    val boxHeight = 22f
+
+                    task.options.forEach { option ->
+                        val rect = RectF(left + 20f, optionY, left + 20f + boxWidth, optionY + boxHeight)
+                        canvas.drawRoundRect(rect, 11f, 11f, bubblePaint)
+                        canvas.drawRoundRect(rect, 11f, 11f, bubbleBorder)
+                        canvas.drawText(option, cx, optionY + 15f, optionPaint)
+                        optionY += boxHeight + 4f
+                    }
+                }
+                PrepositionTaskType.FIND_PICTURE -> {
+                    val qPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText(task.correctAnswer.replaceFirstChar { it.uppercase() }, cx, top + 45f, qPaint)
+
+                    val spacing = (right - left - 20f) / 3f
+                    val startX = left + 10f + spacing / 2f
+
+                    val choices = listOf(task.preposition) + task.wrongPrepositions
+                    val shuffledChoices = choices.shuffled()
+
+                    for (j in 0 until 3) {
+                        val x = startX + j * spacing
+                        val rect = RectF(x - 30f, top + 65f, x + 30f, top + 125f)
+                        
+                        canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
+                        canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
+
+                        drawScene(canvas, task.targetEmoji, task.baseEmoji, shuffledChoices[j], x, top + 95f)
+                    }
+                }
+                PrepositionTaskType.DRAW_SELF -> {
+                    val qPaint = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText("Нарисуй ${task.targetName} ${task.correctAnswer}", cx, top + 45f, qPaint)
+
+                    drawScene(canvas, task.targetEmoji, task.baseEmoji, task.preposition, cx, top + 90f, isDrawSelf = true)
+
+                    val drawRect = RectF(left + 20f, top + 120f, right - 20f, bottom - 10f)
+                    val dashPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
+                    canvas.drawRoundRect(drawRect, 8f, 8f, dashPaint)
+                }
             }
         }
     }
 
-    private fun drawFindWordTask(canvas: Canvas, task: PrepositionTask, left: Float, top: Float, right: Float, bottom: Float) {
-        val centerX = left + (right - left) / 2f
-        
-        // Рисуем эмодзи (предмет + база)
-        val emojiPaint = Paint().apply { textSize = 40f; textAlign = Paint.Align.CENTER }
-        // Просто ставим рядом
-        canvas.drawText(task.targetEmoji, centerX - 25f, top + 80f, emojiPaint)
-        canvas.drawText(task.baseEmoji, centerX + 25f, top + 80f, emojiPaint)
+    private fun drawScene(canvas: Canvas, target: String, base: String, prep: String, cx: Float, cy: Float, isDrawSelf: Boolean = false) {
+        val targetPaint = Paint().apply { textSize = 28f; textAlign = Paint.Align.CENTER }
+        val basePaint = Paint().apply { textSize = 38f; textAlign = Paint.Align.CENTER }
 
-        // Вопрос
-        val qPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        canvas.drawText(task.question, centerX, top + 115f, qPaint)
-
-        // Варианты ответов (обводка)
-        val optionPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
-        val bubblePaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
-        val bubbleBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
-
-        var currentY = top + 135f
-        val boxWidth = right - left - 40f
-        val boxHeight = 24f
-
-        task.options.forEach { option ->
-            val rect = RectF(left + 20f, currentY, left + 20f + boxWidth, currentY + boxHeight)
-            canvas.drawRoundRect(rect, 12f, 12f, bubblePaint)
-            canvas.drawRoundRect(rect, 12f, 12f, bubbleBorder)
-            canvas.drawText(option, left + 20f + boxWidth / 2f, currentY + 16f, optionPaint)
-            currentY += boxHeight + 6f
+        if (isDrawSelf) {
+            canvas.drawText(base, cx, cy + 10f, basePaint)
+            return
         }
-    }
 
-    private fun drawFindPictureTask(canvas: Canvas, task: PrepositionTask, left: Float, top: Float, right: Float, bottom: Float) {
-        val centerX = left + (right - left) / 2f
-        
-        // Текст задания сверху
-        val qPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        canvas.drawText(task.correctAnswer.replaceFirstChar { it.uppercase() }, centerX, top + 35f, qPaint)
-
-        // Три варианта картинок
-        val emojiPaint = Paint().apply { textSize = 30f; textAlign = Paint.Align.CENTER }
-        
-        val spacing = (right - left - 40f) / 3f
-        val startX = left + 20f + spacing / 2f
-
-        // Правильный + 2 рандомных неправильных (упрощенно - просто меняем базу)
-        // В реальности тут надо генерировать другие сцены, но для наглядности сойдет
-        for (i in 0 until 3) {
-            val x = startX + i * spacing
-            
-            // Рамка
-            val rect = RectF(x - 35f, top + 50f, x + 35f, top + 110f)
-            canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
-            canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
-
-            // Для упрощения рисуем правильный вариант и две другие базы
-            val baseToDraw = if (i == 0) task.baseEmoji else if (i == 1) "📦" else "🪑"
-            val targetToDraw = if (i == 0) task.targetEmoji else "🐭"
-
-            canvas.drawText(targetToDraw, x - 10f, top + 85f, emojiPaint)
-            canvas.drawText(baseToDraw, x + 15f, top + 85f, emojiPaint)
+        when (prep) {
+            "на" -> {
+                canvas.drawText(base, cx, cy + 15f, basePaint)
+                canvas.drawText(target, cx, cy - 5f, targetPaint)
+            }
+            "под" -> {
+                canvas.drawText(base, cx, cy - 15f, basePaint)
+                canvas.drawText(target, cx, cy + 15f, targetPaint)
+            }
+            "в" -> {
+                val smallTargetPaint = Paint(targetPaint).apply { textSize = 20f }
+                canvas.drawText(base, cx, cy, basePaint)
+                canvas.drawText(target, cx, cy + 5f, smallTargetPaint)
+            }
+            "над" -> {
+                canvas.drawText(base, cx, cy + 15f, basePaint)
+                canvas.drawText(target, cx, cy - 20f, targetPaint)
+            }
+            "за" -> {
+                canvas.drawText(target, cx - 12f, cy, targetPaint)
+                canvas.drawText(base, cx + 12f, cy, basePaint)
+            }
+            "перед" -> {
+                canvas.drawText(base, cx - 12f, cy, basePaint)
+                canvas.drawText(target, cx + 12f, cy, targetPaint)
+            }
+            "слева от" -> {
+                canvas.drawText(base, cx + 20f, cy, basePaint)
+                canvas.drawText(target, cx - 15f, cy, targetPaint)
+            }
+            "справа от" -> {
+                canvas.drawText(base, cx - 20f, cy, basePaint)
+                canvas.drawText(target, cx + 15f, cy, targetPaint)
+            }
+            "между" -> {
+                canvas.drawText(base, cx - 30f, cy, basePaint)
+                canvas.drawText(target, cx, cy, targetPaint)
+                canvas.drawText(base, cx + 30f, cy, basePaint)
+            }
+            else -> {
+                canvas.drawText(target, cx - 15f, cy, targetPaint)
+                canvas.drawText(base, cx + 15f, cy, basePaint)
+            }
         }
-    }
-
-    private fun drawDrawSelfTask(canvas: Canvas, task: PrepositionTask, left: Float, top: Float, right: Float, bottom: Float) {
-        val centerX = left + (right - left) / 2f
-        
-        // Задание
-        val qPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        canvas.drawText("Нарисуй ${task.targetName} ${task.correctAnswer}", centerX, top + 35f, qPaint)
-
-        // Рисуем только базу
-        val emojiPaint = Paint().apply { textSize = 50f; textAlign = Paint.Align.CENTER }
-        canvas.drawText(task.baseEmoji, centerX, top + 90f, emojiPaint)
-
-        // Место для рисования (пунктирная рамка)
-        val drawRect = RectF(left + 20f, top + 110f, right - 20f, bottom - 10f)
-        val dashPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
-        canvas.drawRoundRect(drawRect, 8f, 8f, dashPaint)
     }
 
     private fun drawAnswersPage(canvas: Canvas, tasks: List<PrepositionTask>) {
