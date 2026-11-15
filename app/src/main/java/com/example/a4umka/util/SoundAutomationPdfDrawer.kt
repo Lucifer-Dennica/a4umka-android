@@ -21,7 +21,6 @@ object SoundAutomationPdfDrawer {
         val pages = mutableListOf<Bitmap>()
         val data = SoundAutomationData.getData(config.sound)
 
-        // В зависимости от режима генерируем нужные листы
         if (config.mode == SpeechMode.KIT || config.mode == SpeechMode.SYLLABLES) {
             val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
@@ -53,29 +52,29 @@ object SoundAutomationPdfDrawer {
         val data = SoundAutomationData.getData(config.sound)
         var pageNum = 1
 
-        fun startNewPage(): Canvas {
+        fun startNewPage(): PdfDocument.Page {
             val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
             val page = document.startPage(pageInfo)
             page.canvas.drawColor(Color.parseColor("#FAFAFA"))
-            return page.canvas
+            return page
         }
 
         if (config.mode == SpeechMode.KIT || config.mode == SpeechMode.SYLLABLES) {
-            val canvas = startNewPage()
-            drawSyllablesPage(canvas, config, data.syllables)
-            document.finishPage(document.pages.last())
+            val page = startNewPage()
+            drawSyllablesPage(page.canvas, config, data.syllables)
+            document.finishPage(page)
         }
 
         if (config.mode == SpeechMode.KIT || config.mode == SpeechMode.WORDS) {
-            val canvas = startNewPage()
-            drawWordsPage(canvas, config, data)
-            document.finishPage(document.pages.last())
+            val page = startNewPage()
+            drawWordsPage(page.canvas, config, data)
+            document.finishPage(page)
         }
 
         if (config.mode == SpeechMode.KIT || config.mode == SpeechMode.PHRASES) {
-            val canvas = startNewPage()
-            drawPhrasesPage(canvas, config, data.phrases)
-            document.finishPage(document.pages.last())
+            val page = startNewPage()
+            drawPhrasesPage(page.canvas, config, data.phrases)
+            document.finishPage(page)
         }
     }
 
@@ -111,7 +110,6 @@ object SoundAutomationPdfDrawer {
         val margin = 40f
         val startY = 130f
         
-        // Разбиваем на блоки (примерно как на скрине)
         val blocks = listOf(
             "Слог в начале" to syllables.subList(0, 4),
             "Слог в конце" to syllables.subList(4, 8),
@@ -129,7 +127,7 @@ object SoundAutomationPdfDrawer {
         var currentY = startY
         for ((title, items) in blocks) {
             if (items.isEmpty()) continue
-            val blockHeight = if (items.size > 4) 100f else 70f // Упрощенно
+            val blockHeight = if (items.size > 4) 100f else 70f
             
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 10f, 10f, blockBgPaint)
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 10f, 10f, blockBorderPaint)
@@ -148,7 +146,6 @@ object SoundAutomationPdfDrawer {
 
                 canvas.drawText(item.text, cx, cy + 15f, textPaint)
                 
-                // 3 кружочка под слогом
                 val circleRadius = 4f
                 val circleSpacing = 12f
                 val startCircleX = cx - circleSpacing
@@ -207,7 +204,6 @@ object SoundAutomationPdfDrawer {
         for (phrase in phrases) {
             canvas.drawText("«$phrase»", PAGE_WIDTH / 2f, currentY, textPaint)
             
-            // Кружочки
             val circleRadius = 6f
             val circleSpacing = 20f
             val startX = PAGE_WIDTH / 2f - circleSpacing
