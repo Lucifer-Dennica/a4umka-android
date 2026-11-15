@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,9 +37,12 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(PrepositionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
+    
+    // Триггер для обновления превью без изменения настроек
+    var refreshTrigger by remember { mutableIntStateOf(0) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-    LaunchedEffect(config) {
+    LaunchedEffect(config, refreshTrigger) {
         delay(300)
         previewPages = PrepositionPdfDrawer.generatePreview(config, context)
     }
@@ -55,6 +59,9 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
+                    IconButton(onClick = { refreshTrigger++ }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Обновить")
+                    }
                     IconButton(onClick = { showInfoSheet = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
                     }
