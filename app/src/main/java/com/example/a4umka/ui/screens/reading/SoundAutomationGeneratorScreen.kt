@@ -28,7 +28,7 @@ import com.example.a4umka.util.SoundAutomationPdfDrawer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SoundAutomationGeneratorScreen(
     onBack: () -> Unit,
