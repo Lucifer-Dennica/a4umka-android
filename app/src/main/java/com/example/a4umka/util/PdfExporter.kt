@@ -166,6 +166,12 @@ object PdfExporter {
         return saveDocument(context, document, "sound_scheme_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportSoundAutomation(context: Context, config: SoundAutomationConfig): String? {
+        val document = PdfDocument()
+        SoundAutomationPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "sound_automation_${config.sound.letter}_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
