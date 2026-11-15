@@ -10,7 +10,8 @@ data class PrepositionTask(
     val baseName: String,
     val question: String,
     val correctAnswer: String,
-    val options: List<String>
+    val options: List<String>,
+    val wrongPrepositions: List<String> // Для режима "Найди картинку"
 )
 
 object PrepositionData {
@@ -50,7 +51,6 @@ object PrepositionData {
             val target = targets.random()
             val base = bases.random()
             
-            // Формируем правильный ответ в зависимости от предлога
             val correctAnswer = when (prep) {
                 "на" -> "на ${base.second}"
                 "под" -> "под ${base.second}"
@@ -58,14 +58,15 @@ object PrepositionData {
                 "над" -> "над ${base.second}"
                 "за" -> "за ${base.second}"
                 "перед" -> "перед ${base.second}"
-                "между" -> "между ${base.second}" // Для простоты используем одну базу
+                "между" -> "между ${base.second}" 
                 "слева от" -> "слева от ${base.second}"
                 "справа от" -> "справа от ${base.second}"
                 else -> "на ${base.second}"
             }
 
-            // Генерируем 2 неправильных варианта
             val wrongOptions = mutableSetOf<String>()
+            val wrongPreps = mutableSetOf<String>()
+
             while (wrongOptions.size < 2) {
                 val wrongPrep = prepositionsToUse.random()
                 if (wrongPrep != prep) {
@@ -82,6 +83,7 @@ object PrepositionData {
                         else -> "на ${base.second}"
                     }
                     wrongOptions.add(wrongAns)
+                    wrongPreps.add(wrongPrep)
                 }
             }
             
@@ -96,7 +98,8 @@ object PrepositionData {
                     baseName = base.second,
                     question = "Где ${target.second}?",
                     correctAnswer = correctAnswer,
-                    options = allOptions
+                    options = allOptions,
+                    wrongPrepositions = wrongPreps.toList()
                 )
             )
         }
