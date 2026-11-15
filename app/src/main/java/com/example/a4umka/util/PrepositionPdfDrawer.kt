@@ -120,7 +120,7 @@ object PrepositionPdfDrawer {
 
             when (config.taskType) {
                 PrepositionTaskType.FIND_WORD -> {
-                    drawScene(canvas, task.targetEmoji, task.baseEmoji, task.preposition, cx, cy)
+                    drawScene(canvas, task.targetEmoji, task.base.emoji, task.preposition, cx, cy)
                     
                     val qPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
                     canvas.drawText(task.question, cx, cy + 45f, qPaint)
@@ -158,14 +158,14 @@ object PrepositionPdfDrawer {
                         canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
                         canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
 
-                        drawScene(canvas, task.targetEmoji, task.baseEmoji, shuffledChoices[j], x, top + 95f)
+                        drawScene(canvas, task.targetEmoji, task.base.emoji, shuffledChoices[j], x, top + 95f)
                     }
                 }
                 PrepositionTaskType.DRAW_SELF -> {
                     val qPaint = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
                     canvas.drawText("Нарисуй ${task.targetName} ${task.correctAnswer}", cx, top + 45f, qPaint)
 
-                    drawScene(canvas, task.targetEmoji, task.baseEmoji, task.preposition, cx, top + 90f, isDrawSelf = true)
+                    drawScene(canvas, task.targetEmoji, task.base.emoji, task.preposition, cx, top + 90f, isDrawSelf = true)
 
                     val drawRect = RectF(left + 20f, top + 120f, right - 20f, bottom - 10f)
                     val dashPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
@@ -176,8 +176,8 @@ object PrepositionPdfDrawer {
     }
 
     private fun drawScene(canvas: Canvas, target: String, base: String, prep: String, cx: Float, cy: Float, isDrawSelf: Boolean = false) {
-        val targetPaint = Paint().apply { textSize = 28f; textAlign = Paint.Align.CENTER }
-        val basePaint = Paint().apply { textSize = 38f; textAlign = Paint.Align.CENTER }
+        val targetPaint = Paint().apply { textSize = 36f; textAlign = Paint.Align.CENTER }
+        val basePaint = Paint().apply { textSize = 46f; textAlign = Paint.Align.CENTER }
 
         if (isDrawSelf) {
             canvas.drawText(base, cx, cy + 10f, basePaint)
@@ -187,45 +187,48 @@ object PrepositionPdfDrawer {
         when (prep) {
             "на" -> {
                 canvas.drawText(base, cx, cy + 15f, basePaint)
-                canvas.drawText(target, cx, cy - 5f, targetPaint)
+                canvas.drawText(target, cx, cy - 10f, targetPaint)
             }
             "под" -> {
                 canvas.drawText(base, cx, cy - 15f, basePaint)
-                canvas.drawText(target, cx, cy + 15f, targetPaint)
+                canvas.drawText(target, cx, cy + 20f, targetPaint)
             }
             "в" -> {
-                val smallTargetPaint = Paint(targetPaint).apply { textSize = 20f }
+                val smallTargetPaint = Paint(targetPaint).apply { textSize = 26f }
                 canvas.drawText(base, cx, cy, basePaint)
                 canvas.drawText(target, cx, cy + 5f, smallTargetPaint)
             }
             "над" -> {
                 canvas.drawText(base, cx, cy + 15f, basePaint)
-                canvas.drawText(target, cx, cy - 20f, targetPaint)
+                canvas.drawText(target, cx, cy - 25f, targetPaint)
             }
             "за" -> {
-                canvas.drawText(target, cx - 12f, cy, targetPaint)
-                canvas.drawText(base, cx + 12f, cy, basePaint)
+                canvas.drawText(base, cx - 5f, cy + 5f, basePaint)
+                val smallTargetPaint = Paint(targetPaint).apply { textSize = 28f }
+                canvas.drawText(target, cx + 25f, cy - 15f, smallTargetPaint) 
             }
             "перед" -> {
-                canvas.drawText(base, cx - 12f, cy, basePaint)
-                canvas.drawText(target, cx + 12f, cy, targetPaint)
+                canvas.drawText(target, cx - 5f, cy + 5f, targetPaint)
+                val smallBasePaint = Paint(basePaint).apply { textSize = 38f }
+                canvas.drawText(base, cx + 25f, cy - 15f, smallBasePaint)
             }
             "слева от" -> {
-                canvas.drawText(base, cx + 20f, cy, basePaint)
-                canvas.drawText(target, cx - 15f, cy, targetPaint)
+                canvas.drawText(target, cx - 30f, cy + 5f, targetPaint)
+                canvas.drawText(base, cx + 25f, cy, basePaint)
             }
             "справа от" -> {
-                canvas.drawText(base, cx - 20f, cy, basePaint)
-                canvas.drawText(target, cx + 15f, cy, targetPaint)
+                canvas.drawText(base, cx - 25f, cy, basePaint)
+                canvas.drawText(target, cx + 30f, cy + 5f, targetPaint)
             }
             "между" -> {
-                canvas.drawText(base, cx - 30f, cy, basePaint)
-                canvas.drawText(target, cx, cy, targetPaint)
-                canvas.drawText(base, cx + 30f, cy, basePaint)
+                val smallBasePaint = Paint(basePaint).apply { textSize = 38f }
+                canvas.drawText(base, cx - 40f, cy, smallBasePaint)
+                canvas.drawText(target, cx, cy + 5f, targetPaint)
+                canvas.drawText(base, cx + 40f, cy, smallBasePaint)
             }
             else -> {
-                canvas.drawText(target, cx - 15f, cy, targetPaint)
-                canvas.drawText(base, cx + 15f, cy, basePaint)
+                canvas.drawText(target, cx - 20f, cy, targetPaint)
+                canvas.drawText(base, cx + 20f, cy, basePaint)
             }
         }
     }
