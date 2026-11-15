@@ -17,7 +17,7 @@ enum class PrepositionEnum(val ruName: String, val fileName: String) {
 enum class ScenePair(val folderName: String, val targetName: String, val baseName: String, val targetNom: String, val baseNom: String) {
     MOUSE_BASKET("mouse_basket", "мышка", "корзина", "мышка", "корзина"),
     CAT_SHELF("cat_shelf", "кот", "полка", "кот", "полка"),
-    APPLE_SHELF("apple_shelf", "яблоко", "полка", "яблоко", "полка"),
+    APPLE_TABLE("apple_table", "яблоко", "стол", "яблоко", "стол"), // Изменили на стол
     BIRD_TREE("bird_tree", "птичка", "дерево", "птичка", "дерево"),
     TOYS_BOX("toys_box", "игрушки", "коробка", "игрушки", "коробка")
 }
@@ -37,12 +37,12 @@ object PrepositionData {
     private val allPrepositions = listOf(PrepositionEnum.MEZHDU, PrepositionEnum.SLEVA, PrepositionEnum.SPRAVA)
 
     private fun getBaseWord(baseNom: String, prep: PrepositionEnum): String {
-        // Простая логика падежей для наших базовых слов
         return when (baseNom) {
             "корзина" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "корзине" else "корзиной"
             "полка" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "полке" else "полкой"
             "дерево" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "дереве" else "деревом"
             "коробка" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "коробке" else "коробкой"
+            "стол" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "столе" else "столом"
             else -> "предметом"
         }
     }
