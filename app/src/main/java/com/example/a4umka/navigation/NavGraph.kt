@@ -33,6 +33,7 @@ object Routes {
     const val INTERACTIVE_ANAGRAM = "interactive_anagram"
     const val INTERACTIVE_WORD_IN_WORD = "interactive_word_in_word"
     const val INTERACTIVE_CUSTOM_CROSSWORD = "interactive_custom_crossword"
+    const val INTERACTIVE_PREPOSITION = "interactive_preposition" // <-- НОВЫЙ МАРШРУТ
 
     fun category(id: String) = "category/$id"
     fun task(categoryId: String, taskId: String) = "task/$categoryId/$taskId"
@@ -51,6 +52,7 @@ fun NavGraph() {
     var currentFairyTaleConfig by remember { mutableStateOf(FairyTaleConfig()) }
     var currentAnagramConfig by remember { mutableStateOf(AnagramConfig()) }
     var currentCustomCrosswordConfig by remember { mutableStateOf(CustomCrosswordConfig()) }
+    var currentPrepositionConfig by remember { mutableStateOf(PrepositionConfig()) } // <-- НОВОЕ СОСТОЯНИЕ
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
@@ -87,7 +89,13 @@ fun NavGraph() {
             when {
                 categoryId == "reading" && taskId == "alphabet_poster" -> AlphabetGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "letter_ribbon" -> RibbonGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { navController.navigate(Routes.INTERACTIVE_RIBBON) })
-                categoryId == "reading" && taskId == "prepositions" -> PrepositionGeneratorScreen(onBack = { navController.popBackStack() })
+                categoryId == "reading" && taskId == "prepositions" -> PrepositionGeneratorScreen(
+                    onBack = { navController.popBackStack() },
+                    onPlayInteractive = { config -> 
+                        currentPrepositionConfig = config
+                        navController.navigate(Routes.INTERACTIVE_PREPOSITION) 
+                    }
+                ) // <-- ОБНОВЛЕНО
                 categoryId == "reading" && taskId == "syllable_tables" -> SyllableTableGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "assemble_word" -> AssembleWordGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "fillword" -> FillwordGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { currentFillwordConfig = it; navController.navigate(Routes.INTERACTIVE_FILLWORD) })
@@ -135,6 +143,14 @@ fun NavGraph() {
                 config = currentCustomCrosswordConfig,
                 onBack = { navController.popBackStack() }
             ) 
+        }
+
+        // <-- НОВЫЙ ЭКРАН
+        composable(Routes.INTERACTIVE_PREPOSITION) {
+            InteractivePrepositionScreen(
+                config = currentPrepositionConfig,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(
