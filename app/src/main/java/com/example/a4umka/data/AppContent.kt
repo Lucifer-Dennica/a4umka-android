@@ -5,8 +5,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class Category(val id: String, val title: String, val icon: ImageVector)
-
-// Добавили emoji и isInteractive
 data class TaskItem(
     val id: String, 
     val title: String, 
@@ -48,7 +46,8 @@ object AppContent {
         TaskItem("word_in_word", "Найди слово в слове", "Найди короткое слово внутри длинного", "🔤", isInteractive = true),
         TaskItem("crossword", "Кроссворд по картинкам", "Разгадай картинки и впиши слова в сетку", "🧩"),
         TaskItem("custom_crossword", "Кроссворд из своих слов", "Создай кроссворд с текстовыми вопросами", "🛠️", isInteractive = true),
-        TaskItem("prepositions", "Предлоги в картинках", "Учимся говорить: на, под, в, за и другие", "🧭", isInteractive = true)
+        TaskItem("prepositions", "Предлоги в картинках", "Учимся говорить: на, под, в, за и другие", "🧭", isInteractive = true),
+        TaskItem("sound_scheme", "Звуко-буквенный анализ", "Классическая звуковая схема слова по цветам", "🎨")
     )
 
     private val handTasks = listOf(
