@@ -2,50 +2,53 @@ package com.example.a4umka.data
 
 import kotlin.random.Random
 
-enum class SceneObject(val title: String) {
-    TABLE("стол"), CHAIR("стул"), BOX("коробка"), BASKET("корзина"), TREE("дерево"), SHELF("полка"),
-    BALL("мяч"), CAT("кот"), MOUSE("мышка"), BIRD("птичка"), APPLE("яблоко"), DICE("кубик"), FLOWER("цветок")
+enum class PrepositionEnum(val ruName: String, val fileName: String) {
+    NA("на", "na"),
+    POD("под", "pod"),
+    V("в", "v"),
+    NAD("над", "nad"),
+    ZA("за", "za"),
+    PERED("перед", "pered"),
+    MEZHDU("между", "mezhdu"),
+    SLEVA("слева от", "sleva"),
+    SPRAVA("справа от", "sprava")
+}
+
+enum class ScenePair(val folderName: String, val targetName: String, val baseName: String, val targetNom: String, val baseNom: String) {
+    MOUSE_BASKET("mouse_basket", "мышка", "корзина", "мышка", "корзина"),
+    CAT_SHELF("cat_shelf", "кот", "полка", "кот", "полка"),
+    APPLE_SHELF("apple_shelf", "яблоко", "полка", "яблоко", "полка"),
+    BIRD_TREE("bird_tree", "птичка", "дерево", "птичка", "дерево"),
+    TOYS_BOX("toys_box", "игрушки", "коробка", "игрушки", "коробка")
 }
 
 data class PrepositionTask(
-    val preposition: String,
-    val targetObject: SceneObject,
-    val baseObject: SceneObject,
+    val preposition: PrepositionEnum,
+    val scene: ScenePair,
     val question: String,
     val correctAnswer: String,
     val options: List<String>,
-    val wrongPrepositions: List<String>
+    val wrongPrepositions: List<PrepositionEnum>
 )
 
 object PrepositionData {
-    private val simplePrepositions = listOf("на", "под", "в")
-    private val basicPrepositions = listOf("над", "за", "перед")
-    private val allPrepositions = listOf("между", "слева от", "справа от")
+    private val simplePrepositions = listOf(PrepositionEnum.NA, PrepositionEnum.POD, PrepositionEnum.V)
+    private val basicPrepositions = listOf(PrepositionEnum.NAD, PrepositionEnum.ZA, PrepositionEnum.PERED)
+    private val allPrepositions = listOf(PrepositionEnum.MEZHDU, PrepositionEnum.SLEVA, PrepositionEnum.SPRAVA)
 
-    private val targets = listOf(
-        SceneObject.BALL, SceneObject.CAT, SceneObject.MOUSE, SceneObject.BIRD, 
-        SceneObject.APPLE, SceneObject.DICE, SceneObject.FLOWER
-    )
-
-    private val bases = listOf(
-        SceneObject.TABLE, SceneObject.CHAIR, SceneObject.BOX, 
-        SceneObject.BASKET, SceneObject.TREE, SceneObject.SHELF
-    )
-
-    private fun getBaseWord(base: SceneObject, prep: String): String {
-        return when (base) {
-            SceneObject.TABLE -> if (prep == "на" || prep == "в") "столе" else "столом"
-            SceneObject.CHAIR -> if (prep == "на" || prep == "в") "стуле" else "стулом"
-            SceneObject.BOX -> if (prep == "на" || prep == "в") "коробке" else "коробкой"
-            SceneObject.BASKET -> if (prep == "на" || prep == "в") "корзине" else "корзиной"
-            SceneObject.TREE -> if (prep == "на" || prep == "в") "дереве" else "деревом"
-            SceneObject.SHELF -> if (prep == "на" || prep == "в") "полке" else "полкой"
+    private fun getBaseWord(baseNom: String, prep: PrepositionEnum): String {
+        // Простая логика падежей для наших базовых слов
+        return when (baseNom) {
+            "корзина" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "корзине" else "корзиной"
+            "полка" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "полке" else "полкой"
+            "дерево" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "дереве" else "деревом"
+            "коробка" -> if (prep == PrepositionEnum.NA || prep == PrepositionEnum.V) "коробке" else "коробкой"
             else -> "предметом"
         }
     }
 
-    private fun getAnswer(prep: String, base: SceneObject): String {
-        return "$prep ${getBaseWord(base, prep)}"
+    private fun getAnswer(prep: PrepositionEnum, scene: ScenePair): String {
+        return "${prep.ruName} ${getBaseWord(scene.baseNom, prep)}"
     }
 
     fun generateTasks(config: PrepositionConfig): List<PrepositionTask> {
@@ -56,20 +59,21 @@ object PrepositionData {
             PrepositionLevel.ALL -> simplePrepositions + basicPrepositions + allPrepositions
         }
 
+        val allScenes = ScenePair.values()
+
         repeat(config.tasksCount) {
             val prep = prepositionsToUse.random()
-            val target = targets.random()
-            val base = bases.random()
+            val scene = allScenes.random()
             
-            val correctAnswer = getAnswer(prep, base)
+            val correctAnswer = getAnswer(prep, scene)
 
             val wrongOptions = mutableSetOf<String>()
-            val wrongPreps = mutableSetOf<String>()
+            val wrongPreps = mutableSetOf<PrepositionEnum>()
 
             while (wrongOptions.size < 2) {
                 val wrongPrep = prepositionsToUse.random()
                 if (wrongPrep != prep) {
-                    val wrongAns = getAnswer(wrongPrep, base)
+                    val wrongAns = getAnswer(wrongPrep, scene)
                     wrongOptions.add(wrongAns)
                     wrongPreps.add(wrongPrep)
                 }
@@ -80,9 +84,8 @@ object PrepositionData {
             tasks.add(
                 PrepositionTask(
                     preposition = prep,
-                    targetObject = target,
-                    baseObject = base,
-                    question = "Где ${target.title}?",
+                    scene = scene,
+                    question = "Где ${scene.targetNom}?",
                     correctAnswer = correctAnswer,
                     options = allOptions,
                     wrongPrepositions = wrongPreps.toList()
