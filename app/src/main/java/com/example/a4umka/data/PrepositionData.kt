@@ -2,18 +2,15 @@ package com.example.a4umka.data
 
 import kotlin.random.Random
 
-data class BaseObject(
-    val emoji: String,
-    val nominative: String,    // Именительный (стол)
-    val prepositional: String, // Предложный (на столе, в коробке)
-    val instrumental: String   // Творительный (под столом, за коробкой)
-)
+enum class SceneObject(val title: String) {
+    TABLE("стол"), CHAIR("стул"), BOX("коробка"), BASKET("корзина"), TREE("дерево"), SHELF("полка"),
+    BALL("мяч"), CAT("кот"), MOUSE("мышка"), BIRD("птичка"), APPLE("яблоко"), DICE("кубик"), FLOWER("цветок")
+}
 
 data class PrepositionTask(
     val preposition: String,
-    val targetEmoji: String,
-    val targetName: String,
-    val base: BaseObject,
+    val targetObject: SceneObject,
+    val baseObject: SceneObject,
     val question: String,
     val correctAnswer: String,
     val options: List<String>,
@@ -26,27 +23,29 @@ object PrepositionData {
     private val allPrepositions = listOf("между", "слева от", "справа от")
 
     private val targets = listOf(
-        Pair("⚽", "мяч"),
-        Pair("🐱", "кот"),
-        Pair("🐭", "мышка"),
-        Pair("🐦", "птичка"),
-        Pair("🍎", "яблоко"),
-        Pair("🎲", "кубик"),
-        Pair("🌸", "цветок")
+        SceneObject.BALL, SceneObject.CAT, SceneObject.MOUSE, SceneObject.BIRD, 
+        SceneObject.APPLE, SceneObject.DICE, SceneObject.FLOWER
     )
 
     private val bases = listOf(
-        BaseObject("🪵", "стол", "столе", "столом"),
-        BaseObject("🪑", "стул", "стуле", "стулом"),
-        BaseObject("📦", "коробка", "коробке", "коробкой"),
-        BaseObject("🧺", "корзина", "корзине", "корзиной"),
-        BaseObject("🌳", "дерево", "дереве", "деревом"),
-        BaseObject("🪜", "полка", "полке", "полкой")
+        SceneObject.TABLE, SceneObject.CHAIR, SceneObject.BOX, 
+        SceneObject.BASKET, SceneObject.TREE, SceneObject.SHELF
     )
 
-    private fun getAnswer(prep: String, base: BaseObject): String {
-        val baseWord = if (prep == "на" || prep == "в") base.prepositional else base.instrumental
-        return "$prep $baseWord"
+    private fun getBaseWord(base: SceneObject, prep: String): String {
+        return when (base) {
+            SceneObject.TABLE -> if (prep == "на" || prep == "в") "столе" else "столом"
+            SceneObject.CHAIR -> if (prep == "на" || prep == "в") "стуле" else "стулом"
+            SceneObject.BOX -> if (prep == "на" || prep == "в") "коробке" else "коробкой"
+            SceneObject.BASKET -> if (prep == "на" || prep == "в") "корзине" else "корзиной"
+            SceneObject.TREE -> if (prep == "на" || prep == "в") "дереве" else "деревом"
+            SceneObject.SHELF -> if (prep == "на" || prep == "в") "полке" else "полкой"
+            else -> "предметом"
+        }
+    }
+
+    private fun getAnswer(prep: String, base: SceneObject): String {
+        return "$prep ${getBaseWord(base, prep)}"
     }
 
     fun generateTasks(config: PrepositionConfig): List<PrepositionTask> {
@@ -81,10 +80,9 @@ object PrepositionData {
             tasks.add(
                 PrepositionTask(
                     preposition = prep,
-                    targetEmoji = target.first,
-                    targetName = target.second,
-                    base = base,
-                    question = "Где ${target.second}?",
+                    targetObject = target,
+                    baseObject = base,
+                    question = "Где ${target.title}?",
                     correctAnswer = correctAnswer,
                     options = allOptions,
                     wrongPrepositions = wrongPreps.toList()
