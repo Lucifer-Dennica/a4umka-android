@@ -73,11 +73,11 @@ private fun TaskTile(
 ) {
     Box(
         modifier = modifier
-            .height(130.dp) // Чуть увеличили высоту для иконок
+            .height(130.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick)
-            .padding(12.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp) // Уменьшили верхний отступ
     ) {
         // Иконка телефона в правом верхнем углу, если доступен интерактив
         if (task.isInteractive) {
@@ -92,7 +92,7 @@ private fun TaskTile(
         }
 
         Column(
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top, // Выравниваем контент по верхнему краю
             modifier = Modifier.fillMaxSize()
         ) {
             Row(
@@ -102,8 +102,8 @@ private fun TaskTile(
                 if (task.emoji.isNotEmpty()) {
                     Text(
                         text = task.emoji,
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(end = 6.dp)
+                        fontSize = 18.sp, // Чуть уменьшили эмодзи, чтобы не перекрывал заголовок
+                        modifier = Modifier.padding(end = 4.dp)
                     )
                 }
                 Text(
@@ -115,13 +115,14 @@ private fun TaskTile(
                     lineHeight = 18.sp
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp)) // Уменьшили отступ между заголовком и текстом
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 4, // Разрешили до 4 строк описания
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 14.sp // Чуть сжали межстрочный интервал
             )
         }
     }
