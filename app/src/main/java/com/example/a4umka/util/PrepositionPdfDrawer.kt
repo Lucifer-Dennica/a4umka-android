@@ -1,17 +1,23 @@
 package com.example.a4umka.util
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
-import com.example.a4umka.data.PrepositionConfig
-import com.example.a4umka.data.PrepositionData
-import com.example.a4umka.data.PrepositionTask
-import com.example.a4umka.data.PrepositionTaskType
-import com.example.a4umka.data.SceneObject
+import com.example.a4umka.data.*
 
 object PrepositionPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
+
+    private val bitmapCache = mutableMapOf<String, Bitmap?>()
+
+    fun clearCache() { bitmapCache.clear() }
 
     fun generatePreview(config: PrepositionConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
@@ -20,7 +26,7 @@ object PrepositionPdfDrawer {
         val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.parseColor("#FAFAFA"))
-        drawMainPage(canvas, config, tasks)
+        drawMainPage(canvas, config, tasks, context)
         pages.add(bmp)
 
         if (config.showAnswers) {
@@ -41,7 +47,7 @@ object PrepositionPdfDrawer {
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
         var page = document.startPage(pageInfo)
         page.canvas.drawColor(Color.parseColor("#FAFAFA"))
-        drawMainPage(page.canvas, config, tasks)
+        drawMainPage(page.canvas, config, tasks, context)
         document.finishPage(page)
 
         if (config.showAnswers) {
@@ -53,7 +59,7 @@ object PrepositionPdfDrawer {
         }
     }
 
-    private fun drawMainPage(canvas: Canvas, config: PrepositionConfig, tasks: List<PrepositionTask>) {
+    private fun drawMainPage(canvas: Canvas, config: PrepositionConfig, tasks: List<PrepositionTask>, context: Context) {
         val margin = 40f
         val textColor = Color.parseColor("#33691E")
 
@@ -112,20 +118,20 @@ object PrepositionPdfDrawer {
             canvas.drawText("${i + 1}", left + 20f, top + 25f, numPaint)
 
             val cx = left + (right - left) / 2f
-            val cy = top + (bottom - top) * 0.35f
+            val cy = top + 60f // Центр для картинки
 
             when (config.taskType) {
                 PrepositionTaskType.FIND_WORD -> {
-                    drawScene(canvas, task.targetObject, task.baseObject, task.preposition, cx, cy)
+                    drawAssetImage(canvas, context, task.scene.folderName, task.preposition.fileName, cx, cy, 100f, 100f)
                     
                     val qPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                    canvas.drawText(task.question, cx, cy + 45f, qPaint)
+                    canvas.drawText(task.question, cx, cy + 65f, qPaint)
 
                     val optionPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
                     val bubblePaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
                     val bubbleBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
 
-                    var optionY = cy + 60f
+                    var optionY = cy + 80f
                     val boxWidth = right - left - 40f
                     val boxHeight = 22f
 
@@ -149,26 +155,23 @@ object PrepositionPdfDrawer {
 
                     for (j in 0 until 3) {
                         val x = startX + j * spacing
-                        val rect = RectF(x - 30f, top + 65f, x + 30f, top + 125f)
+                        val rect = RectF(x - 35f, top + 65f, x + 35f, top + 125f)
                         
                         canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
                         canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
 
-                        // Уменьшаем масштаб для мини-картинок
-                        canvas.save()
-                        canvas.translate(x, top + 95f)
-                        canvas.scale(0.6f, 0.6f)
-                        drawScene(canvas, task.targetObject, task.baseObject, shuffledChoices[j], 0f, 0f)
-                        canvas.restore()
+                        drawAssetImage(canvas, context, task.scene.folderName, shuffledChoices[j].fileName, x, top + 95f, 60f, 60f)
                     }
                 }
                 PrepositionTaskType.DRAW_SELF -> {
                     val qPaint = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                    canvas.drawText("Нарисуй ${task.targetObject.title} ${task.correctAnswer}", cx, top + 45f, qPaint)
+                    canvas.drawText("Нарисуй ${task.scene.targetName} ${task.correctAnswer}", cx, top + 45f, qPaint)
 
-                    drawScene(canvas, task.targetObject, task.baseObject, task.preposition, cx, top + 90f, isDrawSelf = true)
-
-                    val drawRect = RectF(left + 20f, top + 120f, right - 20f, bottom - 10f)
+                    // В режиме "Нарисуй сам" мы показываем только фон (без предлога)
+                    // Для этого можно использовать картинку предлога "на", но перекрыть верхнюю часть,
+                    // либо просто дать ребенку пустую рамку. Оставим пустую рамку с базовым объектом.
+                    // В идеале нужна отдельная картинка с пустой базой, но для простоты дадим рамку.
+                    val drawRect = RectF(left + 20f, top + 60f, right - 20f, bottom - 10f)
                     val dashPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
                     canvas.drawRoundRect(drawRect, 8f, 8f, dashPaint)
                 }
@@ -176,197 +179,39 @@ object PrepositionPdfDrawer {
         }
     }
 
-    private fun drawScene(canvas: Canvas, target: SceneObject, base: SceneObject, prep: String, cx: Float, cy: Float, isDrawSelf: Boolean = false) {
-        // Если рисуем сами - показываем только базу
-        if (isDrawSelf) {
-            drawObject(canvas, base, cx, cy, isBase = true)
-            return
+    private fun drawAssetImage(canvas: Canvas, context: Context, folder: String, fileName: String, cx: Float, cy: Float, maxWidth: Float, maxHeight: Float) {
+        val assetPath = "prepositions/$folder/$fileName.png"
+        var bitmap = bitmapCache[assetPath]
+        
+        if (bitmap == null && !bitmapCache.containsKey(assetPath)) {
+            bitmap = try {
+                context.assets.open(assetPath).use { BitmapFactory.decodeStream(it) }
+            } catch (e: Exception) {
+                null
+            }
+            bitmapCache[assetPath] = bitmap
         }
 
-        // Логика наложения слоев
-        when (prep) {
-            "за" -> {
-                // Сначала цель, потом база поверх нее (перекрывает)
-                drawObject(canvas, target, cx + 15f, cy - 5f, isBase = false)
-                drawObject(canvas, base, cx, cy, isBase = true)
+        if (bitmap != null) {
+            val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+            var drawW = maxWidth
+            var drawH = maxWidth / ratio
+            if (drawH > maxHeight) {
+                drawH = maxHeight
+                drawW = maxHeight * ratio
             }
-            "перед" -> {
-                // Сначала база, потом цель поверх нее
-                drawObject(canvas, base, cx - 15f, cy - 5f, isBase = true)
-                drawObject(canvas, target, cx + 5f, cy + 5f, isBase = false)
-            }
-            "на" -> {
-                drawObject(canvas, base, cx, cy + 10f, isBase = true)
-                drawObject(canvas, target, cx, cy - 15f, isBase = false)
-            }
-            "под" -> {
-                drawObject(canvas, base, cx, cy - 10f, isBase = true)
-                drawObject(canvas, target, cx, cy + 15f, isBase = false)
-            }
-            "в" -> {
-                drawObject(canvas, base, cx, cy, isBase = true)
-                // Цель рисуем меньше и поверх
-                canvas.save()
-                canvas.translate(cx, cy)
-                canvas.scale(0.5f, 0.5f)
-                drawObject(canvas, target, 0f, 0f, isBase = false)
-                canvas.restore()
-            }
-            "над" -> {
-                drawObject(canvas, base, cx, cy + 15f, isBase = true)
-                drawObject(canvas, target, cx, cy - 25f, isBase = false)
-            }
-            "слева от" -> {
-                drawObject(canvas, base, cx + 25f, cy, isBase = true)
-                drawObject(canvas, target, cx - 25f, cy, isBase = false)
-            }
-            "справа от" -> {
-                drawObject(canvas, base, cx - 25f, cy, isBase = true)
-                drawObject(canvas, target, cx + 25f, cy, isBase = false)
-            }
-            "между" -> {
-                canvas.save()
-                canvas.translate(cx - 35f, cy)
-                canvas.scale(0.7f, 0.7f)
-                drawObject(canvas, base, 0f, 0f, isBase = true)
-                canvas.restore()
-
-                canvas.save()
-                canvas.translate(cx + 35f, cy)
-                canvas.scale(0.7f, 0.7f)
-                drawObject(canvas, base, 0f, 0f, isBase = true)
-                canvas.restore()
-
-                drawObject(canvas, target, cx, cy, isBase = false)
-            }
-            else -> {
-                drawObject(canvas, target, cx - 20f, cy, isBase = false)
-                drawObject(canvas, base, cx + 20f, cy, isBase = true)
-            }
-        }
-    }
-
-    // --- ВЕКТОРНАЯ ОТРИСОВКА ОБЪЕКТОВ ---
-
-    private fun drawObject(canvas: Canvas, obj: SceneObject, x: Float, y: Float, isBase: Boolean) {
-        val fillPaint = Paint().apply { isAntiAlias = true; style = Paint.Style.FILL }
-        val strokePaint = Paint().apply { isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 2f; color = Color.parseColor("#333333") }
-
-        when (obj) {
-            SceneObject.TABLE -> {
-                fillPaint.color = Color.parseColor("#8D6E63")
-                canvas.drawRect(x - 30f, y - 10f, x + 30f, y, fillPaint) // Столешница
-                canvas.drawRect(x - 30f, y - 10f, x + 30f, y, strokePaint)
-                canvas.drawRect(x - 25f, y, x - 20f, y + 20f, fillPaint) // Ножка левая
-                canvas.drawRect(x + 20f, y, x + 25f, y + 20f, fillPaint) // Ножка правая
-            }
-            SceneObject.CHAIR -> {
-                fillPaint.color = Color.parseColor("#A1887F")
-                canvas.drawRect(x - 15f, y - 20f, x + 15f, y - 15f, fillPaint) // Спинка
-                canvas.drawRect(x - 15f, y - 20f, x + 15f, y - 15f, strokePaint)
-                canvas.drawRect(x - 15f, y - 5f, x + 15f, y, fillPaint) // Сиденье
-                canvas.drawRect(x - 15f, y - 5f, x + 15f, y, strokePaint)
-                canvas.drawRect(x - 12f, y, x - 8f, y + 15f, fillPaint) // Ножки
-                canvas.drawRect(x + 8f, y, x + 12f, y + 15f, fillPaint)
-            }
-            SceneObject.BOX -> {
-                fillPaint.color = Color.parseColor("#FFB300")
-                canvas.drawRect(x - 25f, y - 15f, x + 25f, y + 15f, fillPaint)
-                canvas.drawRect(x - 25f, y - 15f, x + 25f, y + 15f, strokePaint)
-                canvas.drawLine(x - 25f, y, x + 25f, y, strokePaint) // Крышка
-                canvas.drawLine(x, y - 15f, x, y + 15f, strokePaint) // Стык
-            }
-            SceneObject.BASKET -> {
-                fillPaint.color = Color.parseColor("#FFCA28")
-                val path = Path().apply {
-                    moveTo(x - 25f, y - 10f)
-                    lineTo(x + 25f, y - 10f)
-                    lineTo(x + 15f, y + 20f)
-                    lineTo(x - 15f, y + 20f)
-                    close()
-                }
-                canvas.drawPath(path, fillPaint)
-                canvas.drawPath(path, strokePaint)
-                val handle = RectF(x - 20f, y - 30f, x + 20f, y + 10f)
-                canvas.drawArc(handle, 180f, 180f, false, strokePaint) // Ручка
-            }
-            SceneObject.TREE -> {
-                fillPaint.color = Color.parseColor("#795548")
-                canvas.drawRect(x - 5f, y - 10f, x + 5f, y + 20f, fillPaint) // Ствол
-                fillPaint.color = Color.parseColor("#4CAF50")
-                canvas.drawCircle(x, y - 20f, 20f, fillPaint) // Крона
-                canvas.drawCircle(x, y - 20f, 20f, strokePaint)
-            }
-            SceneObject.SHELF -> {
-                fillPaint.color = Color.parseColor("#8D6E63")
-                canvas.drawRect(x - 30f, y - 5f, x + 30f, y, fillPaint) // Полка
-                canvas.drawRect(x - 30f, y - 5f, x + 30f, y, strokePaint)
-                canvas.drawRect(x - 25f, y, x - 20f, y + 15f, fillPaint) // Кронштейн
-                canvas.drawRect(x + 20f, y, x + 25f, y + 15f, fillPaint)
-            }
-            SceneObject.BALL -> {
-                fillPaint.color = Color.WHITE
-                canvas.drawCircle(x, y, 15f, fillPaint)
-                canvas.drawCircle(x, y, 15f, strokePaint)
-                strokePaint.color = Color.BLACK
-                canvas.drawCircle(x, y, 5f, Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }) // Черное пятно
-            }
-            SceneObject.CAT -> {
-                fillPaint.color = Color.parseColor("#FF9800")
-                canvas.drawCircle(x, y, 15f, fillPaint) // Голова
-                canvas.drawCircle(x, y, 15f, strokePaint)
-                // Уши
-                val ear1 = Path().apply { moveTo(x - 12f, y - 10f); lineTo(x - 5f, y - 22f); lineTo(x - 2f, y - 10f); close() }
-                val ear2 = Path().apply { moveTo(x + 12f, y - 10f); lineTo(x + 5f, y - 22f); lineTo(x + 2f, y - 10f); close() }
-                canvas.drawPath(ear1, fillPaint); canvas.drawPath(ear1, strokePaint)
-                canvas.drawPath(ear2, fillPaint); canvas.drawPath(ear2, strokePaint)
-                // Глаза
-                canvas.drawCircle(x - 5f, y - 2f, 2f, Paint().apply { color = Color.BLACK })
-                canvas.drawCircle(x + 5f, y - 2f, 2f, Paint().apply { color = Color.BLACK })
-            }
-            SceneObject.MOUSE -> {
-                fillPaint.color = Color.GRAY
-                canvas.drawOval(RectF(x - 15f, y - 8f, x + 10f, y + 8f), fillPaint) // Тело
-                canvas.drawOval(RectF(x - 15f, y - 8f, x + 10f, y + 8f), strokePaint)
-                canvas.drawCircle(x - 10f, y - 8f, 6f, fillPaint) // Ухо
-                canvas.drawCircle(x - 10f, y - 8f, 6f, strokePaint)
-                canvas.drawLine(x + 10f, y, x + 20f, y + 5f, strokePaint) // Хвост
-            }
-            SceneObject.BIRD -> {
-                fillPaint.color = Color.parseColor("#2196F3")
-                canvas.drawOval(RectF(x - 12f, y - 8f, x + 12f, y + 8f), fillPaint) // Тело
-                canvas.drawOval(RectF(x - 12f, y - 8f, x + 12f, y + 8f), strokePaint)
-                fillPaint.color = Color.parseColor("#FFC107")
-                val beak = Path().apply { moveTo(x + 10f, y); lineTo(x + 18f, y - 4f); lineTo(x + 18f, y + 4f); close() }
-                canvas.drawPath(beak, fillPaint)
-                canvas.drawPath(beak, strokePaint)
-            }
-            SceneObject.APPLE -> {
-                fillPaint.color = Color.RED
-                canvas.drawCircle(x, y, 12f, fillPaint)
-                canvas.drawCircle(x, y, 12f, strokePaint)
-                canvas.drawLine(x, y - 12f, x + 3f, y - 18f, strokePaint) // Хвостик
-            }
-            SceneObject.DICE -> {
-                fillPaint.color = Color.WHITE
-                canvas.drawRect(x - 12f, y - 12f, x + 12f, y + 12f, fillPaint)
-                canvas.drawRect(x - 12f, y - 12f, x + 12f, y + 12f, strokePaint)
-                val dot = Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }
-                canvas.drawCircle(x, y, 3f, dot) // Одна точка
-            }
-            SceneObject.FLOWER -> {
-                fillPaint.color = Color.parseColor("#E91E63")
-                for (i in 0 until 5) {
-                    val angle = Math.toRadians((i * 72).toDouble())
-                    val px = x + (Math.cos(angle) * 10).toFloat()
-                    val py = y + (Math.sin(angle) * 10).toFloat()
-                    canvas.drawCircle(px, py, 8f, fillPaint)
-                    canvas.drawCircle(px, py, 8f, strokePaint)
-                }
-                fillPaint.color = Color.YELLOW
-                canvas.drawCircle(x, y, 5f, fillPaint)
-                canvas.drawCircle(x, y, 5f, strokePaint)
-            }
+            
+            val rect = RectF(cx - drawW / 2f, cy - drawH / 2f, cx + drawW / 2f, cy + drawH / 2f)
+            canvas.drawBitmap(bitmap, null, rect, Paint().apply { isFilterBitmap = true; isAntiAlias = true })
+        } else {
+            // Если картинки нет - рисуем красную заглушку
+            val errorPaint = Paint().apply { color = Color.RED; style = Paint.Style.STROKE; strokeWidth = 2f }
+            val rect = RectF(cx - maxWidth / 2f, cy - maxHeight / 2f, cx + maxWidth / 2f, cy + maxHeight / 2f)
+            canvas.drawRect(rect, errorPaint)
+            
+            val textPaint = Paint().apply { color = Color.RED; textSize = 10f; textAlign = Paint.Align.CENTER }
+            canvas.drawText("Нет картинки:", cx, cy - 5f, textPaint)
+            canvas.drawText("$folder/$fileName", cx, cy + 10f, textPaint)
         }
     }
 
