@@ -9,9 +9,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +45,6 @@ fun CategoryScreen(
             )
         }
     ) { padding ->
-        // Используем LazyVerticalGrid для оптимизации и устранения лагов при скролле
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(16.dp),
@@ -72,30 +73,54 @@ private fun TaskTile(
 ) {
     Box(
         modifier = modifier
-            .height(120.dp)
+            .height(130.dp) // Чуть увеличили высоту для иконок
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick)
             .padding(12.dp)
     ) {
+        // Иконка телефона в правом верхнем углу, если доступен интерактив
+        if (task.isInteractive) {
+            Icon(
+                imageVector = Icons.Default.PhoneAndroid,
+                contentDescription = "Можно играть на телефоне",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(20.dp)
+            )
+        }
+
         Column(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = task.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 18.sp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(end = if (task.isInteractive) 24.dp else 0.dp)
+            ) {
+                if (task.emoji.isNotEmpty()) {
+                    Text(
+                        text = task.emoji,
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                }
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 18.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
         }
