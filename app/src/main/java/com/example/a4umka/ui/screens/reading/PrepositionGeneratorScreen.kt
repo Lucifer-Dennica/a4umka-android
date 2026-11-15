@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
@@ -30,7 +31,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrepositionGeneratorScreen(onBack: () -> Unit) {
+fun PrepositionGeneratorScreen(
+    onBack: () -> Unit,
+    onPlayInteractive: (PrepositionConfig) -> Unit // <-- Добавлен коллбэк
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -38,7 +42,6 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(PrepositionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     
-    // Триггер для обновления превью без изменения настроек (кнопка "Обновить")
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -120,7 +123,6 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Заданий на листе:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // ДОБАВИЛИ ВАРИАНТЫ 8 И 9
                     listOf(4, 6, 8, 9).forEach { count ->
                         FilterChip(
                             selected = config.tasksCount == count,
@@ -134,6 +136,19 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
                     Text("Добавить вторым листом ответы")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Кнопка запуска интерактива
+                Button(
+                    onClick = { onPlayInteractive(config) },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Решать на телефоне")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
