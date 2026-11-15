@@ -86,13 +86,15 @@ object PrepositionPdfDrawer {
         }
         canvas.drawText(subText, PAGE_WIDTH / 2f, 110f, subPaint)
 
-        // Сетка задач (2 колонки)
-        val cols = 2
-        val rows = (tasks.size + 1) / 2
+        // ДИНАМИЧЕСКАЯ СЕТКА (3 колонки для 8 и 9 заданий, иначе 2)
+        val cols = if (tasks.size > 6) 3 else 2
+        val rows = (tasks.size + cols - 1) / cols
         val tableTop = 140f
         val availableHeight = PAGE_HEIGHT - tableTop - 60f
         val cellWidth = (PAGE_WIDTH - margin * 2) / cols
         val cellHeight = availableHeight / rows
+
+        val isSmall = cols == 3 // Флаг для уменьшения шрифтов и картинок
 
         val cardBgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
         val cardBorderPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
@@ -118,60 +120,60 @@ object PrepositionPdfDrawer {
             canvas.drawText("${i + 1}", left + 20f, top + 25f, numPaint)
 
             val cx = left + (right - left) / 2f
-            val cy = top + 60f // Центр для картинки
+            val cy = top + (if (isSmall) 50f else 60f)
 
             when (config.taskType) {
                 PrepositionTaskType.FIND_WORD -> {
-                    drawAssetImage(canvas, context, task.scene.folderName, task.preposition.fileName, cx, cy, 100f, 100f)
+                    drawAssetImage(canvas, context, task.scene.folderName, task.preposition.fileName, cx, cy, if (isSmall) 60f else 100f, if (isSmall) 60f else 100f)
                     
-                    val qPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                    canvas.drawText(task.question, cx, cy + 65f, qPaint)
+                    val qPaint = Paint().apply { isAntiAlias = true; textSize = if (isSmall) 12f else 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText(task.question, cx, cy + (if (isSmall) 45f else 65f), qPaint)
 
-                    val optionPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; textAlign = Paint.Align.CENTER }
+                    val optionTextSize = if (isSmall) 9f else 12f
+                    val optionPaint = Paint().apply { isAntiAlias = true; textSize = optionTextSize; color = Color.BLACK; textAlign = Paint.Align.CENTER }
                     val bubblePaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
                     val bubbleBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
 
-                    var optionY = cy + 80f
-                    val boxWidth = right - left - 40f
-                    val boxHeight = 22f
+                    var optionY = cy + (if (isSmall) 55f else 80f)
+                    val boxWidth = right - left - (if (isSmall) 10f else 40f)
+                    val boxHeight = if (isSmall) 16f else 22f
 
                     task.options.forEach { option ->
-                        val rect = RectF(left + 20f, optionY, left + 20f + boxWidth, optionY + boxHeight)
-                        canvas.drawRoundRect(rect, 11f, 11f, bubblePaint)
-                        canvas.drawRoundRect(rect, 11f, 11f, bubbleBorder)
-                        canvas.drawText(option, cx, optionY + 15f, optionPaint)
+                        val rect = RectF(cx - boxWidth / 2f, optionY, cx + boxWidth / 2f, optionY + boxHeight)
+                        canvas.drawRoundRect(rect, boxHeight / 2f, boxHeight / 2f, bubblePaint)
+                        canvas.drawRoundRect(rect, boxHeight / 2f, boxHeight / 2f, bubbleBorder)
+                        // Центрируем текст по вертикали
+                        val textY = optionY + (boxHeight / 2f) - ((optionPaint.descent() + optionPaint.ascent()) / 2f)
+                        canvas.drawText(option, cx, textY, optionPaint)
                         optionY += boxHeight + 4f
                     }
                 }
                 PrepositionTaskType.FIND_PICTURE -> {
-                    val qPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                    canvas.drawText(task.correctAnswer.replaceFirstChar { it.uppercase() }, cx, top + 45f, qPaint)
+                    val qPaint = Paint().apply { isAntiAlias = true; textSize = if (isSmall) 11f else 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText(task.correctAnswer.replaceFirstChar { it.uppercase() }, cx, top + 40f, qPaint)
 
-                    val spacing = (right - left - 20f) / 3f
-                    val startX = left + 10f + spacing / 2f
+                    val spacing = (right - left - 10f) / 3f
+                    val startX = left + 5f + spacing / 2f
 
                     val choices = listOf(task.preposition) + task.wrongPrepositions
                     val shuffledChoices = choices.shuffled()
 
                     for (j in 0 until 3) {
                         val x = startX + j * spacing
-                        val rect = RectF(x - 35f, top + 65f, x + 35f, top + 125f)
+                        val rectH = if (isSmall) 45f else 60f
+                        val rect = RectF(x - (spacing/2f - 2f), top + 55f, x + (spacing/2f - 2f), top + 55f + rectH)
                         
                         canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
                         canvas.drawRoundRect(rect, 8f, 8f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
 
-                        drawAssetImage(canvas, context, task.scene.folderName, shuffledChoices[j].fileName, x, top + 95f, 60f, 60f)
+                        drawAssetImage(canvas, context, task.scene.folderName, shuffledChoices[j].fileName, x, top + 55f + rectH/2f, if (isSmall) 40f else 55f, if (isSmall) 40f else 55f)
                     }
                 }
                 PrepositionTaskType.DRAW_SELF -> {
-                    val qPaint = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                    canvas.drawText("Нарисуй ${task.scene.targetName} ${task.correctAnswer}", cx, top + 45f, qPaint)
+                    val qPaint = Paint().apply { isAntiAlias = true; textSize = if (isSmall) 11f else 13f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText("Нарисуй ${task.scene.targetName} ${task.correctAnswer}", cx, top + 40f, qPaint)
 
-                    // В режиме "Нарисуй сам" мы показываем только фон (без предлога)
-                    // Для этого можно использовать картинку предлога "на", но перекрыть верхнюю часть,
-                    // либо просто дать ребенку пустую рамку. Оставим пустую рамку с базовым объектом.
-                    // В идеале нужна отдельная картинка с пустой базой, но для простоты дадим рамку.
-                    val drawRect = RectF(left + 20f, top + 60f, right - 20f, bottom - 10f)
+                    val drawRect = RectF(left + 10f, top + 55f, right - 10f, bottom - 10f)
                     val dashPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
                     canvas.drawRoundRect(drawRect, 8f, 8f, dashPaint)
                 }
@@ -204,14 +206,14 @@ object PrepositionPdfDrawer {
             val rect = RectF(cx - drawW / 2f, cy - drawH / 2f, cx + drawW / 2f, cy + drawH / 2f)
             canvas.drawBitmap(bitmap, null, rect, Paint().apply { isFilterBitmap = true; isAntiAlias = true })
         } else {
-            // Если картинки нет - рисуем красную заглушку
+            // Заглушка, если картинку забыли положить
             val errorPaint = Paint().apply { color = Color.RED; style = Paint.Style.STROKE; strokeWidth = 2f }
             val rect = RectF(cx - maxWidth / 2f, cy - maxHeight / 2f, cx + maxWidth / 2f, cy + maxHeight / 2f)
             canvas.drawRect(rect, errorPaint)
             
-            val textPaint = Paint().apply { color = Color.RED; textSize = 10f; textAlign = Paint.Align.CENTER }
+            val textPaint = Paint().apply { color = Color.RED; textSize = 8f; textAlign = Paint.Align.CENTER }
             canvas.drawText("Нет картинки:", cx, cy - 5f, textPaint)
-            canvas.drawText("$folder/$fileName", cx, cy + 10f, textPaint)
+            canvas.drawText("$folder/$fileName", cx, cy + 5f, textPaint)
         }
     }
 
