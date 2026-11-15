@@ -38,7 +38,7 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(PrepositionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     
-    // Триггер для обновления превью без изменения настроек
+    // Триггер для обновления превью без изменения настроек (кнопка "Обновить")
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -120,7 +120,8 @@ fun PrepositionGeneratorScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Заданий на листе:", style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(4, 6).forEach { count ->
+                    // ДОБАВИЛИ ВАРИАНТЫ 8 И 9
+                    listOf(4, 6, 8, 9).forEach { count ->
                         FilterChip(
                             selected = config.tasksCount == count,
                             onClick = { config = config.copy(tasksCount = count) },
