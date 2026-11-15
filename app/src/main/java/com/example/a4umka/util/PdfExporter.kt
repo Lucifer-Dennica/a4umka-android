@@ -160,6 +160,12 @@ object PdfExporter {
         return saveDocument(context, document, "prepositions_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportSoundScheme(context: Context, config: SoundSchemeConfig): String? {
+        val document = PdfDocument()
+        SoundSchemePdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "sound_scheme_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
