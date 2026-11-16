@@ -82,7 +82,6 @@ fun SoundAutomationGeneratorScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                // Блок 1: Выбор звука (скрываем, если выбраны пары)
                 if (config.mode != SpeechMode.PAIRS) {
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -125,7 +124,6 @@ fun SoundAutomationGeneratorScreen(
             }
 
             item {
-                // Блок 2: Что напечатать
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -156,8 +154,7 @@ fun SoundAutomationGeneratorScreen(
                             title = "Где живёт звук?",
                             desc = "12 картинок, ребёнок сам отмечает место звука + ответы",
                             selected = config.mode == SpeechMode.WHERE_IS_SOUND,
-                            onClick = { config = config.copy(mode = SpeechMode.WHERE_IS_SOUND) },
-                            enabled = false // Пока не реализовано
+                            onClick = { config = config.copy(mode = SpeechMode.WHERE_IS_SOUND) }
                         )
                         ModeRadioButton(
                             title = "Фразы и чистоговорки",
