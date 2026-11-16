@@ -48,7 +48,7 @@ object AppContent {
         TaskItem("custom_crossword", "Кроссворд из своих слов", "Создай кроссворд с текстовыми вопросами", "🛠️", isInteractive = true),
         TaskItem("prepositions", "Предлоги в картинках", "Учимся говорить: на, под, в, за и другие", "🧭", isInteractive = true),
         TaskItem("sound_scheme", "Звуко-буквенный анализ", "Классическая звуковая схема слова по цветам", "🎨"),
-        TaskItem("sound_automation", "Автоматизация звуков", "Логопедические листы: слоги, слова, фразы", "🦁", isInteractive = true)
+        TaskItem("sound_automation", "Автоматизация звуков", "Логопедические листы: слоги, слова, фразы", "🦁", isInteractive = false)
     )
 
     private val handTasks = listOf(
