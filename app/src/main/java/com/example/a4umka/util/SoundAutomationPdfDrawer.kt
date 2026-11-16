@@ -8,10 +8,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
-import com.example.a4umka.data.SoundAutomationConfig
-import com.example.a4umka.data.SoundAutomationData
-import com.example.a4umka.data.SoundItem
-import com.example.a4umka.data.SpeechMode
+import com.example.a4umka.data.*
 
 object SoundAutomationPdfDrawer {
     const val PAGE_WIDTH = 595f
@@ -19,6 +16,16 @@ object SoundAutomationPdfDrawer {
 
     fun generatePreview(config: SoundAutomationConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
+
+        if (config.mode == SpeechMode.PAIRS) {
+            val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bmp)
+            canvas.drawColor(Color.parseColor("#FAFAFA"))
+            drawPairsPage(canvas, config)
+            pages.add(bmp)
+            return pages
+        }
+
         val data = SoundAutomationData.getData(config.sound)
 
         if (config.mode == SpeechMode.KIT || config.mode == SpeechMode.SYLLABLES) {
@@ -49,7 +56,6 @@ object SoundAutomationPdfDrawer {
     }
 
     fun drawDocument(document: PdfDocument, config: SoundAutomationConfig, context: Context) {
-        val data = SoundAutomationData.getData(config.sound)
         var pageNum = 1
 
         fun startNewPage(): PdfDocument.Page {
@@ -58,6 +64,15 @@ object SoundAutomationPdfDrawer {
             page.canvas.drawColor(Color.parseColor("#FAFAFA"))
             return page
         }
+
+        if (config.mode == SpeechMode.PAIRS) {
+            val page = startNewPage()
+            drawPairsPage(page.canvas, config)
+            document.finishPage(page)
+            return
+        }
+
+        val data = SoundAutomationData.getData(config.sound)
 
         if (config.mode == SpeechMode.KIT || config.mode == SpeechMode.SYLLABLES) {
             val page = startNewPage()
@@ -157,7 +172,7 @@ object SoundAutomationPdfDrawer {
         }
     }
 
-    private fun drawWordsPage(canvas: Canvas, config: SoundAutomationConfig, data: com.example.a4umka.data.SoundData) {
+    private fun drawWordsPage(canvas: Canvas, config: SoundAutomationConfig, data: SoundData) {
         drawHeader(canvas, config, "Звук ${config.sound.letter}: слова")
         val margin = 40f
         var currentY = 130f
@@ -211,6 +226,74 @@ object SoundAutomationPdfDrawer {
                 canvas.drawCircle(startX + i * circleSpacing, currentY + 30f, circleRadius, circlePaint)
             }
             currentY += 90f
+        }
+    }
+
+    private fun drawPairsPage(canvas: Canvas, config: SoundAutomationConfig) {
+        val pairData = SoundAutomationData.getPairData(config.pair)
+        val title = "Различаем: ${config.pair.title}"
+        
+        val margin = 40f
+        val textColor = Color.parseColor("#33691E")
+        
+        val headerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
+        val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
+        canvas.drawText("Имя:", margin, 40f, headerPaint)
+        canvas.drawLine(margin + 30f, 42f, margin + 150f, 42f, linePaint)
+        canvas.drawText("Дата:", PAGE_WIDTH - 140f, 40f, headerPaint)
+        canvas.drawLine(PAGE_WIDTH - 100f, 42f, PAGE_WIDTH - margin, 42f, linePaint)
+
+        val titlePaint = Paint().apply { 
+            isAntiAlias = true; textSize = 28f; color = textColor; 
+            typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER 
+        }
+        canvas.drawText(title, PAGE_WIDTH / 2f, 80f, titlePaint)
+
+        val subPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
+        canvas.drawText("Назови пары слов и обведи тот звук, который услышал", PAGE_WIDTH / 2f, 100f, subPaint)
+
+        val blockBgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+        val blockBorderPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
+        val blockTitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+        
+        var currentY = 140f
+
+        // 1. Слоги
+        canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 80f), 10f, 10f, blockBgPaint)
+        canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 80f), 10f, 10f, blockBorderPaint)
+        canvas.drawText("1. Слоги", margin + 10f, currentY + 20f, blockTitlePaint)
+
+        val sylTextPaint = Paint().apply { isAntiAlias = true; textSize = 22f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val circlePaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
+        val sylWidth = (PAGE_WIDTH - margin * 2) / 4
+        pairData.syllables.forEachIndexed { i, pair ->
+            val cx = margin + i * sylWidth + sylWidth / 2
+            canvas.drawText("${pair.first} - ${pair.second}", cx, currentY + 45f, sylTextPaint)
+            canvas.drawCircle(cx - 10f, currentY + 65f, 4f, circlePaint)
+            canvas.drawCircle(cx + 10f, currentY + 65f, 4f, circlePaint)
+        }
+        currentY += 100f
+
+        // 2. Слова
+        canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 180f), 10f, 10f, blockBgPaint)
+        canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 180f), 10f, 10f, blockBorderPaint)
+        canvas.drawText("2. Слова", margin + 10f, currentY + 20f, blockTitlePaint)
+
+        val wordTextPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val emojiPaint = Paint().apply { textSize = 30f; textAlign = Paint.Align.CENTER }
+        
+        pairData.words.forEachIndexed { i, triple ->
+            val col = i % 2
+            val row = i / 2
+            val cx = margin + col * ((PAGE_WIDTH - margin*2)/2) + (PAGE_WIDTH - margin*2)/4
+            val cy = currentY + 60f + row * 60f
+
+            canvas.drawText(triple.third, cx, cy - 10f, emojiPaint)
+            canvas.drawText("${triple.first} - ${triple.second}", cx, cy + 15f, wordTextPaint)
+            
+            // Рисуем кружочки под словами для отметки
+            canvas.drawCircle(cx - 25f, cy + 30f, 4f, circlePaint)
+            canvas.drawCircle(cx + 25f, cy + 30f, 4f, circlePaint)
         }
     }
 }
