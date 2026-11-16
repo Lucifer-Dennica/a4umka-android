@@ -226,7 +226,6 @@ object SoundAutomationData {
 
     private val pairsData = mapOf(
         SoundPair.S_SH to PairData(
-            // Убрали пробелы вокруг тире
             syllables = listOf("СА-ША", "СО-ШО", "СУ-ШУ", "СЫ-ШИ", "АС-АШ", "ОС-ОШ", "УС-УШ", "АСА-АША"),
             words = listOf(
                 PairWord("ГРУША", "🍐", "Ш"), PairWord("КОШКА", "🐈", "Ш"), PairWord("КОМПАС", "🧭", "С"), PairWord("ПОДСОЛНУХ", "🌻", "С"),
