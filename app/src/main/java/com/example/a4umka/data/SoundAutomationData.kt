@@ -25,7 +25,7 @@ object SoundAutomationData {
             Pair("АР", 1), Pair("ОР", 1), Pair("УР", 1), Pair("ЫР", 1),
             Pair("АРА", 1), Pair("ОРО", 1), Pair("УРУ", 1), Pair("ЫРЫ", 1),
             Pair("ТРА", 1), Pair("КРО", 1), Pair("БРУ", 1), Pair("ВРЫ", 1),
-            Pair("РА-РО-РУ", 0), Pair("РО-РУ-РЫ", 0)
+            Pair("А РО РУ", 0), Pair("О РУ РЫ", 0) // Убрали дефисы, поставили пробелы
         ),
         wordsStart = listOf(
             AutoWord("РАК", "🦞", 0, 0), AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("РУКА", "✋", 0, 0), AutoWord("РАКУШКА", "🐚", 0, 0)
@@ -74,7 +74,7 @@ object SoundAutomationData {
             Pair("АЛ", 1), Pair("ОЛ", 1), Pair("УЛ", 1), Pair("ЫЛ", 1),
             Pair("АЛА", 1), Pair("ОЛО", 1), Pair("УЛУ", 1), Pair("ЫЛЫ", 1),
             Pair("КЛА", 1), Pair("СЛО", 1), Pair("ПЛУ", 1), Pair("БЛЫ", 1),
-            Pair("ЛА-ЛО-ЛУ", 0), Pair("ЛО-ЛУ-ЛЫ", 0)
+            Pair("ЛА ЛО ЛУ", 0), Pair("ЛО ЛУ ЛЫ", 0)
         ),
         wordsStart = listOf(
             AutoWord("ЛУК", "🧅", 0, 0), AutoWord("ЛАМПА", "💡", 0, 0), AutoWord("ЛОЖКА", "🥄", 0, 0), AutoWord("ЛОДКА", "🛶", 0, 0)
@@ -106,7 +106,7 @@ object SoundAutomationData {
             Pair("АС", 1), Pair("ОС", 1), Pair("УС", 1), Pair("ЫС", 1),
             Pair("АСА", 1), Pair("ОСО", 1), Pair("УСУ", 1), Pair("ЫСЫ", 1),
             Pair("СПА", 0), Pair("СТО", 0), Pair("СКУ", 0), Pair("СВЫ", 0),
-            Pair("СА-СО-СУ", 0), Pair("СО-СУ-СЫ", 0)
+            Pair("СА СО СУ", 0), Pair("СО СУ СЫ", 0)
         ),
         wordsStart = listOf(
             AutoWord("СОБАКА", "🐕", 0, 0), AutoWord("СЛОН", "🐘", 0, 0), AutoWord("СЫР", "🧀", 0, 0), AutoWord("САМОЛЁТ", "✈️", 0, 0)
@@ -138,7 +138,7 @@ object SoundAutomationData {
             Pair("АЗ", 1), Pair("ОЗ", 1), Pair("УЗ", 1), Pair("ЫЗ", 1),
             Pair("АЗА", 1), Pair("ОЗО", 1), Pair("УЗУ", 1), Pair("ЫЗЫ", 1),
             Pair("ЗВА", 0), Pair("ЗДО", 0), Pair("ЗМУ", 0), Pair("ЗБЫ", 0),
-            Pair("ЗА-ЗО-ЗУ", 0), Pair("ЗО-ЗУ-ЗЫ", 0)
+            Pair("ЗА ЗО ЗУ", 0), Pair("ЗО ЗУ ЗЫ", 0)
         ),
         wordsStart = listOf(
             AutoWord("ЗАМОК", "🏰", 0, 0), AutoWord("ЗАЯЦ", "🐇", 0, 0), AutoWord("ЗУБЫ", "🦷", 0, 0), AutoWord("ЗОНТ", "☂️", 0, 0)
@@ -169,7 +169,7 @@ object SoundAutomationData {
             Pair("АШ", 1), Pair("ОШ", 1), Pair("УШ", 1), Pair("ЫШ", 1),
             Pair("АША", 1), Pair("ОШО", 1), Pair("УШУ", 1), Pair("ЫШИ", 1),
             Pair("ШПА", 0), Pair("ШТО", 0), Pair("ШКУ", 0), Pair("ШВЫ", 0),
-            Pair("ША-ШО-ШУ", 0), Pair("ШО-ШУ-ШИ", 0)
+            Pair("ША ШО ШУ", 0), Pair("ШО ШУ ШИ", 0)
         ),
         wordsStart = listOf(
             AutoWord("ШАР", "🎈", 0, 0), AutoWord("ШАПКА", "🧢", 0, 0), AutoWord("ШУБА", "🧥", 0, 0), AutoWord("ШКОЛА", "🏫", 0, 0)
@@ -200,7 +200,7 @@ object SoundAutomationData {
             Pair("АЖ", 1), Pair("ОЖ", 1), Pair("УЖ", 1), Pair("ИЖ", 1),
             Pair("АЖА", 1), Pair("ОЖО", 1), Pair("УЖУ", 1), Pair("ИЖИ", 1),
             Pair("ЖБА", 0), Pair("ЖДО", 0), Pair("ЖМУ", 0), Pair("ЖВЫ", 0),
-            Pair("ЖА-ЖО-ЖУ", 0), Pair("ЖО-ЖУ-ЖИ", 0)
+            Pair("ЖА ЖО ЖУ", 0), Pair("ЖО ЖУ ЖИ", 0)
         ),
         wordsStart = listOf(
             AutoWord("ЖУК", "🪲", 0, 0), AutoWord("ЖАБА", "🐸", 0, 0), AutoWord("ЖИРАФ", "🦒", 0, 0), AutoWord("ЖЁЛУДЬ", "🌰", 0, 0)
