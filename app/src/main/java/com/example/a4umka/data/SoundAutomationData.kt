@@ -12,13 +12,10 @@ data class SoundData(
 
 data class PairData(
     val syllables: List<Pair<String, String>>,
-    val words: List<Triple<String, String, String>> // Левое слово, правое слово, эмодзи
+    val words: List<Triple<String, String, String>>
 )
 
 object SoundAutomationData {
-    // ... (существующие данные rData, lData, sData, zData, shData, zhData остаются без изменений, 
-    // я оставлю их здесь для полноты файла, как в предыдущем сообщении)
-
     private val rData = SoundData(
         syllables = listOf("РА", "РО", "РУ", "РЫ", "АР", "ОР", "УР", "ЫР", "АРА", "ОРО", "УРУ", "ЫРЫ", "ТРА", "КРО", "БРУ", "ВРЫ", "РА-РО-РУ", "РО-РУ-РЫ").map { SoundItem(it) },
         wordsStart = listOf(SoundItem("РАК", "🦞"), SoundItem("РЫБА", "🐟"), SoundItem("РУКА", "✋"), SoundItem("РОЗА", "🌹"), SoundItem("РАДУГА", "🌈"), SoundItem("РУБАШКА", "👕")),
