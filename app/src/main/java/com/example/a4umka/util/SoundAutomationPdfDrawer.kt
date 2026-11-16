@@ -146,31 +146,26 @@ object SoundAutomationPdfDrawer {
         val boxPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
         val boxBorder = Paint().apply { color = borderColor; style = Paint.Style.STROKE; strokeWidth = 1f }
         
-        // Имя
         canvas.drawRoundRect(RectF(margin, 25f, margin + 120f, 45f), 5f, 5f, boxPaint)
         canvas.drawRoundRect(RectF(margin, 25f, margin + 120f, 45f), 5f, 5f, boxBorder)
         canvas.drawText("Имя:", margin + 5f, 38f, Paint().apply { textSize = textSize; color = Color.GRAY; isAntiAlias = true })
         canvas.drawLine(margin + 30f, 40f, margin + 110f, 40f, Paint().apply { color = Color.LTGRAY; strokeWidth = 1f })
 
-        // Звук
         val centerRect = RectF(PAGE_WIDTH/2f - 60f, 25f, PAGE_WIDTH/2f + 60f, 45f)
         canvas.drawRoundRect(centerRect, 5f, 5f, Paint().apply { color = Color.parseColor("#C8E6C9"); style = Paint.Style.FILL })
         canvas.drawText("Звук ${config.sound.letter}", PAGE_WIDTH/2f - 20f, 38f, Paint().apply { textSize = textSize; color = Color.DKGRAY; isAntiAlias = true; typeface = Typeface.DEFAULT_BOLD })
 
-        // Дата
         canvas.drawRoundRect(RectF(PAGE_WIDTH - margin - 120f, 25f, PAGE_WIDTH - margin, 45f), 5f, 5f, boxPaint)
         canvas.drawRoundRect(RectF(PAGE_WIDTH - margin - 120f, 25f, PAGE_WIDTH - margin, 45f), 5f, 5f, boxBorder)
         canvas.drawText("Дата:", PAGE_WIDTH - margin - 115f, 38f, Paint().apply { textSize = textSize; color = Color.GRAY; isAntiAlias = true })
         canvas.drawLine(PAGE_WIDTH - margin - 85f, 40f, PAGE_WIDTH - margin - 10f, 40f, Paint().apply { color = Color.LTGRAY; strokeWidth = 1f })
 
-        // Заголовок
         val titlePaint = Paint().apply { 
             isAntiAlias = true; textSize = 28f; color = greenCircleColor; 
             typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER 
         }
         canvas.drawText(title, PAGE_WIDTH / 2f, 80f, titlePaint)
 
-        // Подзаголовок
         val subPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
         canvas.drawText(sub, PAGE_WIDTH / 2f, 100f, subPaint)
     }
@@ -200,15 +195,11 @@ object SoundAutomationPdfDrawer {
         drawHeader(canvas, config, "Звук ${config.sound.letter}: слоги", "Прочитай или повтори за взрослым каждый слог три раза. После каждого раза закрась кружок")
         
         val margin = 40f
-        val startY = 130f
+        var currentY = 130f
         
-        val blocks = listOf(
-            "Слог в начале" to syllables.subList(0, 4),
-            "Слог в конце" to syllables.subList(4, 8),
-            "Между гласными" to syllables.subList(8, 12),
-            "С другим согласным" to syllables.subList(12, 16),
-            "Цепочки" to syllables.subList(16, 18)
-        )
+        val blockTitles = listOf("Слог в начале", "Слог в конце", "Между гласными", "С другим согласным", "Цепочки")
+        val startIndexes = listOf(0, 4, 8, 12, 16)
+        val endIndexes = listOf(4, 8, 12, 16, 18)
 
         val blockBgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
         val blockBorderPaint = Paint().apply { color = borderColor; style = Paint.Style.STROKE; strokeWidth = 1.5f }
@@ -224,14 +215,17 @@ object SoundAutomationPdfDrawer {
         val highlightPaint = Paint(textPaint).apply { color = highlightColor }
         val circlePaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
 
-        var currentY = startY
-
-        for (bIndex in blocks.indices) {
-            val title = blocks[bIndex].first
-            val items = blocks[bIndex].second
-            if (items.isEmpty()) continue
+        for (bIndex in blockTitles.indices) {
+            val title = blockTitles[bIndex]
+            val startIdx = startIndexes[bIndex]
+            val endIdx = endIndexes[bIndex]
             
-            val isTwoRows = items.size > 4
+            if (startIdx >= syllables.size) continue
+            val actualEndIdx = if (endIdx > syllables.size) syllables.size else endIdx
+            val itemsCount = actualEndIdx - startIdx
+            if (itemsCount <= 0) continue
+            
+            val isTwoRows = itemsCount > 4
             val blockHeight = if (isTwoRows) 115f else 80f
             
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBgPaint)
@@ -243,10 +237,10 @@ object SoundAutomationPdfDrawer {
 
             val itemWidth = (PAGE_WIDTH - margin * 2 - 20f) / 4
             
-            for (iIndex in items.indices) {
-                val item = items[iIndex]
-                val col = iIndex % 4
-                val row = iIndex / 4
+            for (iIdx in 0 until itemsCount) {
+                val item = syllables[startIdx + iIdx]
+                val col = iIdx % 4
+                val row = iIdx / 4
                 
                 val cardLeft = margin + 10f + col * itemWidth
                 val cardTop = currentY + 30f + row * 55f
