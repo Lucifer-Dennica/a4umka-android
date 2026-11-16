@@ -31,7 +31,7 @@ object SoundAutomationData {
             AutoWord("РАК", "🦞", 0, 0), AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("РУКА", "✋", 0, 0), AutoWord("РАКУШКА", "🐚", 0, 0)
         ),
         wordsMiddle = listOf(
-            AutoWord("ЗЕБРА", "🦓", 3, 1), // Исправлен индекс
+            AutoWord("ЗЕБРА", "🦓", 3, 1), 
             AutoWord("ШОРТЫ", "🩳", 2, 1), 
             AutoWord("ШАРФ", "🧣", 2, 1), 
             AutoWord("ГРУША", "🍐", 1, 1)
@@ -54,7 +54,7 @@ object SoundAutomationData {
         ),
         whereIsSound = listOf(
             AutoWord("ПОМИДОР", "🍅", 6, 2), 
-            AutoWord("КОМПЬЮТЕР", "💻", 8, 2), // Исправлен индекс
+            AutoWord("КОМПЬЮТЕР", "💻", 8, 2), 
             AutoWord("ДРАКОН", "🐉", 1, 1), 
             AutoWord("РАДУГА", "🌈", 0, 0),
             AutoWord("БОБР", "🦫", 3, 2), 
@@ -62,7 +62,7 @@ object SoundAutomationData {
             AutoWord("РОЗА", "🌹", 0, 0), 
             AutoWord("РАК", "🦞", 0, 0),
             AutoWord("РУЧКА", "🖊️", 0, 0), 
-            AutoWord("СВЕТОФОР", "🚦", 7, 2), // Исправлен индекс
+            AutoWord("СВЕТОФОР", "🚦", 7, 2), 
             AutoWord("КРАБ", "🦀", 1, 1), 
             AutoWord("КОРОНА", "👑", 2, 1)
         )
@@ -80,7 +80,7 @@ object SoundAutomationData {
             AutoWord("ЛУК", "🧅", 0, 0), AutoWord("ЛАМПА", "💡", 0, 0), AutoWord("ЛОЖКА", "🥄", 0, 0), AutoWord("ЛОДКА", "🛶", 0, 0)
         ),
         wordsMiddle = listOf(
-            AutoWord("ПИЛА", "🪚", 2, 1), AutoWord("ЮЛА", "🪀", 1, 1), AutoWord("КУКЛА", "🪆", 2, 1), AutoWord("ХАЛАТ", "🥼", 2, 1)
+            AutoWord("ПИЛА", "🪚", 2, 1), AutoWord("ЮЛА", "🪀", 1, 1), AutoWord("КУКЛА", "🪆", 3, 1), AutoWord("ХАЛАТ", "🥼", 2, 1)
         ),
         wordsEnd = listOf(
             AutoWord("СТОЛ", "🪵", 3, 2), AutoWord("СТУЛ", "🪑", 3, 2), AutoWord("ФУТБОЛ", "⚽", 5, 2), AutoWord("ОСЁЛ", "🫏", 3, 2)
@@ -95,7 +95,7 @@ object SoundAutomationData {
         ),
         whereIsSound = listOf(
             AutoWord("ЛОПАТА", "🪏", 0, 0), AutoWord("ЮЛА", "🪀", 1, 1), AutoWord("СТОЛ", "🪵", 3, 2), AutoWord("ПАЛАТКА", "⛺", 3, 1),
-            AutoWord("ЛУНА", "🌙", 0, 0), AutoWord("КУКЛА", "🪆", 2, 1), AutoWord("ДЯТЕЛ", "🐦", 3, 2), AutoWord("ЛЫЖИ", "🎿", 0, 0),
+            AutoWord("ЛУНА", "🌙", 0, 0), AutoWord("КУКЛА", "🪆", 3, 1), AutoWord("ДЯТЕЛ", "🐦", 3, 2), AutoWord("ЛЫЖИ", "🎿", 0, 0),
             AutoWord("МОЛОКО", "🥛", 2, 1), AutoWord("ЛОШАДЬ", "🐎", 0, 0), AutoWord("ОСЁЛ", "🫏", 3, 2), AutoWord("БУЛКА", "🥖", 2, 1)
         )
     )
