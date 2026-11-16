@@ -98,6 +98,9 @@ object SoundAutomationData {
     private val zData = SoundData(
         syllables = listOf(
             SoundItem("ЗА"), SoundItem("ЗО"), SoundItem("ЗУ"), SoundItem("ЗЫ"),
+            SoundItem("АЗ"), SoundItem("ОЗ"), SoundItem("УЗ"), SoundItem("ЫЗ"),
+            SoundItem("АЗА"), SoundItem("ОЗО"), SoundItem("УЗУ"), SoundItem("ЫЗЫ"),
+            SoundItem("ЗВА"), SoundItem("ЗДО"), SoundItem("ЗМУ"), SoundItem("ЗБЫ"),
             SoundItem("ЗА-ЗО-ЗУ"), SoundItem("ЗО-ЗУ-ЗЫ")
         ),
         wordsStart = listOf(
@@ -108,7 +111,10 @@ object SoundAutomationData {
             SoundItem("РОЗА", "🌹"), SoundItem("КОЗА", "🐐"), SoundItem("ВАЗА", "🏺"),
             SoundItem("ГРОЗА", "⛈️"), SoundItem("МЕДУЗА", "🪼"), SoundItem("БИЗОН", "🦬")
         ),
-        wordsEnd = listOf(),
+        wordsEnd = listOf(
+            SoundItem("ТАЗ", "🥣"), SoundItem("ГЛАЗ", "👁️"), SoundItem("АРБУЗ", "🍉"),
+            SoundItem("ПАРОВОЗ", "🚂"), SoundItem("СТРЕКОЗА", "🦟"), SoundItem("МЕДУЗА", "🪼")
+        ),
         phrases = listOf(
             "За-за-за — у нас идёт коза",
             "Зу-зу-зу — мы поймали стрекозу",
@@ -147,6 +153,9 @@ object SoundAutomationData {
     private val zhData = SoundData(
         syllables = listOf(
             SoundItem("ЖА"), SoundItem("ЖО"), SoundItem("ЖУ"), SoundItem("ЖИ"),
+            SoundItem("АЖ"), SoundItem("ОЖ"), SoundItem("УЖ"), SoundItem("ИЖ"),
+            SoundItem("АЖА"), SoundItem("ОЖО"), SoundItem("УЖУ"), SoundItem("ИЖИ"),
+            SoundItem("ЖБА"), SoundItem("ЖДО"), SoundItem("ЖМУ"), SoundItem("ЖВЫ"),
             SoundItem("ЖА-ЖО-ЖУ"), SoundItem("ЖО-ЖУ-ЖИ")
         ),
         wordsStart = listOf(
@@ -157,7 +166,10 @@ object SoundAutomationData {
             SoundItem("ЛУЖА", "💧"), SoundItem("НОЖИ", "🔪"), SoundItem("ЕЖИ", "🦔"),
             SoundItem("ОДЕЖДА", "👗"), SoundItem("СНЕЖИНКА", "❄️"), SoundItem("ПИЖАМА", "🩳")
         ),
-        wordsEnd = listOf(),
+        wordsEnd = listOf(
+            SoundItem("НОЖ", "🔪"), SoundItem("ЁЖ", "🦔"), SoundItem("ЧИЖ", "🐦"),
+            SoundItem("БАГАЖ", "🧳"), SoundItem("СТРИЖ", "🐦"), SoundItem("ПЛЯЖ", "🏖️")
+        ),
         phrases = listOf(
             "Жа-жа-жа — есть иголки у ежа",
             "Жу-жу-жу — молоко дадим ежу",
