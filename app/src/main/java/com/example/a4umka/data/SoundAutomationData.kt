@@ -31,7 +31,10 @@ object SoundAutomationData {
             AutoWord("РАК", "🦞", 0, 0), AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("РУКА", "✋", 0, 0), AutoWord("РАКУШКА", "🐚", 0, 0)
         ),
         wordsMiddle = listOf(
-            AutoWord("ЗЕБРА", "🦓", 2, 1), AutoWord("ШОРТЫ", "🩳", 2, 1), AutoWord("ШАРФ", "🧣", 2, 1), AutoWord("ГРУША", "🍐", 1, 1)
+            AutoWord("ЗЕБРА", "🦓", 3, 1), // Исправлен индекс с 2 на 3
+            AutoWord("ШОРТЫ", "🩳", 2, 1), 
+            AutoWord("ШАРФ", "🧣", 2, 1), 
+            AutoWord("ГРУША", "🍐", 1, 1)
         ),
         wordsEnd = listOf(
             AutoWord("ПОВАР", "👨‍🍳", 4, 2), AutoWord("ТОПОР", "🪓", 4, 2), AutoWord("ТИГР", "🐯", 3, 2), AutoWord("СЫР", "🧀", 2, 2)
@@ -50,9 +53,18 @@ object SoundAutomationData {
             Pair("У Романа ракета", 2)
         ),
         whereIsSound = listOf(
-            AutoWord("ПОМИДОР", "🍅", 6, 2), AutoWord("КОМПЬЮТЕР", "💻", 7, 2), AutoWord("ДРАКОН", "🐉", 1, 1), AutoWord("РАДУГА", "🌈", 0, 0),
-            AutoWord("БОБР", "🦫", 3, 2), AutoWord("КОРОВА", "🐄", 2, 1), AutoWord("РОЗА", "🌹", 0, 0), AutoWord("РАК", "🦞", 0, 0),
-            AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("СВЕТОФОР", "🚦", 6, 2), AutoWord("КРАБ", "🦀", 1, 1), AutoWord("КОРОНА", "👑", 2, 1)
+            AutoWord("ПОМИДОР", "🍅", 6, 2), 
+            AutoWord("КОМПЬЮТЕР", "💻", 8, 2), // Исправлен индекс с 7 на 8
+            AutoWord("ДРАКОН", "🐉", 1, 1), 
+            AutoWord("РАДУГА", "🌈", 0, 0),
+            AutoWord("БОБР", "🦫", 3, 2), 
+            AutoWord("КОРОВА", "🐄", 2, 1), 
+            AutoWord("РОЗА", "🌹", 0, 0), 
+            AutoWord("РАК", "🦞", 0, 0),
+            AutoWord("РУЧКА", "🖊️", 0, 0), 
+            AutoWord("СВЕТОФОР", "🚦", 7, 2), // Исправлен индекс с 6 на 7
+            AutoWord("КРАБ", "🦀", 1, 1), 
+            AutoWord("КОРОНА", "👑", 2, 1)
         )
     )
 
