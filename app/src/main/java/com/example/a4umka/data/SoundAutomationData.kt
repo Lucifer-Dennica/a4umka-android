@@ -1,15 +1,15 @@
 package com.example.a4umka.data
 
 // Класс для слов: само слово, эмодзи, индекс выделяемой буквы, позиция звука (0-начало, 1-середина, 2-конец)
-data class SoundWord(val word: String, val emoji: String, val highlightIndex: Int, val position: Int)
+data class AutoWord(val word: String, val emoji: String, val highlightIndex: Int, val position: Int)
 
 data class SoundData(
-    val syllables: List<Pair<String, Int>>, // Строка и индекс для выделения
-    val wordsStart: List<SoundWord>,
-    val wordsMiddle: List<SoundWord>,
-    val wordsEnd: List<SoundWord>,
-    val phrases: List<Pair<String, Int>>, // Фраза и индекс начала выделения
-    val whereIsSound: List<SoundWord>
+    val syllables: List<Pair<String, Int>>,
+    val wordsStart: List<AutoWord>,
+    val wordsMiddle: List<AutoWord>,
+    val wordsEnd: List<AutoWord>,
+    val phrases: List<Pair<String, Int>>,
+    val whereIsSound: List<AutoWord>
 )
 
 data class PairWord(val word: String, val emoji: String, val correctSound: String)
@@ -29,13 +29,13 @@ object SoundAutomationData {
             Pair("РА-РО-РУ", 0), Pair("РО-РУ-РЫ", 0)
         ),
         wordsStart = listOf(
-            SoundWord("РАК", "🦞", 0, 0), SoundWord("РУЧКА", "🖊️", 0, 0), SoundWord("РУКА", "✋", 0, 0), SoundWord("РАКУШКА", "🐚", 0, 0)
+            AutoWord("РАК", "🦞", 0, 0), AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("РУКА", "✋", 0, 0), AutoWord("РАКУШКА", "🐚", 0, 0)
         ),
         wordsMiddle = listOf(
-            SoundWord("ЗЕБРА", "🦓", 2, 1), SoundWord("ШОРТЫ", "🩳", 2, 1), SoundWord("ШАРФ", "🧣", 2, 1), SoundWord("ГРУША", "🍐", 1, 1)
+            AutoWord("ЗЕБРА", "🦓", 2, 1), AutoWord("ШОРТЫ", "🩳", 2, 1), AutoWord("ШАРФ", "🧣", 2, 1), AutoWord("ГРУША", "🍐", 1, 1)
         ),
         wordsEnd = listOf(
-            SoundWord("ПОВАР", "👨‍🍳", 4, 2), SoundWord("ТОПОР", "🪓", 4, 2), SoundWord("ТИГР", "🐯", 3, 2), SoundWord("СЫР", "🧀", 2, 2)
+            AutoWord("ПОВАР", "👨‍🍳", 4, 2), AutoWord("ТОПОР", "🪓", 4, 2), AutoWord("ТИГР", "🐯", 3, 2), AutoWord("СЫР", "🧀", 2, 2)
         ),
         phrases = listOf(
             Pair("Ор-ор-ор — вот высокий забор", 0),
@@ -51,9 +51,9 @@ object SoundAutomationData {
             Pair("У Романа ракета", 2)
         ),
         whereIsSound = listOf(
-            SoundWord("ПОМИДОР", "🍅", 6, 2), SoundWord("КОМПЬЮТЕР", "💻", 7, 2), SoundWord("ДРАКОН", "🐉", 1, 1), SoundWord("РАДУГА", "🌈", 0, 0),
-            SoundWord("БОБР", "🦫", 3, 2), SoundWord("КОРОВА", "🐄", 2, 1), SoundWord("РОЗА", "🌹", 0, 0), SoundWord("РАК", "🦞", 0, 0),
-            SoundWord("РУЧКА", "🖊️", 0, 0), SoundWord("СВЕТОФОР", "🚦", 6, 2), SoundWord("КРАБ", "🦀", 1, 1), SoundWord("КОРОНА", "👑", 2, 1)
+            AutoWord("ПОМИДОР", "🍅", 6, 2), AutoWord("КОМПЬЮТЕР", "💻", 7, 2), AutoWord("ДРАКОН", "🐉", 1, 1), AutoWord("РАДУГА", "🌈", 0, 0),
+            AutoWord("БОБР", "🦫", 3, 2), AutoWord("КОРОВА", "🐄", 2, 1), AutoWord("РОЗА", "🌹", 0, 0), AutoWord("РАК", "🦞", 0, 0),
+            AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("СВЕТОФОР", "🚦", 6, 2), AutoWord("КРАБ", "🦀", 1, 1), AutoWord("КОРОНА", "👑", 2, 1)
         )
     )
 
@@ -66,13 +66,13 @@ object SoundAutomationData {
             Pair("ЛА-ЛО-ЛУ", 0), Pair("ЛО-ЛУ-ЛЫ", 0)
         ),
         wordsStart = listOf(
-            SoundWord("ЛУК", "🧅", 0, 0), SoundWord("ЛАМПА", "💡", 0, 0), SoundWord("ЛОЖКА", "🥄", 0, 0), SoundWord("ЛОДКА", "🛶", 0, 0)
+            AutoWord("ЛУК", "🧅", 0, 0), AutoWord("ЛАМПА", "💡", 0, 0), AutoWord("ЛОЖКА", "🥄", 0, 0), AutoWord("ЛОДКА", "🛶", 0, 0)
         ),
         wordsMiddle = listOf(
-            SoundWord("ПИЛА", "🪚", 2, 1), SoundWord("ЮЛА", "🪀", 1, 1), SoundWord("КУКЛА", "🪆", 2, 1), SoundWord("ХАЛАТ", "🥼", 2, 1)
+            AutoWord("ПИЛА", "🪚", 2, 1), AutoWord("ЮЛА", "🪀", 1, 1), AutoWord("КУКЛА", "🪆", 2, 1), AutoWord("ХАЛАТ", "🥼", 2, 1)
         ),
         wordsEnd = listOf(
-            SoundWord("СТОЛ", "🪵", 3, 2), SoundWord("СТУЛ", "🪑", 3, 2), SoundWord("ФУТБОЛ", "⚽", 5, 2), SoundWord("ОСЁЛ", "🫏", 3, 2)
+            AutoWord("СТОЛ", "🪵", 3, 2), AutoWord("СТУЛ", "🪑", 3, 2), AutoWord("ФУТБОЛ", "⚽", 5, 2), AutoWord("ОСЁЛ", "🫏", 3, 2)
         ),
         phrases = listOf(
             Pair("Ла-ла-ла — в комнате юла", 0),
@@ -83,9 +83,9 @@ object SoundAutomationData {
             Pair("Клава пила сок", 1)
         ),
         whereIsSound = listOf(
-            SoundWord("ЛОПАТА", "🪏", 0, 0), SoundWord("ЮЛА", "🪀", 1, 1), SoundWord("СТОЛ", "🪵", 3, 2), SoundWord("ПАЛАТКА", "⛺", 3, 1),
-            SoundWord("ЛУНА", "🌙", 0, 0), SoundWord("КУКЛА", "🪆", 2, 1), SoundWord("ДЯТЕЛ", "🐦", 3, 2), SoundWord("ЛЫЖИ", "🎿", 0, 0),
-            SoundWord("МОЛОКО", "🥛", 2, 1), SoundWord("ЛОШАДЬ", "🐎", 0, 0), SoundWord("ОСЁЛ", "🫏", 3, 2), SoundWord("БУЛКА", "🥖", 2, 1)
+            AutoWord("ЛОПАТА", "🪏", 0, 0), AutoWord("ЮЛА", "🪀", 1, 1), AutoWord("СТОЛ", "🪵", 3, 2), AutoWord("ПАЛАТКА", "⛺", 3, 1),
+            AutoWord("ЛУНА", "🌙", 0, 0), AutoWord("КУКЛА", "🪆", 2, 1), AutoWord("ДЯТЕЛ", "🐦", 3, 2), AutoWord("ЛЫЖИ", "🎿", 0, 0),
+            AutoWord("МОЛОКО", "🥛", 2, 1), AutoWord("ЛОШАДЬ", "🐎", 0, 0), AutoWord("ОСЁЛ", "🫏", 3, 2), AutoWord("БУЛКА", "🥖", 2, 1)
         )
     )
 
@@ -98,13 +98,13 @@ object SoundAutomationData {
             Pair("СА-СО-СУ", 0), Pair("СО-СУ-СЫ", 0)
         ),
         wordsStart = listOf(
-            SoundWord("СОБАКА", "🐕", 0, 0), SoundWord("СЛОН", "🐘", 0, 0), SoundWord("СЫР", "🧀", 0, 0), SoundWord("САМОЛЁТ", "✈️", 0, 0)
+            AutoWord("СОБАКА", "🐕", 0, 0), AutoWord("СЛОН", "🐘", 0, 0), AutoWord("СЫР", "🧀", 0, 0), AutoWord("САМОЛЁТ", "✈️", 0, 0)
         ),
         wordsMiddle = listOf(
-            SoundWord("ЛИСА", "🦊", 2, 1), SoundWord("ОСА", "🐝", 1, 1), SoundWord("КОСА", "🌾", 2, 1), SoundWord("ВЕСЫ", "⚖️", 2, 1)
+            AutoWord("ЛИСА", "🦊", 2, 1), AutoWord("ОСА", "🐝", 1, 1), AutoWord("КОСА", "🌾", 2, 1), AutoWord("ВЕСЫ", "⚖️", 2, 1)
         ),
         wordsEnd = listOf(
-            SoundWord("НОС", "👃", 2, 2), SoundWord("ЛЕС", "🌲", 2, 2), SoundWord("ПЁС", "🐕", 2, 2), SoundWord("АВТОБУС", "🚌", 6, 2)
+            AutoWord("НОС", "👃", 2, 2), AutoWord("ЛЕС", "🌲", 2, 2), AutoWord("ПЁС", "🐕", 2, 2), AutoWord("АВТОБУС", "🚌", 6, 2)
         ),
         phrases = listOf(
             Pair("Са-са-са — в лесу бегает лиса", 0),
@@ -115,9 +115,9 @@ object SoundAutomationData {
             Pair("В саду стоит стол", 2)
         ),
         whereIsSound = listOf(
-            SoundWord("САМОЛЁТ", "✈️", 0, 0), SoundWord("ЛИСА", "🦊", 2, 1), SoundWord("АНАНАС", "🍍", 5, 2), SoundWord("ВЕСЫ", "⚖️", 2, 1),
-            SoundWord("СЛОН", "🐘", 0, 0), SoundWord("ОСА", "🐝", 1, 1), SoundWord("ПЫЛЕСОС", "🧹", 7, 2), SoundWord("СЫР", "🧀", 0, 0),
-            SoundWord("КОСА", "🌾", 2, 1), SoundWord("СОВА", "🦉", 0, 0), SoundWord("НОС", "👃", 2, 2), SoundWord("БУСЫ", "📿", 2, 1)
+            AutoWord("САМОЛЁТ", "✈️", 0, 0), AutoWord("ЛИСА", "🦊", 2, 1), AutoWord("АНАНАС", "🍍", 5, 2), AutoWord("ВЕСЫ", "⚖️", 2, 1),
+            AutoWord("СЛОН", "🐘", 0, 0), AutoWord("ОСА", "🐝", 1, 1), AutoWord("ПЫЛЕСОС", "🧹", 7, 2), AutoWord("СЫР", "🧀", 0, 0),
+            AutoWord("КОСА", "🌾", 2, 1), AutoWord("СОВА", "🦉", 0, 0), AutoWord("НОС", "👃", 2, 2), AutoWord("БУСЫ", "📿", 2, 1)
         )
     )
 
@@ -130,13 +130,13 @@ object SoundAutomationData {
             Pair("ЗА-ЗО-ЗУ", 0), Pair("ЗО-ЗУ-ЗЫ", 0)
         ),
         wordsStart = listOf(
-            SoundWord("ЗАМОК", "🏰", 0, 0), SoundWord("ЗАЯЦ", "🐇", 0, 0), SoundWord("ЗУБЫ", "🦷", 0, 0), SoundWord("ЗОНТ", "☂️", 0, 0)
+            AutoWord("ЗАМОК", "🏰", 0, 0), AutoWord("ЗАЯЦ", "🐇", 0, 0), AutoWord("ЗУБЫ", "🦷", 0, 0), AutoWord("ЗОНТ", "☂️", 0, 0)
         ),
         wordsMiddle = listOf(
-            SoundWord("РОЗА", "🌹", 2, 1), SoundWord("КОЗА", "🐐", 2, 1), SoundWord("ВАЗА", "🏺", 2, 1), SoundWord("ГРОЗА", "⛈️", 2, 1)
+            AutoWord("РОЗА", "🌹", 2, 1), AutoWord("КОЗА", "🐐", 2, 1), AutoWord("ВАЗА", "🏺", 2, 1), AutoWord("ГРОЗА", "⛈️", 2, 1)
         ),
         wordsEnd = listOf(
-            SoundWord("ТАЗ", "🥣", 2, 2), SoundWord("ГЛАЗ", "👁️", 3, 2), SoundWord("АРБУЗ", "🍉", 4, 2), SoundWord("ПАРОВОЗ", "🚂", 6, 2)
+            AutoWord("ТАЗ", "🥣", 2, 2), AutoWord("ГЛАЗ", "👁️", 3, 2), AutoWord("АРБУЗ", "🍉", 4, 2), AutoWord("ПАРОВОЗ", "🚂", 6, 2)
         ),
         phrases = listOf(
             Pair("За-за-за — у нас идёт коза", 0),
@@ -146,9 +146,9 @@ object SoundAutomationData {
             Pair("В вазе стоят розы", 7)
         ),
         whereIsSound = listOf(
-            SoundWord("ЗАМОК", "🏰", 0, 0), SoundWord("КОЗА", "🐐", 2, 1), SoundWord("АРБУЗ", "🍉", 4, 2), SoundWord("РОЗА", "🌹", 2, 1),
-            SoundWord("ЗЕБРА", "🦓", 0, 0), SoundWord("ВАЗА", "🏺", 2, 1), SoundWord("ПАРОВОЗ", "🚂", 6, 2), SoundWord("ЗОНТ", "☂️", 0, 0),
-            SoundWord("БИЗОН", "🦬", 2, 1), SoundWord("ЗАЯЦ", "🐇", 0, 0), SoundWord("ГЛАЗ", "👁️", 3, 2), SoundWord("ГРОЗА", "⛈️", 2, 1)
+            AutoWord("ЗАМОК", "🏰", 0, 0), AutoWord("КОЗА", "🐐", 2, 1), AutoWord("АРБУЗ", "🍉", 4, 2), AutoWord("РОЗА", "🌹", 2, 1),
+            AutoWord("ЗЕБРА", "🦓", 0, 0), AutoWord("ВАЗА", "🏺", 2, 1), AutoWord("ПАРОВОЗ", "🚂", 6, 2), AutoWord("ЗОНТ", "☂️", 0, 0),
+            AutoWord("БИЗОН", "🦬", 2, 1), AutoWord("ЗАЯЦ", "🐇", 0, 0), AutoWord("ГЛАЗ", "👁️", 3, 2), AutoWord("ГРОЗА", "⛈️", 2, 1)
         )
     )
 
@@ -161,13 +161,13 @@ object SoundAutomationData {
             Pair("ША-ШО-ШУ", 0), Pair("ШО-ШУ-ШИ", 0)
         ),
         wordsStart = listOf(
-            SoundWord("ШАР", "🎈", 0, 0), SoundWord("ШАПКА", "🧢", 0, 0), SoundWord("ШУБА", "🧥", 0, 0), SoundWord("ШКОЛА", "🏫", 0, 0)
+            AutoWord("ШАР", "🎈", 0, 0), AutoWord("ШАПКА", "🧢", 0, 0), AutoWord("ШУБА", "🧥", 0, 0), AutoWord("ШКОЛА", "🏫", 0, 0)
         ),
         wordsMiddle = listOf(
-            SoundWord("МАШИНА", "🚗", 2, 1), SoundWord("МЫШКА", "🐭", 2, 1), SoundWord("КОШКА", "🐈", 2, 1), SoundWord("ЛОШАДЬ", "🐎", 2, 1)
+            AutoWord("МАШИНА", "🚗", 2, 1), AutoWord("МЫШКА", "🐭", 2, 1), AutoWord("КОШКА", "🐈", 2, 1), AutoWord("ЛОШАДЬ", "🐎", 2, 1)
         ),
         wordsEnd = listOf(
-            SoundWord("ДУШ", "🚿", 2, 2), SoundWord("МЫШЬ", "🐭", 3, 2), SoundWord("КАМЫШ", "🌾", 4, 2), SoundWord("ЛАНДЫШ", "🌼", 5, 2)
+            AutoWord("ДУШ", "🚿", 2, 2), AutoWord("МЫШЬ", "🐭", 3, 2), AutoWord("КАМЫШ", "🌾", 4, 2), AutoWord("ЛАНДЫШ", "🌼", 5, 2)
         ),
         phrases = listOf(
             Pair("Ша-ша-ша — мама моет малыша", 0),
@@ -177,9 +177,9 @@ object SoundAutomationData {
             Pair("У Маши новая шуба", 4)
         ),
         whereIsSound = listOf(
-            SoundWord("ШАР", "🎈", 0, 0), SoundWord("МАШИНА", "🚗", 2, 1), SoundWord("ЛАНДЫШ", "🌼", 5, 2), SoundWord("МЫШКА", "🐭", 2, 1),
-            SoundWord("ШАПКА", "🧢", 0, 0), SoundWord("КОШКА", "🐈", 2, 1), SoundWord("МАЛЫШ", "👶", 4, 2), SoundWord("ШУБА", "🧥", 0, 0),
-            SoundWord("ВИШНЯ", "🍒", 2, 1), SoundWord("ШКОЛА", "🏫", 0, 0), SoundWord("ФИНИШ", "🏁", 4, 2), SoundWord("ПОДУШКА", "🛏️", 4, 1)
+            AutoWord("ШАР", "🎈", 0, 0), AutoWord("МАШИНА", "🚗", 2, 1), AutoWord("ЛАНДЫШ", "🌼", 5, 2), AutoWord("МЫШКА", "🐭", 2, 1),
+            AutoWord("ШАПКА", "🧢", 0, 0), AutoWord("КОШКА", "🐈", 2, 1), AutoWord("МАЛЫШ", "👶", 4, 2), AutoWord("ШУБА", "🧥", 0, 0),
+            AutoWord("ВИШНЯ", "🍒", 2, 1), AutoWord("ШКОЛА", "🏫", 0, 0), AutoWord("ФИНИШ", "🏁", 4, 2), AutoWord("ПОДУШКА", "🛏️", 4, 1)
         )
     )
 
@@ -192,13 +192,13 @@ object SoundAutomationData {
             Pair("ЖА-ЖО-ЖУ", 0), Pair("ЖО-ЖУ-ЖИ", 0)
         ),
         wordsStart = listOf(
-            SoundWord("ЖУК", "🪲", 0, 0), SoundWord("ЖАБА", "🐸", 0, 0), SoundWord("ЖИРАФ", "🦒", 0, 0), SoundWord("ЖЁЛУДЬ", "🌰", 0, 0)
+            AutoWord("ЖУК", "🪲", 0, 0), AutoWord("ЖАБА", "🐸", 0, 0), AutoWord("ЖИРАФ", "🦒", 0, 0), AutoWord("ЖЁЛУДЬ", "🌰", 0, 0)
         ),
         wordsMiddle = listOf(
-            SoundWord("ЛУЖА", "💧", 2, 1), SoundWord("НОЖИ", "🔪", 2, 1), SoundWord("ЕЖИ", "🦔", 1, 1), SoundWord("ОДЕЖДА", "👗", 2, 1)
+            AutoWord("ЛУЖА", "💧", 2, 1), AutoWord("НОЖИ", "🔪", 2, 1), AutoWord("ЕЖИ", "🦔", 1, 1), AutoWord("ОДЕЖДА", "👗", 2, 1)
         ),
         wordsEnd = listOf(
-            SoundWord("НОЖ", "🔪", 2, 2), SoundWord("ЁЖ", "🦔", 1, 2), SoundWord("ЧИЖ", "🐦", 2, 2), SoundWord("БАГАЖ", "🧳", 4, 2)
+            AutoWord("НОЖ", "🔪", 2, 2), AutoWord("ЁЖ", "🦔", 1, 2), AutoWord("ЧИЖ", "🐦", 2, 2), AutoWord("БАГАЖ", "🧳", 4, 2)
         ),
         phrases = listOf(
             Pair("Жа-жа-жа — есть иголки у ежа", 0),
@@ -207,9 +207,9 @@ object SoundAutomationData {
             Pair("У Жени новый журнал", 2)
         ),
         whereIsSound = listOf(
-            SoundWord("ЖУК", "🪲", 0, 0), SoundWord("ЛУЖА", "💧", 2, 1), SoundWord("НОЖ", "🔪", 2, 2), SoundWord("ЕЖИ", "🦔", 1, 1),
-            SoundWord("ЖАБА", "🐸", 0, 0), SoundWord("НОЖИ", "🔪", 2, 1), SoundWord("ЁЖ", "🦔", 1, 2), SoundWord("ЖИРАФ", "🦒", 0, 0),
-            SoundWord("ОДЕЖДА", "👗", 2, 1), SoundWord("ЖУРНАЛ", "📖", 0, 0), SoundWord("БАГАЖ", "🧳", 4, 2), SoundWord("ПИЖАМА", "🩳", 2, 1)
+            AutoWord("ЖУК", "🪲", 0, 0), AutoWord("ЛУЖА", "💧", 2, 1), AutoWord("НОЖ", "🔪", 2, 2), AutoWord("ЕЖИ", "🦔", 1, 1),
+            AutoWord("ЖАБА", "🐸", 0, 0), AutoWord("НОЖИ", "🔪", 2, 1), AutoWord("ЁЖ", "🦔", 1, 2), AutoWord("ЖИРАФ", "🦒", 0, 0),
+            AutoWord("ОДЕЖДА", "👗", 2, 1), AutoWord("ЖУРНАЛ", "📖", 0, 0), AutoWord("БАГАЖ", "🧳", 4, 2), AutoWord("ПИЖАМА", "🩳", 2, 1)
         )
     )
 
