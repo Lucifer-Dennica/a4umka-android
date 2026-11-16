@@ -1,6 +1,5 @@
 package com.example.a4umka.data
 
-// Класс для слов: само слово, эмодзи, индекс выделяемой буквы, позиция звука (0-начало, 1-середина, 2-конец)
 data class AutoWord(val word: String, val emoji: String, val highlightIndex: Int, val position: Int)
 
 data class SoundData(
