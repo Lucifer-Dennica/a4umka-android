@@ -890,4 +890,140 @@ object SoundAutomationPdfDrawer {
             var right = left + cellW - 5f
             var bottom = top + cellH - 10f
 
-            var whitePaint =
+            var whitePaint = Paint()
+            whitePaint.color = Color.WHITE
+            whitePaint.style = Paint.Style.FILL
+            
+            var borderPaint = Paint()
+            borderPaint.color = Color.LTGRAY
+            borderPaint.style = Paint.Style.STROKE
+            borderPaint.strokeWidth = 1f
+
+            canvas.drawRoundRect(RectF(left, top, right, bottom), 8f, 8f, whitePaint)
+            canvas.drawRoundRect(RectF(left, top, right, bottom), 8f, 8f, borderPaint)
+
+            canvas.drawCircle(left + 12f, top + 12f, 8f, circleNumBg)
+            
+            var numPaint = Paint()
+            numPaint.textSize = 10f
+            numPaint.color = Color.WHITE
+            numPaint.textAlign = Paint.Align.CENTER
+            numPaint.typeface = safeTypefaceBold
+            canvas.drawText("${index + 1}", left + 12f, top + 15f, numPaint)
+
+            var cx = left + (right - left) / 2f
+            canvas.drawText(item.emoji, cx, top + 55f, emojiPaint)
+            canvas.drawText(item.word.lowercase(), cx, top + 75f, wordPaint)
+
+            var btnW = 30f
+            var btnH = 16f
+            var btnY = top + 85f
+            
+            var leftBtn = RectF(cx - btnW - 5f, btnY, cx - 5f, btnY + btnH)
+            canvas.drawRoundRect(leftBtn, 4f, 4f, whitePaint)
+            canvas.drawRoundRect(leftBtn, 4f, 4f, borderPaint)
+            
+            var btnTextPaint = Paint()
+            btnTextPaint.textSize = 10f
+            btnTextPaint.color = textColor
+            btnTextPaint.textAlign = Paint.Align.CENTER
+            btnTextPaint.typeface = safeTypeface
+            canvas.drawText(config.pair.first.letter, cx - btnW / 2f - 5f, btnY + 12f, btnTextPaint)
+            
+            var dropPaint = Paint()
+            dropPaint.textSize = 8f
+            dropPaint.textAlign = Paint.Align.CENTER
+            canvas.drawText("💧", cx - btnW + 2f, btnY + 12f, dropPaint)
+
+            var rightBtn = RectF(cx + 5f, btnY, cx + btnW + 5f, btnY + btnH)
+            canvas.drawRoundRect(rightBtn, 4f, 4f, whitePaint)
+            canvas.drawRoundRect(rightBtn, 4f, 4f, borderPaint)
+            
+            canvas.drawText(config.pair.second.letter, cx + btnW / 2f + 5f, btnY + 12f, btnTextPaint)
+            canvas.drawText("💧", cx + 5f, btnY + 12f, dropPaint)
+        }
+    }
+
+    private fun drawPairsAnswers(canvas: Canvas, config: SoundAutomationConfig) {
+        var pairData = SoundAutomationData.getPairData(config.pair)
+        
+        var margin = 40f
+        
+        var titlePaint = Paint()
+        titlePaint.isAntiAlias = true
+        titlePaint.textSize = 28f
+        titlePaint.color = greenCircleColor
+        titlePaint.typeface = cursiveTypeface
+        titlePaint.textAlign = Paint.Align.CENTER
+        canvas.drawText("Ответы", PAGE_WIDTH / 2f, 60f, titlePaint)
+        
+        var subPaint = Paint()
+        subPaint.isAntiAlias = true
+        subPaint.textSize = 11f
+        subPaint.color = Color.GRAY
+        subPaint.textAlign = Paint.Align.CENTER
+        subPaint.typeface = Typeface.create(safeTypeface, Typeface.ITALIC)
+        canvas.drawText("Для взрослого", PAGE_WIDTH / 2f, 80f, subPaint)
+
+        var headerTextPaint = Paint()
+        headerTextPaint.isAntiAlias = true
+        headerTextPaint.textSize = 14f
+        headerTextPaint.color = Color.DKGRAY
+        headerTextPaint.typeface = safeTypefaceBold
+        canvas.drawText("Различаем ${config.pair.title}", margin, 120f, headerTextPaint)
+
+        var currentY = 140f
+        var rowHeight = 35f
+        
+        var textPaint = Paint()
+        textPaint.isAntiAlias = true
+        textPaint.textSize = 12f
+        textPaint.color = textColor
+        textPaint.typeface = safeTypeface
+        
+        var emojiPaint = Paint()
+        emojiPaint.textSize = 20f
+        emojiPaint.textAlign = Paint.Align.CENTER
+        
+        var numBg = Paint()
+        numBg.color = Color.WHITE
+        numBg.style = Paint.Style.FILL
+        
+        var numBorder = Paint()
+        numBorder.color = Color.LTGRAY
+        numBorder.style = Paint.Style.STROKE
+        numBorder.strokeWidth = 1f
+        
+        var greenBoxBg = Paint()
+        greenBoxBg.color = greenCircleColor
+        greenBoxBg.style = Paint.Style.FILL
+        
+        var greenBoxText = Paint()
+        greenBoxText.isAntiAlias = true
+        greenBoxText.textSize = 12f
+        greenBoxText.color = Color.WHITE
+        greenBoxText.typeface = safeTypefaceBold
+        greenBoxText.textAlign = Paint.Align.CENTER
+
+        for (index in pairData.words.indices) {
+            var word = pairData.words[index]
+            var col = index % 2
+            var row = index / 2
+            if (col == 0 && row > 0) currentY += rowHeight
+            
+            var left = margin + col * ((PAGE_WIDTH - margin*2)/2f)
+            
+            var pillRect = RectF(left, currentY - 12f, left + 230f, currentY + 12f)
+            canvas.drawRoundRect(pillRect, 12f, 12f, numBg)
+            canvas.drawRoundRect(pillRect, 12f, 12f, numBorder)
+            
+            canvas.drawText("${index + 1}", left + 10f, currentY + 4f, textPaint)
+            canvas.drawText(word.emoji, left + 35f, currentY + 6f, emojiPaint)
+            canvas.drawText(word.word.lowercase(), left + 55f, currentY + 4f, textPaint)
+
+            var boxRect = RectF(left + 180f, currentY - 10f, left + 210f, currentY + 10f)
+            canvas.drawRoundRect(boxRect, 8f, 8f, greenBoxBg)
+            canvas.drawText(word.correctSound, left + 195f, currentY + 4f, greenBoxText)
+        }
+    }
+}
