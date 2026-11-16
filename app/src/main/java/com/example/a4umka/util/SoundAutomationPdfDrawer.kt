@@ -229,8 +229,8 @@ object SoundAutomationPdfDrawer {
 
         for ((title, items) in blocks) {
             if (items.isEmpty()) continue
-            val isTwoRows = items.size > 4
-            val blockHeight = if (isTwoRows) 115f else 80f
+            var isTwoRows = items.size > 4
+            var blockHeight = if (isTwoRows) 115f else 80f
             
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBgPaint)
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBorderPaint)
@@ -239,28 +239,28 @@ object SoundAutomationPdfDrawer {
             canvas.drawText(blockIndex.toString(), margin + 15f, currentY + 19f, circleNumText)
             canvas.drawText(title, margin + 35f, currentY + 19f, blockTitlePaint)
 
-            val itemWidth = (PAGE_WIDTH - margin * 2 - 20f) / 4
+            var itemWidth = (PAGE_WIDTH - margin * 2 - 20f) / 4
             
             items.forEachIndexed { index, item ->
-                val col = index % 4
-                val row = index / 4
+                var col = index % 4
+                var row = index / 4
                 
-                val cardLeft = margin + 10f + col * itemWidth
-                val cardTop = currentY + 30f + row * 55f
-                val cardRight = cardLeft + itemWidth - 5f
-                val cardBottom = cardTop + 45f
+                var cardLeft = margin + 10f + col * itemWidth
+                var cardTop = currentY + 30f + row * 55f
+                var cardRight = cardLeft + itemWidth - 5f
+                var cardBottom = cardTop + 45f
 
                 canvas.drawRoundRect(RectF(cardLeft, cardTop, cardRight, cardBottom), 8f, 8f, cardBgPaint)
                 canvas.drawRoundRect(RectF(cardLeft, cardTop, cardRight, cardBottom), 8f, 8f, cardBorderPaint)
                 
-                val cx = cardLeft + (cardRight - cardLeft) / 2f
-                val cy = cardTop + (cardBottom - cardTop) / 2f
+                var cx = cardLeft + (cardRight - cardLeft) / 2f
+                var cy = cardTop + (cardBottom - cardTop) / 2f
 
                 drawHighlightedText(canvas, item.first, item.second, cx, cy + 8f, textPaint, highlightPaint)
                 
-                val circleRadius = 4f
-                val circleSpacing = 12f
-                val startCircleX = cx - circleSpacing
+                var circleRadius = 4f
+                var circleSpacing = 12f
+                var startCircleX = cx - circleSpacing
                 for (i in 0 until 3) {
                     canvas.drawCircle(startCircleX + i * circleSpacing, cy + 20f, circleRadius, circlePaint)
                 }
@@ -302,7 +302,7 @@ object SoundAutomationPdfDrawer {
 
         for ((title, words) in sections) {
             if (words.isEmpty()) continue
-            val blockHeight = 160f
+            var blockHeight = 160f
             
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBgPaint)
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBorderPaint)
@@ -311,10 +311,10 @@ object SoundAutomationPdfDrawer {
             canvas.drawText(blockIndex.toString(), margin + 15f, currentY + 19f, circleNumText)
             canvas.drawText(title, margin + 35f, currentY + 19f, blockTitlePaint)
 
-            val indicatorX = PAGE_WIDTH - margin - 40f
-            val indicatorY = currentY + 10f
+            var indicatorX = PAGE_WIDTH - margin - 40f
+            var indicatorY = currentY + 10f
             for (i in 0 until 3) {
-                val rect = RectF(indicatorX + i * 12f, indicatorY, indicatorX + i * 12f + 10f, indicatorY + 10f)
+                var rect = RectF(indicatorX + i * 12f, indicatorY, indicatorX + i * 12f + 10f, indicatorY + 10f)
                 if (i == (blockIndex - 1)) {
                     canvas.drawRoundRect(rect, 3f, 3f, Paint().apply { color = Color.parseColor("#FFB74D"); style = Paint.Style.FILL })
                 } else {
@@ -322,29 +322,29 @@ object SoundAutomationPdfDrawer {
                 }
             }
 
-            val itemWidth = (PAGE_WIDTH - margin * 2 - 20f) / 4
+            var itemWidth = (PAGE_WIDTH - margin * 2 - 20f) / 4
             
             words.forEachIndexed { index, item ->
-                val col = index % 4
-                val cardLeft = margin + 10f + col * itemWidth
-                val cardTop = currentY + 30f
-                val cardRight = cardLeft + itemWidth - 5f
-                val cardBottom = cardTop + 120f
+                var col = index % 4
+                var cardLeft = margin + 10f + col * itemWidth
+                var cardTop = currentY + 30f
+                var cardRight = cardLeft + itemWidth - 5f
+                var cardBottom = cardTop + 120f
 
                 canvas.drawRoundRect(RectF(cardLeft, cardTop, cardRight, cardBottom), 8f, 8f, cardBgPaint)
                 canvas.drawRoundRect(RectF(cardLeft, cardTop, cardRight, cardBottom), 8f, 8f, cardBorderPaint)
                 
-                val cx = cardLeft + (cardRight - cardLeft) / 2f
+                var cx = cardLeft + (cardRight - cardLeft) / 2f
                 
                 canvas.drawText(item.emoji, cx, cardTop + 50f, emojiPaint)
                 drawHighlightedText(canvas, item.word, item.highlightIndex, cx, cardTop + 75f, wordPaint, highlightPaint)
 
-                val boxW = 16f
-                val boxH = 8f
-                val startBoxX = cx - (boxW * 3 + 2f) / 2f
-                val boxY = cardTop + 85f
+                var boxW = 16f
+                var boxH = 8f
+                var startBoxX = cx - (boxW * 3 + 2f) / 2f
+                var boxY = cardTop + 85f
                 for (i in 0 until 3) {
-                    val r = RectF(startBoxX + i * (boxW + 1f), boxY, startBoxX + i * (boxW + 1f) + boxW, boxY + boxH)
+                    var r = RectF(startBoxX + i * (boxW + 1f), boxY, startBoxX + i * (boxW + 1f) + boxW, boxY + boxH)
                     if (i == item.position) {
                         canvas.drawRoundRect(r, 2f, 2f, Paint().apply { color = Color.parseColor("#FFB74D"); style = Paint.Style.FILL })
                     } else {
@@ -352,7 +352,7 @@ object SoundAutomationPdfDrawer {
                     }
                 }
 
-                val startCircleX = cx - 12f
+                var startCircleX = cx - 12f
                 for (i in 0 until 3) {
                     canvas.drawCircle(startCircleX + i * 12f, cardTop + 105f, 4f, circlePaint)
                 }
@@ -367,29 +367,29 @@ object SoundAutomationPdfDrawer {
         
         if (isAnswer) {
             canvas.drawColor(bgColor)
-            val titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = greenCircleColor; typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER }
+            var titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = greenCircleColor; typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER }
             canvas.drawText("Ответы", PAGE_WIDTH / 2f, 60f, titlePaint)
-            val subPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
+            var subPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
             canvas.drawText("Для взрослого", PAGE_WIDTH / 2f, 80f, subPaint)
 
-            val headerTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+            var headerTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Где живёт звук ${config.sound.letter}?", margin, 120f, headerTextPaint)
 
             var currentY = 140f
-            val rowHeight = 35f
-            val textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; typeface = Typeface.DEFAULT }
-            val emojiPaint = Paint().apply { textSize = 20f; textAlign = Paint.Align.CENTER }
-            val numBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
-            val numBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
+            var rowHeight = 35f
+            var textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; typeface = Typeface.DEFAULT }
+            var emojiPaint = Paint().apply { textSize = 20f; textAlign = Paint.Align.CENTER }
+            var numBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+            var numBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
             
             words.forEachIndexed { index, word ->
-                val col = index % 2
-                val row = index / 2
+                var col = index % 2
+                var row = index / 2
                 if (col == 0 && row > 0) currentY += rowHeight
                 
-                val left = margin + col * ((PAGE_WIDTH - margin*2)/2f)
+                var left = margin + col * ((PAGE_WIDTH - margin*2)/2f)
                 
-                val pillRect = RectF(left, currentY - 12f, left + 230f, currentY + 12f)
+                var pillRect = RectF(left, currentY - 12f, left + 230f, currentY + 12f)
                 canvas.drawRoundRect(pillRect, 12f, 12f, numBg)
                 canvas.drawRoundRect(pillRect, 12f, 12f, numBorder)
                 
@@ -397,20 +397,20 @@ object SoundAutomationPdfDrawer {
                 canvas.drawText(word.emoji, left + 35f, currentY + 6f, emojiPaint)
                 canvas.drawText(word.word.lowercase(), left + 55f, currentY + 4f, textPaint)
 
-                val boxSize = 12f
-                val boxX = left + 150f
-                val boxY = currentY - 6f
+                var boxSize = 12f
+                var boxX = left + 150f
+                var boxY = currentY - 6f
                 
-                val posText = when(word.position) {
+                var posText = when(word.position) {
                     0 -> "в начале"
                     1 -> "в середине"
                     else -> "в конце"
                 }
                 
                 for (i in 0 until 3) {
-                    val rect = RectF(boxX + i * (boxSize + 2f), boxY, boxX + i * (boxSize + 2f) + boxSize, boxY + boxSize)
+                    var rect = RectF(boxX + i * (boxSize + 2f), boxY, boxX + i * (boxSize + 2f) + boxSize, boxY + boxSize)
                     if (i == word.position) {
-                        val pill = RectF(rect.left - 2f, rect.top - 1f, rect.right + 2f, rect.bottom + 1f)
+                        var pill = RectF(rect.left - 2f, rect.top - 1f, rect.right + 2f, rect.bottom + 1f)
                         canvas.drawRoundRect(pill, 4f, 4f, Paint().apply { color = Color.parseColor("#FFB74D"); style = Paint.Style.FILL })
                     } else {
                         canvas.drawRoundRect(rect, 2f, 2f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
@@ -424,28 +424,28 @@ object SoundAutomationPdfDrawer {
 
         drawHeader(canvas, config, "Где живёт звук ${config.sound.letter}?", "Назови картинку. Где звук — в начале, в середине или в конце слова? Закрась клетку")
 
-        val cols = 4
-        val tableTop = 130f
-        val cellWidth = (PAGE_WIDTH - margin * 2) / cols
-        val cellHeight = 170f
+        var cols = 4
+        var tableTop = 130f
+        var cellWidth = (PAGE_WIDTH - margin * 2) / cols
+        var cellHeight = 170f
 
-        val cardBgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
-        val cardBorderPaint = Paint().apply { color = borderColor; style = Paint.Style.STROKE; strokeWidth = 1.5f }
-        val numBgPaint = Paint().apply { color = greenCircleColor; style = Paint.Style.FILL }
-        val numTextPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        var cardBgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+        var cardBorderPaint = Paint().apply { color = borderColor; style = Paint.Style.STROKE; strokeWidth = 1.5f }
+        var numBgPaint = Paint().apply { color = greenCircleColor; style = Paint.Style.FILL }
+        var numTextPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         
-        val emojiPaint = Paint().apply { textSize = 46f; textAlign = Paint.Align.CENTER }
-        val wordPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
-        val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
+        var emojiPaint = Paint().apply { textSize = 46f; textAlign = Paint.Align.CENTER }
+        var wordPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
+        var boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
 
         words.forEachIndexed { index, word ->
-            val col = index % cols
-            val row = index / cols
+            var col = index % cols
+            var row = index / cols
             
-            val left = margin + col * cellWidth + 4f
-            val top = tableTop + row * cellHeight + 4f
-            val right = left + cellWidth - 8f
-            val bottom = top + cellHeight - 8f
+            var left = margin + col * cellWidth + 4f
+            var top = tableTop + row * cellHeight + 4f
+            var right = left + cellWidth - 8f
+            var bottom = top + cellHeight - 8f
 
             canvas.drawRoundRect(RectF(left, top, right, bottom), 10f, 10f, cardBgPaint)
             canvas.drawRoundRect(RectF(left, top, right, bottom), 10f, 10f, cardBorderPaint)
@@ -453,29 +453,29 @@ object SoundAutomationPdfDrawer {
             canvas.drawCircle(left + 15f, top + 15f, 10f, numBgPaint)
             canvas.drawText("${index + 1}", left + 15f, top + 19f, numTextPaint)
 
-            val cx = left + (right - left) / 2f
+            var cx = left + (right - left) / 2f
             canvas.drawText(word.emoji, cx, top + 70f, emojiPaint)
             canvas.drawText(word.word.lowercase(), cx, top + 95f, wordPaint)
 
-            val boxSize = 24f
-            val boxSpacing = 2f
-            val totalWidth = boxSize * 3 + boxSpacing * 2
-            val startX = cx - totalWidth / 2f
-            val boxY = top + 115f
+            var boxSize = 24f
+            var boxSpacing = 2f
+            var totalWidth = boxSize * 3 + boxSpacing * 2
+            var startX = cx - totalWidth / 2f
+            var boxY = top + 115f
 
             for (i in 0 until 3) {
-                val r = RectF(startX + i * (boxSize + boxSpacing), boxY, startX + i * (boxSize + boxSpacing) + boxSize, boxY + boxSize)
+                var r = RectF(startX + i * (boxSize + boxSpacing), boxY, startX + i * (boxSize + boxSpacing) + boxSize, boxY + boxSize)
                 canvas.drawRoundRect(r, 2f, 2f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
                 canvas.drawRoundRect(r, 2f, 2f, boxPaint)
             }
         }
 
-        val legendY = PAGE_HEIGHT - 40f
-        val legendBoxX = PAGE_WIDTH / 2f - 60f
-        val legendTextPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY }
+        var legendY = PAGE_HEIGHT - 40f
+        var legendBoxX = PAGE_WIDTH / 2f - 60f
+        var legendTextPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY }
         
         for (i in 0 until 3) {
-            val r = RectF(legendBoxX + i * 22f, legendY - 10f, legendBoxX + i * 22f + 20f, legendY + 10f)
+            var r = RectF(legendBoxX + i * 22f, legendY - 10f, legendBoxX + i * 22f + 20f, legendY + 10f)
             canvas.drawRoundRect(r, 2f, 2f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
             canvas.drawRoundRect(r, 2f, 2f, boxPaint)
         }
@@ -509,7 +509,7 @@ object SoundAutomationPdfDrawer {
 
         for ((title, items) in blocks) {
             if (items.isEmpty()) continue
-            val blockHeight = items.size * 40f + 30f
+            var blockHeight = items.size * 40f + 30f
             
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBgPaint)
             canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + blockHeight), 12f, 12f, blockBorderPaint)
@@ -519,13 +519,13 @@ object SoundAutomationPdfDrawer {
             canvas.drawText(title, margin + 35f, currentY + 19f, blockTitlePaint)
 
             items.forEachIndexed { index, item ->
-                val cy = currentY + 45f + index * 40f
+                var cy = currentY + 45f + index * 40f
                 
                 canvas.drawText("🦁", margin + 15f, cy, Paint().apply { textSize = 16f })
                 drawHighlightedText(canvas, item.first, item.second, margin + 200f, cy, textPaint, highlightPaint)
                 canvas.drawLine(margin + 15f, cy + 12f, PAGE_WIDTH - margin - 15f, cy + 12f, dashPaint)
 
-                val startCircleX = PAGE_WIDTH - margin - 60f
+                var startCircleX = PAGE_WIDTH - margin - 60f
                 for (i in 0 until 3) {
                     canvas.drawCircle(startCircleX + i * 15f, cy - 4f, 5f, circlePaint)
                 }
@@ -550,22 +550,21 @@ object SoundAutomationPdfDrawer {
         val blockTitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
 
         val textPaint = Paint().apply { isAntiAlias = true; textSize = 20f; color = textColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        val highlightPaint = Paint(textPaint).apply { color = highlightColor }
         val circlePaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
 
-        val block1Height = 100f
+        var block1Height = 100f
         canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + block1Height), 12f, 12f, blockBgPaint)
         canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + block1Height), 12f, 12f, blockBorderPaint)
         canvas.drawCircle(margin + 15f, currentY + 15f, 10f, circleNumBg)
         canvas.drawText("1", margin + 15f, currentY + 19f, circleNumText)
         canvas.drawText("Повтори пары слогов", margin + 35f, currentY + 19f, blockTitlePaint)
 
-        val sylWidth = (PAGE_WIDTH - margin * 2) / 4
+        var sylWidth = (PAGE_WIDTH - margin * 2) / 4
         pairData.syllables.take(4).forEachIndexed { i, syl ->
-            val cx = margin + i * sylWidth + sylWidth / 2
-            val cy = currentY + 45f
-            val parts = syl.split(" — ")
-            val targetPaint = Paint(textPaint).apply { color = highlightColor }
+            var cx = margin + i * sylWidth + sylWidth / 2
+            var cy = currentY + 45f
+            var parts = syl.split(" — ")
+            var targetPaint = Paint(textPaint).apply { color = highlightColor }
             if (parts.size == 2) {
                 canvas.drawText(parts[0], cx - 20f, cy, targetPaint)
                 canvas.drawText("—", cx, cy, textPaint)
@@ -578,26 +577,26 @@ object SoundAutomationPdfDrawer {
         }
         currentY += block1Height + 10f
 
-        val block2Height = 450f
+        var block2Height = 450f
         canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + block2Height), 12f, 12f, blockBgPaint)
         canvas.drawRoundRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + block2Height), 12f, 12f, blockBorderPaint)
         canvas.drawCircle(margin + 15f, currentY + 15f, 10f, circleNumBg)
         canvas.drawText("2", margin + 15f, currentY + 19f, circleNumText)
         canvas.drawText("Какой звук в слове? Назови картинку и обведи букву", margin + 35f, currentY + 19f, blockTitlePaint)
 
-        val cellW = (PAGE_WIDTH - margin * 2 - 20f) / 4
-        val cellH = 135f
-        val emojiPaint = Paint().apply { textSize = 36f; textAlign = Paint.Align.CENTER }
-        val wordPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
+        var cellW = (PAGE_WIDTH - margin * 2 - 20f) / 4
+        var cellH = 135f
+        var emojiPaint = Paint().apply { textSize = 36f; textAlign = Paint.Align.CENTER }
+        var wordPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
         
         pairData.words.forEachIndexed { index, item ->
-            val col = index % 4
-            val row = index / 4
+            var col = index % 4
+            var row = index / 4
             
-            val left = margin + 10f + col * cellW
-            val top = currentY + 30f + row * cellH
-            val right = left + cellW - 5f
-            val bottom = top + cellH - 10f
+            var left = margin + 10f + col * cellW
+            var top = currentY + 30f + row * cellH
+            var right = left + cellW - 5f
+            var bottom = top + cellH - 10f
 
             canvas.drawRoundRect(RectF(left, top, right, bottom), 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
             canvas.drawRoundRect(RectF(left, top, right, bottom), 8f, 8f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
@@ -605,21 +604,21 @@ object SoundAutomationPdfDrawer {
             canvas.drawCircle(left + 12f, top + 12f, 8f, Paint().apply { color = greenCircleColor; style = Paint.Style.FILL })
             canvas.drawText("${index + 1}", left + 12f, top + 15f, Paint().apply { textSize = 10f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD })
 
-            val cx = left + (right - left) / 2f
+            var cx = left + (right - left) / 2f
             canvas.drawText(item.emoji, cx, top + 55f, emojiPaint)
             canvas.drawText(item.word.lowercase(), cx, top + 75f, wordPaint)
 
-            val btnW = 30f
-            val btnH = 16f
-            val btnY = top + 85f
+            var btnW = 30f
+            var btnH = 16f
+            var btnY = top + 85f
             
-            val leftBtn = RectF(cx - btnW - 5f, btnY, cx - 5f, btnY + btnH)
+            var leftBtn = RectF(cx - btnW - 5f, btnY, cx - 5f, btnY + btnH)
             canvas.drawRoundRect(leftBtn, 4f, 4f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
             canvas.drawRoundRect(leftBtn, 4f, 4f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
             canvas.drawText(config.pair.first.letter, cx - btnW / 2f - 5f, btnY + 12f, Paint().apply { textSize = 10f; color = textColor; textAlign = Paint.Align.CENTER })
             canvas.drawText("💧", cx - btnW + 2f, btnY + 12f, Paint().apply { textSize = 8f; textAlign = Paint.Align.CENTER })
 
-            val rightBtn = RectF(cx + 5f, btnY, cx + btnW + 5f, btnY + btnH)
+            var rightBtn = RectF(cx + 5f, btnY, cx + btnW + 5f, btnY + btnH)
             canvas.drawRoundRect(rightBtn, 4f, 4f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
             canvas.drawRoundRect(rightBtn, 4f, 4f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
             canvas.drawText(config.pair.second.letter, cx + btnW / 2f + 5f, btnY + 12f, Paint().apply { textSize = 10f; color = textColor; textAlign = Paint.Align.CENTER })
@@ -632,32 +631,32 @@ object SoundAutomationPdfDrawer {
         
         val margin = 40f
         
-        val titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = greenCircleColor; typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER }
+        var titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = greenCircleColor; typeface = Typeface.create("cursive", Typeface.BOLD); textAlign = Paint.Align.CENTER }
         canvas.drawText("Ответы", PAGE_WIDTH / 2f, 60f, titlePaint)
-        val subPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
+        var subPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
         canvas.drawText("Для взрослого", PAGE_WIDTH / 2f, 80f, subPaint)
 
-        val headerTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+        var headerTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
         canvas.drawText("Различаем ${config.pair.title}", margin, 120f, headerTextPaint)
 
         var currentY = 140f
-        val rowHeight = 35f
-        val textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; typeface = Typeface.DEFAULT }
-        val emojiPaint = Paint().apply { textSize = 20f; textAlign = Paint.Align.CENTER }
-        val numBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
-        val numBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
+        var rowHeight = 35f
+        var textPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = textColor; typeface = Typeface.DEFAULT }
+        var emojiPaint = Paint().apply { textSize = 20f; textAlign = Paint.Align.CENTER }
+        var numBg = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+        var numBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
         
-        val greenBoxBg = Paint().apply { color = greenCircleColor; style = Paint.Style.FILL }
-        val greenBoxText = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        var greenBoxBg = Paint().apply { color = greenCircleColor; style = Paint.Style.FILL }
+        var greenBoxText = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
 
         pairData.words.forEachIndexed { index, word ->
-            val col = index % 2
-            val row = index / 2
+            var col = index % 2
+            var row = index / 2
             if (col == 0 && row > 0) currentY += rowHeight
             
-            val left = margin + col * ((PAGE_WIDTH - margin*2)/2f)
+            var left = margin + col * ((PAGE_WIDTH - margin*2)/2f)
             
-            val pillRect = RectF(left, currentY - 12f, left + 230f, currentY + 12f)
+            var pillRect = RectF(left, currentY - 12f, left + 230f, currentY + 12f)
             canvas.drawRoundRect(pillRect, 12f, 12f, numBg)
             canvas.drawRoundRect(pillRect, 12f, 12f, numBorder)
             
@@ -665,7 +664,7 @@ object SoundAutomationPdfDrawer {
             canvas.drawText(word.emoji, left + 35f, currentY + 6f, emojiPaint)
             canvas.drawText(word.word.lowercase(), left + 55f, currentY + 4f, textPaint)
 
-            val boxRect = RectF(left + 180f, currentY - 10f, left + 210f, currentY + 10f)
+            var boxRect = RectF(left + 180f, currentY - 10f, left + 210f, currentY + 10f)
             canvas.drawRoundRect(boxRect, 8f, 8f, greenBoxBg)
             canvas.drawText(word.correctSound, left + 195f, currentY + 4f, greenBoxText)
         }
