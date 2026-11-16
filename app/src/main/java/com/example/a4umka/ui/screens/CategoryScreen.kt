@@ -73,13 +73,12 @@ private fun TaskTile(
 ) {
     Box(
         modifier = modifier
-            .height(130.dp)
+            .heightIn(min = 130.dp) // <-- Теперь карточка может расти вниз, если текст длинный
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick)
-            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp) // Уменьшили верхний отступ
+            .padding(12.dp)
     ) {
-        // Иконка телефона в правом верхнем углу, если доступен интерактив
         if (task.isInteractive) {
             Icon(
                 imageVector = Icons.Default.PhoneAndroid,
@@ -92,37 +91,37 @@ private fun TaskTile(
         }
 
         Column(
-            verticalArrangement = Arrangement.Top, // Выравниваем контент по верхнему краю
+            verticalArrangement = Arrangement.Top,
             modifier = Modifier.fillMaxSize()
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 modifier = Modifier.padding(end = if (task.isInteractive) 24.dp else 0.dp)
             ) {
                 if (task.emoji.isNotEmpty()) {
                     Text(
                         text = task.emoji,
-                        fontSize = 18.sp, // Чуть уменьшили эмодзи, чтобы не перекрывал заголовок
-                        modifier = Modifier.padding(end = 4.dp)
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(end = 6.dp, top = 2.dp)
                     )
                 }
                 Text(
                     text = task.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
+                    maxLines = 3, // Увеличили до 3 строк на всякий случай
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 18.sp
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp)) // Уменьшили отступ между заголовком и текстом
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                maxLines = 4, // Разрешили до 4 строк описания
+                maxLines = 4,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 14.sp // Чуть сжали межстрочный интервал
+                lineHeight = 14.sp
             )
         }
     }
