@@ -31,7 +31,7 @@ object SoundAutomationData {
             AutoWord("РАК", "🦞", 0, 0), AutoWord("РУЧКА", "🖊️", 0, 0), AutoWord("РУКА", "✋", 0, 0), AutoWord("РАКУШКА", "🐚", 0, 0)
         ),
         wordsMiddle = listOf(
-            AutoWord("ЗЕБРА", "🦓", 3, 1), // Исправлен индекс с 2 на 3
+            AutoWord("ЗЕБРА", "🦓", 3, 1), // Исправлен индекс
             AutoWord("ШОРТЫ", "🩳", 2, 1), 
             AutoWord("ШАРФ", "🧣", 2, 1), 
             AutoWord("ГРУША", "🍐", 1, 1)
@@ -54,7 +54,7 @@ object SoundAutomationData {
         ),
         whereIsSound = listOf(
             AutoWord("ПОМИДОР", "🍅", 6, 2), 
-            AutoWord("КОМПЬЮТЕР", "💻", 8, 2), // Исправлен индекс с 7 на 8
+            AutoWord("КОМПЬЮТЕР", "💻", 8, 2), // Исправлен индекс
             AutoWord("ДРАКОН", "🐉", 1, 1), 
             AutoWord("РАДУГА", "🌈", 0, 0),
             AutoWord("БОБР", "🦫", 3, 2), 
@@ -62,7 +62,7 @@ object SoundAutomationData {
             AutoWord("РОЗА", "🌹", 0, 0), 
             AutoWord("РАК", "🦞", 0, 0),
             AutoWord("РУЧКА", "🖊️", 0, 0), 
-            AutoWord("СВЕТОФОР", "🚦", 7, 2), // Исправлен индекс с 6 на 7
+            AutoWord("СВЕТОФОР", "🚦", 7, 2), // Исправлен индекс
             AutoWord("КРАБ", "🦀", 1, 1), 
             AutoWord("КОРОНА", "👑", 2, 1)
         )
@@ -226,7 +226,7 @@ object SoundAutomationData {
 
     private val pairsData = mapOf(
         SoundPair.S_SH to PairData(
-            syllables = listOf("СА — ША", "СО — ШО", "СУ — ШУ", "СЫ — ШИ", "АС — АШ", "ОС — ОШ", "УС — УШ", "АСА — АША"),
+            syllables = listOf("СА - ША", "СО - ШО", "СУ - ШУ", "СЫ - ШИ", "АС - АШ", "ОС - ОШ", "УС - УШ", "АСА - АША"),
             words = listOf(
                 PairWord("ГРУША", "🍐", "Ш"), PairWord("КОШКА", "🐈", "Ш"), PairWord("КОМПАС", "🧭", "С"), PairWord("ПОДСОЛНУХ", "🌻", "С"),
                 PairWord("БАБУШКА", "👵", "Ш"), PairWord("СОК", "🧃", "С"), PairWord("РОМАШКА", "🌼", "Ш"), PairWord("АНАНАС", "🍍", "С"),
@@ -234,7 +234,7 @@ object SoundAutomationData {
             )
         ),
         SoundPair.R_L to PairData(
-            syllables = listOf("РА — ЛА", "РО — ЛО", "РУ — ЛУ", "РЫ — ЛЫ", "АР — АЛ", "ОР — ОЛ", "УР — УЛ", "АРА — АЛА"),
+            syllables = listOf("РА - ЛА", "РО - ЛО", "РУ - ЛУ", "РЫ - ЛЫ", "АР - АЛ", "ОР - ОЛ", "УР - УЛ", "АРА - АЛА"),
             words = listOf(
                 PairWord("ЖИРАФ", "🦒", "Р"), PairWord("ЛОДКА", "🛶", "Л"), PairWord("ЛАМА", "🦙", "Л"), PairWord("ЁЛКА", "🎄", "Л"),
                 PairWord("ОБЛАКО", "☁️", "Л"), PairWord("БАКЛАЖАН", "🍆", "Л"), PairWord("РАК", "🦞", "Р"), PairWord("СЫР", "🧀", "Р"),
@@ -242,7 +242,7 @@ object SoundAutomationData {
             )
         ),
         SoundPair.Z_ZH to PairData(
-            syllables = listOf("ЗА — ЖА", "ЗО — ЖО", "ЗУ — ЖУ", "ЗЫ — ЖИ", "АЗА — АЖА", "ОЗО — ОЖО", "УЗУ — УЖУ", "АЗА — АЖА"),
+            syllables = listOf("ЗА - ЖА", "ЗО - ЖО", "ЗУ - ЖУ", "ЗЫ - ЖИ", "АЗА - АЖА", "ОЗО - ОЖО", "УЗУ - УЖУ", "АЗА - АЖА"),
             words = listOf(
                 PairWord("ЛЫЖИ", "🎿", "Ж"), PairWord("НОЖНИЦЫ", "✂️", "Ж"), PairWord("ЖОНГЛЁР", "🤹", "Ж"), PairWord("РОЗА", "🌹", "З"),
                 PairWord("ПАЗЛ", "🧩", "З"), PairWord("БАКЛАЖАН", "🍆", "Ж"), PairWord("НОЖИК", "🔪", "Ж"), PairWord("ГРУЗОВИК", "🚚", "З"),
