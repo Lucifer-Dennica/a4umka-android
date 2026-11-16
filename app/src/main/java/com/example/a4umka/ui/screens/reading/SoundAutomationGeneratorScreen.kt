@@ -9,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,8 +30,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SoundAutomationGeneratorScreen(
-    onBack: () -> Unit,
-    onPlayInteractive: (SoundAutomationConfig) -> Unit
+    onBack: () -> Unit
+    // Убрали onPlayInteractive
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -114,17 +113,6 @@ fun SoundAutomationGeneratorScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { onPlayInteractive(config) },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Решать на телефоне")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
@@ -163,8 +151,7 @@ fun SoundAutomationGeneratorScreen(
                         "• Выберите один звук, который ребенок уже уверенно произносит изолированно.\n" +
                         "• Попросите повторить слог (или слово) 3 раза.\n" +
                         "• После каждого правильного повтора закрашивайте один кружок.\n" +
-                        "• Не перескакивайте ступеньки: если в словах звук теряется, вернитесь к слогам.\n\n" +
-                        "В онлайн-режиме на телефоне вы можете нажимать на кружочки прямо на экране, чтобы отмечать повторы и переходить к следующему заданию.",
+                        "• Не перескакивайте ступеньки: если в словах звук теряется, вернитесь к слогам.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
