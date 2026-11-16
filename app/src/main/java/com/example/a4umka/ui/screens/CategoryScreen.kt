@@ -1,12 +1,10 @@
 package com.example.a4umka.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -15,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -71,58 +68,65 @@ private fun TaskTile(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Box(
+    // Используем OutlinedCard для красивых рамок, как на сайте
+    OutlinedCard(
         modifier = modifier
-            .heightIn(min = 130.dp) // <-- Теперь карточка может расти вниз, если текст длинный
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
-            .padding(12.dp)
+            .heightIn(min = 130.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = CardDefaults.outlinedCardBorder(),
+        onClick = onClick
     ) {
-        if (task.isInteractive) {
-            Icon(
-                imageVector = Icons.Default.PhoneAndroid,
-                contentDescription = "Можно играть на телефоне",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(20.dp)
-            )
-        }
-
-        Column(
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier.padding(end = if (task.isInteractive) 24.dp else 0.dp)
-            ) {
-                if (task.emoji.isNotEmpty()) {
-                    Text(
-                        text = task.emoji,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(end = 6.dp, top = 2.dp)
-                    )
-                }
-                Text(
-                    text = task.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 3, // Увеличили до 3 строк на всякий случай
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 18.sp
+            if (task.isInteractive) {
+                Icon(
+                    imageVector = Icons.Default.PhoneAndroid,
+                    contentDescription = "Можно играть на телефоне",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = task.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 14.sp
-            )
+
+            Column(
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.padding(end = if (task.isInteractive) 24.dp else 0.dp)
+                ) {
+                    if (task.emoji.isNotEmpty()) {
+                        Text(
+                            text = task.emoji,
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(end = 6.dp, top = 2.dp)
+                        )
+                    }
+                    Text(
+                        text = task.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 18.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = task.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 14.sp
+                )
+            }
         }
     }
 }
