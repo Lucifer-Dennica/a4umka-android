@@ -169,6 +169,62 @@ fun SoundAutomationGeneratorScreen(
                 }
             }
 
+            // НОВОЕ: выбор количества столбцов на листе ответов.
+            // Показываем только если включён showAnswers и в режиме есть лист ответов
+            // (WHERE_IS_SOUND, PAIRS или KIT).
+            item {
+                val hasAnswersSheet = config.showAnswers && (
+                    config.mode == SpeechMode.WHERE_IS_SOUND ||
+                    config.mode == SpeechMode.PAIRS ||
+                    config.mode == SpeechMode.KIT
+                )
+                if (hasAnswersSheet) {
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Лист ответов",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Сколько столбцов с ответами на листе",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilterChip(
+                                    selected = config.answerColumns == 1,
+                                    onClick = { config = config.copy(answerColumns = 1) },
+                                    label = { Text("1 столбец") }
+                                )
+                                FilterChip(
+                                    selected = config.answerColumns == 2,
+                                    onClick = { config = config.copy(answerColumns = 2) },
+                                    label = { Text("2 столбца") }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                if (config.answerColumns == 1) {
+                                    "Широкие карточки на весь лист — удобно читать с расстояния"
+                                } else {
+                                    "Две колонки компактно — больше строк помещается на страницу"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray,
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
