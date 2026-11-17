@@ -90,7 +90,9 @@ data class MnemoConfig(
     // Для режима DESCRIPTIVE_STORY:
     val descriptiveCategory: DescriptiveCategory = DescriptiveCategory.VEGETABLES,
     val selectedSchemeId: String? = null,          // null = «любая из категории»
-    // НОВОЕ: сколько листов печатать в режиме DESCRIPTIVE_STORY.
+    // Сколько листов печатать в режиме DESCRIPTIVE_STORY.
     // На каждом листе 2 описательные схемы. 1 лист = 2 картинки, 2 листа = 4, 3 листа = 6.
-    val descriptiveSheetsCount: Int = 1
+    val descriptiveSheetsCount: Int = 1,
+    // НОВОЕ: seed для случайного выбора схем. Меняется кнопкой «Обновить».
+    val randomSeed: Long = System.currentTimeMillis()
 )
