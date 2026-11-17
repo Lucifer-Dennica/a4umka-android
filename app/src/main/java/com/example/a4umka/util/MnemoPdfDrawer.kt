@@ -25,7 +25,7 @@ object MnemoPdfDrawer {
     private val bgColor = Color.parseColor("#FAFAF5")
     private val cardColor = Color.WHITE
     private val borderColor = Color.parseColor("#D4D4C8")
-    private val dashedColor = Color.parseColor("#B0B0A8")
+    private val dashedColor = Color.parseColor("#7A8A6A")  // тёмно-зелено-серый, заметнее чем #B0B0A8
     private val textColor = Color.parseColor("#333333")
     private val numBgColor = Color.parseColor("#4A7A40")
     private val highlightColor = Color.parseColor("#D84315")
@@ -126,18 +126,27 @@ object MnemoPdfDrawer {
         val usableWidth = PAGE_WIDTH - margin * 2
 
         // === Сетка ячеек ===
+        // ИСПРАВЛЕНО: 6 клеток теперь 3×2 (а не 2×3) — клетки квадратнее, не вылезают за лист.
         val cols = when (text.cellsCount) {
             4 -> 2
-            6 -> 2
+            6 -> 3
             9 -> 3
             else -> 3
         }
         val rows = text.cellsCount / cols
         val gap = 12f
-        val cellSize = (usableWidth - gap * (cols - 1)) / cols
-
         val gridTop = 145f
+        // ИСПРАВЛЕНО: размер клетки считаем от МИНИМУМА ширины и доступной высоты,
+        // чтобы сетка не вылезала за лист и под неё оставалось место под текст.
+        // Резервируем: gridTop (145) + подзаголовок-инструкция + текст под таблицей.
+        val textBlockReserve = if (showText) (text.lines.size * 19f + 35f) else 0f
+        val availableHeight = PAGE_HEIGHT - gridTop - 30f - textBlockReserve - 20f
+        val cellByWidth = (usableWidth - gap * (cols - 1)) / cols
+        val cellByHeight = (availableHeight - gap * (rows - 1)) / rows
+        val cellSize = minOf(cellByWidth, cellByHeight)
         val gridHeight = rows * cellSize + (rows - 1) * gap
+        // Центрируем сетку по горизонтали
+        val gridLeft = margin + (usableWidth - (cols * cellSize + (cols - 1) * gap)) / 2f
 
         // Карточка с инструкторской надписью над сеткой
         val instrPaint = Paint().apply {
@@ -159,14 +168,14 @@ object MnemoPdfDrawer {
             typeface = sansBold; textAlign = Paint.Align.CENTER
         }
         val emojiPaint = Paint().apply {
-            textSize = cellSize * 0.55f; textAlign = Paint.Align.CENTER
+            textSize = cellSize * 0.5f; textAlign = Paint.Align.CENTER
         }
 
         for (i in text.lines.indices) {
             val line = text.lines[i]
             val col = i % cols
             val row = i / cols
-            val left = margin + col * (cellSize + gap)
+            val left = gridLeft + col * (cellSize + gap)
             val top = gridTop + row * (cellSize + gap)
             val rect = RectF(left, top, left + cellSize, top + cellSize)
 
@@ -202,15 +211,21 @@ object MnemoPdfDrawer {
 
         val usableWidth = PAGE_WIDTH - margin * 2
 
+        // ИСПРАВЛЕНО: 6 клеток как 3×2; cellSize от min(ширина, доступная высота).
         val cols = when (text.cellsCount) {
-            4 -> 2; 6 -> 2; 9 -> 3; else -> 3
+            4 -> 2; 6 -> 3; 9 -> 3; else -> 3
         }
         val rows = text.cellsCount / cols
-        val gap = 12f
-        val cellSize = (usableWidth - gap * (cols - 1)) / cols
-
+        // ИСПРАВЛЕНО: gap=8 (плотнее, как на сайте-эталоне), скругление 10 (аккуратнее).
+        val gap = 8f
         val gridTop = 145f
+        val textBlockReserve = if (showText) (text.lines.size * 17f + 35f) else 0f
+        val availableHeight = PAGE_HEIGHT - gridTop - 30f - textBlockReserve - 20f
+        val cellByWidth = (usableWidth - gap * (cols - 1)) / cols
+        val cellByHeight = (availableHeight - gap * (rows - 1)) / rows
+        val cellSize = minOf(cellByWidth, cellByHeight)
         val gridHeight = rows * cellSize + (rows - 1) * gap
+        val gridLeft = margin + (usableWidth - (cols * cellSize + (cols - 1) * gap)) / 2f
 
         val instrPaint = Paint().apply {
             isAntiAlias = true; textSize = 11f; color = grayColor; typeface = sans
@@ -224,7 +239,7 @@ object MnemoPdfDrawer {
         val cardBg = Paint().apply { color = cardColor; style = Paint.Style.FILL }
         val dashedBorder = Paint().apply {
             color = dashedColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
-            pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f, 6f), 0f)
+            pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 4f), 0f)
         }
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
@@ -235,12 +250,12 @@ object MnemoPdfDrawer {
         for (i in text.lines.indices) {
             val col = i % cols
             val row = i / cols
-            val left = margin + col * (cellSize + gap)
+            val left = gridLeft + col * (cellSize + gap)
             val top = gridTop + row * (cellSize + gap)
             val rect = RectF(left, top, left + cellSize, top + cellSize)
 
-            canvas.drawRoundRect(rect, 14f, 14f, cardBg)
-            canvas.drawRoundRect(rect, 14f, 14f, dashedBorder)
+            canvas.drawRoundRect(rect, 10f, 10f, cardBg)
+            canvas.drawRoundRect(rect, 10f, 10f, dashedBorder)
 
             val numCx = left + 18f
             val numCy = top + 18f
@@ -296,48 +311,67 @@ object MnemoPdfDrawer {
         canvas.drawRoundRect(rect, 12f, 12f, cardBg)
         canvas.drawRoundRect(rect, 12f, 12f, cardBorder)
 
-        // Слева — большой эмодзи
-        val emojiSize = height * 0.55f
+        // ИСПРАВЛЕНО: компактная колонка с эмодзи слева — 90pt, эмодзи 50pt.
+        val emojiColWidth = 90f
+        val emojiSize = 50f
         val emojiPaint = Paint().apply { textSize = emojiSize; textAlign = Paint.Align.CENTER }
-        val emojiCx = x + height / 2f
-        val emojiCy = y + height / 2f + emojiSize / 3f
+        val emojiCx = x + emojiColWidth / 2f
+        val emojiCy = y + height / 2f - 8f + emojiSize / 3f
         canvas.drawText(scheme.emoji, emojiCx, emojiCy, emojiPaint)
 
-        // Подпись под эмодзи
         val emojiLabelPaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = textColor; typeface = sansBold
+            isAntiAlias = true; textSize = 12f; color = textColor; typeface = sansBold
             textAlign = Paint.Align.CENTER
         }
         canvas.drawText(scheme.title, emojiCx, y + height - 14f, emojiLabelPaint)
 
-        // Справа — 6 вопросов с местом для ответа
-        val textLeft = x + height + 16f
-        val textWidth = width - height - 24f
-        val questionPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = textColor; typeface = sansBold
-        }
+        // Справа — 6 вопросов в сетке 2×3 с иконками.
+        // ИСПРАВЛЕНО: как на сайте-эталоне — компактнее и с иконками.
+        val textLeft = x + emojiColWidth + 6f
+        val textWidth = width - emojiColWidth - 16f
+        val qCols = 2
+        val qRows = 3
+        val qGapX = 10f
+        val qGapY = 6f
+        val qCellW = (textWidth - qGapX * (qCols - 1)) / qCols
+        val qCellH = (height - 20f - qGapY * (qRows - 1)) / qRows
+
+        // Иконки к вопросам (универсальные для всех категорий)
+        val questionIcons = listOf("❓", "🎨", "📐", "👐", "📍", "🍳")
+
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
-            isAntiAlias = true; textSize = 10f; color = Color.WHITE
+            isAntiAlias = true; textSize = 9f; color = Color.WHITE
             typeface = sansBold; textAlign = Paint.Align.CENTER
+        }
+        val iconPaint = Paint().apply { textSize = 13f; textAlign = Paint.Align.LEFT }
+        val questionPaint = Paint().apply {
+            isAntiAlias = true; textSize = 10f; color = textColor; typeface = sansBold
         }
         val answerLine = Paint().apply {
             color = answerLineColor; strokeWidth = 1f
         }
 
-        val questionCount = scheme.questions.size
-        val qHeight = (height - 24f) / questionCount
-        for (i in 0 until questionCount) {
-            val qy = y + 12f + i * qHeight + qHeight / 2f
-            // Номер вопроса
-            val nCx = textLeft + 10f
-            canvas.drawCircle(nCx, qy - 4f, 9f, numBg)
-            canvas.drawText("${i + 1}", nCx, qy - 1f, numText)
-            // Сам вопрос
-            canvas.drawText(scheme.questions[i], textLeft + 24f, qy, questionPaint)
-            // Линия для ответа
-            val answerY = qy + 9f
-            canvas.drawLine(textLeft + 24f, answerY, x + width - 12f, answerY, answerLine)
+        for (i in 0 until 6) {
+            val col = i % qCols
+            val row = i / qCols
+            val cellX = textLeft + col * (qCellW + qGapX)
+            val cellY = y + 10f + row * (qCellH + qGapY)
+            val cy = cellY + 14f
+
+            // Номер вопроса в кружке
+            val nCx = cellX + 8f
+            canvas.drawCircle(nCx, cy - 3f, 7f, numBg)
+            canvas.drawText("${i + 1}", nCx, cy - 1f, numText)
+
+            // Иконка
+            canvas.drawText(questionIcons[i], cellX + 20f, cy + 4f, iconPaint)
+
+            // Текст вопроса
+            canvas.drawText(scheme.questions[i], cellX + 38f, cy + 2f, questionPaint)
+
+            // Линия для ответа под вопросом
+            canvas.drawLine(cellX + 20f, cy + 13f, cellX + qCellW - 2f, cy + 13f, answerLine)
         }
     }
 
@@ -405,29 +439,31 @@ object MnemoPdfDrawer {
         text: MnemoText,
         x: Float, y: Float, width: Float
     ) {
+        // ИСПРАВЛЕНО: уменьшили шрифт (11f) и интерлиньяж (17f) — чтобы 9 строк
+        // гарантированно помещались под таблицей на листе A4.
         val labelPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = grayColor; typeface = sansBold
+            isAntiAlias = true; textSize = 11f; color = grayColor; typeface = sansBold
         }
         canvas.drawText("Текст для взрослого:", x, y, labelPaint)
 
         val linePaint = Paint().apply {
-            isAntiAlias = true; textSize = 13f; color = textColor; typeface = sans
+            isAntiAlias = true; textSize = 11f; color = textColor; typeface = sans
         }
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
-            isAntiAlias = true; textSize = 10f; color = Color.WHITE
+            isAntiAlias = true; textSize = 9f; color = Color.WHITE
             typeface = sansBold; textAlign = Paint.Align.CENTER
         }
 
-        var cy = y + 25f
+        var cy = y + 20f
         text.lines.forEachIndexed { index, line ->
             // Номер строки
-            val nCx = x + 8f
-            canvas.drawCircle(nCx, cy - 4f, 9f, numBg)
+            val nCx = x + 7f
+            canvas.drawCircle(nCx, cy - 3f, 8f, numBg)
             canvas.drawText("${index + 1}", nCx, cy - 1f, numText)
             // Текст строки
-            canvas.drawText(line.text, x + 24f, cy, linePaint)
-            cy += 22f
+            canvas.drawText(line.text, x + 22f, cy, linePaint)
+            cy += 17f
         }
     }
 
