@@ -253,9 +253,30 @@ fun MnemoGeneratorScreen(onBack: () -> Unit) {
                                     }
                                 }
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            // НОВОЕ: выбор количества листов (как на сайте-эталоне)
+                            Text("Сколько листов", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilterChip(
+                                    selected = config.descriptiveSheetsCount == 1,
+                                    onClick = { config = config.copy(descriptiveSheetsCount = 1) },
+                                    label = { Text("1 лист — 2 картинки") }
+                                )
+                                FilterChip(
+                                    selected = config.descriptiveSheetsCount == 2,
+                                    onClick = { config = config.copy(descriptiveSheetsCount = 2) },
+                                    label = { Text("2 листа — 4 картинки") }
+                                )
+                                FilterChip(
+                                    selected = config.descriptiveSheetsCount == 3,
+                                    onClick = { config = config.copy(descriptiveSheetsCount = 3) },
+                                    label = { Text("3 листа — 6 картинок") }
+                                )
+                            }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "На листе печатается 2 описательные схемы с 6 вопросами по плану",
+                                "На каждом листе 2 описательные схемы с 6 вопросами по плану",
                                 fontSize = 12.sp, color = Color.Gray
                             )
                         }
