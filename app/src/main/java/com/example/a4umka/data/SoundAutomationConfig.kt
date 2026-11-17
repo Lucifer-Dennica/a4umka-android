@@ -16,5 +16,9 @@ data class SoundAutomationConfig(
     val sound: SpeechSound = SpeechSound.R,
     val mode: SpeechMode = SpeechMode.SYLLABLES,
     val pair: SoundPair = SoundPair.S_SH,
-    val showAnswers: Boolean = true
+    val showAnswers: Boolean = true,
+    // НОВОЕ: сколько столбцов на листе ответов (1 — широкие пилюли на весь лист,
+    // 2 — компактная двухколоночная вёрстка). Применимо к листам "Где живёт звук?"
+    // и "Различаем пару".
+    val answerColumns: Int = 1
 )
