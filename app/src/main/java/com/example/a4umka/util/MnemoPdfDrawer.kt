@@ -357,18 +357,21 @@ object MnemoPdfDrawer {
         canvas.drawRoundRect(titleRect, 10f, 10f, titleBgPaint)
         canvas.drawText(scheme.title, emojiCx, y + height - 23f, titlePaint)
 
-        // === Справа — 6 КРУПНЫХ иконок-кнопок в сетке 2×3 (как на сайте-эталоне) ===
+        // === Справа — 6 иконок-кнопок в сетке 3×2 (как на сайте-эталоне) ===
+        // ИСПРАВЛЕНО: 3 столбца × 2 строки, иконки по центру, без круглых фонов.
         val textLeft = x + emojiColWidth + 4f
         val textWidth = width - emojiColWidth - 14f
-        val qCols = 2
-        val qRows = 3
-        val qGapX = 8f
+        val qCols = 3
+        val qRows = 2
+        val qGapX = 6f
         val qGapY = 6f
         val qCellW = (textWidth - qGapX * (qCols - 1)) / qCols
         val qCellH = (height - 16f - qGapY * (qRows - 1)) / qRows
 
-        // Крупные иконки к вопросам (как на сайте-эталоне)
-        val questionIcons = listOf("❓", "🎨", "📐", "👅", "🌱", "🍳")
+        // Вопросы и иконки берутся из MnemoData — они свои для каждой категории
+        val plan = MnemoData.getQuestionsForCategory(scheme.category)
+        val questionIcons = plan.icons
+        val questions = plan.questions
 
         val qCardBg = Paint().apply {
             color = Color.parseColor("#FAFAF5"); style = Paint.Style.FILL
@@ -376,19 +379,9 @@ object MnemoPdfDrawer {
         val qCardBorder = Paint().apply {
             color = Color.parseColor("#D0D0C8"); style = Paint.Style.STROKE; strokeWidth = 1f
         }
-        // Цветной кружок под иконкой вопроса (по номеру — разные пастельные)
-        val iconBgColors = listOf(
-            Color.parseColor("#E3F2FD"),  // голубой для "Что это?"
-            Color.parseColor("#FCE4EC"),  // розовый для "Цвет"
-            Color.parseColor("#F3E5F5"),  // лиловый для "Форма"
-            Color.parseColor("#FFF3E0"),  // оранжевый для "Вкус"
-            Color.parseColor("#E8F5E9"),  // зелёный для "Где растёт"
-            Color.parseColor("#FFFDE7")   // жёлтый для "Что готовят"
-        )
-        val iconCirclePaint = Paint().apply { style = Paint.Style.FILL; isAntiAlias = true }
-
+        // НЕТ круглого цветного фона под иконками — как на сайте-эталоне
         val iconPaint = Paint().apply {
-            textSize = 28f; textAlign = Paint.Align.CENTER
+            textSize = 32f; textAlign = Paint.Align.CENTER
         }
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
@@ -396,7 +389,7 @@ object MnemoPdfDrawer {
             typeface = sansBold; textAlign = Paint.Align.CENTER
         }
         val questionPaint = Paint().apply {
-            isAntiAlias = true; textSize = 10f; color = textColor; typeface = sansBold
+            isAntiAlias = true; textSize = 9f; color = textColor; typeface = sansBold
             textAlign = Paint.Align.CENTER
         }
         val answerLine = Paint().apply {
@@ -414,23 +407,43 @@ object MnemoPdfDrawer {
             canvas.drawRoundRect(qRect, 8f, 8f, qCardBg)
             canvas.drawRoundRect(qRect, 8f, 8f, qCardBorder)
 
-            // === Верх карточки: круглая иконка вопроса ===
-            val iconCx = cellX + qCellW / 2f
-            val iconCy = cellY + 22f
-            iconCirclePaint.color = iconBgColors[i]
-            canvas.drawCircle(iconCx, iconCy, 18f, iconCirclePaint)
-            canvas.drawText(questionIcons[i], iconCx, iconCy + iconPaint.textSize / 3f, iconPaint)
+            val centerX = cellX + qCellW / 2f
 
-            // === Центр карточки: текст вопроса ===
-            canvas.drawText(scheme.questions[i], iconCx, iconCy + 26f, questionPaint)
+            // === Иконка по центру карточки (БЕЗ круглого фона) ===
+            val iconY = cellY + 28f
+            canvas.drawText(questionIcons[i], centerX, iconY, iconPaint)
 
-            // === Низ карточки: номер + линия для ответа ===
-            val nCx = cellX + 10f
-            val answerY = cellY + qCellH - 12f
-            canvas.drawCircle(nCx, answerY - 3f, 6f, numBg)
-            canvas.drawText("${i + 1}", nCx, answerY - 1f, numText)
-            // Линия для ответа от номера до правого края
-            canvas.drawLine(cellX + 18f, answerY, cellX + qCellW - 6f, answerY, answerLine)
+            // === Номер вопроса слева сверху ===
+            val nCx = cellX + 12f
+            val nCy = cellY + 14f
+            canvas.drawCircle(nCx, nCy, 7f, numBg)
+            canvas.drawText("${i + 1}", nCx, nCy + 3f, numText)
+
+            // === Текст вопроса под иконкой ===
+            // Длинные вопросы переносим — разбиваем на 2 строки если нужно
+            val qText = questions[i]
+            val maxWidth = qCellW - 8f
+            if (questionPaint.measureText(qText) > maxWidth) {
+                // Простой перенос по пробелу примерно посередине
+                val words = qText.split(" ")
+                var line1 = ""
+                var line2 = ""
+                for (w in words) {
+                    if (questionPaint.measureText("$line1 $w".trim()) <= maxWidth) {
+                        line1 = "$line1 $w".trim()
+                    } else {
+                        line2 = "$line2 $w".trim()
+                    }
+                }
+                canvas.drawText(line1, centerX, iconY + 18f, questionPaint)
+                canvas.drawText(line2, centerX, iconY + 30f, questionPaint)
+                // Линия для ответа под вопросом
+                canvas.drawLine(cellX + 6f, cellY + qCellH - 8f, cellX + qCellW - 6f, cellY + qCellH - 8f, answerLine)
+            } else {
+                canvas.drawText(qText, centerX, iconY + 18f, questionPaint)
+                // Линия для ответа под вопросом
+                canvas.drawLine(cellX + 6f, cellY + qCellH - 8f, cellX + qCellW - 6f, cellY + qCellH - 8f, answerLine)
+            }
         }
     }
 
