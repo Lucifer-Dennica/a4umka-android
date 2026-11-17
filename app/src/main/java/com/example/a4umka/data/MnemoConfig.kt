@@ -70,14 +70,14 @@ data class DescriptiveScheme(
     val title: String,           // "Помидор"
     val category: DescriptiveCategory,
     val emoji: String,           // "🍅"
-    // 6 вопросов по плану (одинаковые для всех схем):
+    // 6 коротких вопросов по плану — помещаются в ячейки 2×3 рядом с иконкой:
     val questions: List<String> = listOf(
         "Что это?",
         "Какого цвета?",
         "Какой формы?",
-        "Какой на вкус / на ощупь?",
-        "Где растёт / где живёт?",
-        "Что из него готовят / для чего нужен?"
+        "Какой на вкус?",
+        "Где растёт?",
+        "Что из него готовят?"
     )
 )
 
@@ -89,5 +89,8 @@ data class MnemoConfig(
     val showText: Boolean = true,                  // печатать текст под таблицей
     // Для режима DESCRIPTIVE_STORY:
     val descriptiveCategory: DescriptiveCategory = DescriptiveCategory.VEGETABLES,
-    val selectedSchemeId: String? = null           // null = «любая из категории»
+    val selectedSchemeId: String? = null,          // null = «любая из категории»
+    // НОВОЕ: сколько листов печатать в режиме DESCRIPTIVE_STORY.
+    // На каждом листе 2 описательные схемы. 1 лист = 2 картинки, 2 листа = 4, 3 листа = 6.
+    val descriptiveSheetsCount: Int = 1
 )
