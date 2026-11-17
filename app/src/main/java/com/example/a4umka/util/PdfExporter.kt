@@ -172,6 +172,12 @@ object PdfExporter {
         return saveDocument(context, document, "sound_automation_${config.sound.letter}_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportMnemo(context: Context, config: MnemoConfig): String? {
+        val document = PdfDocument()
+        MnemoPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "mnemo_${config.mode.name.lowercase()}_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
