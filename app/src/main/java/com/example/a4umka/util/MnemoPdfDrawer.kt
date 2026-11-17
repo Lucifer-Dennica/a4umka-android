@@ -539,10 +539,13 @@ object MnemoPdfDrawer {
         }
     }
 
-    private fun typeToWord(type: MnemoType): String = when (type) {
-        MnemoType.POEM -> "Стих"
-        MnemoType.TALE -> "Сказка"
-        MnemoType.STORY -> "Рассказ"
-        MnemoType.POTESHKA -> "Потешка"
-        MnemoType.DESCRIPTIVE -> "Описательный рассказ"
+    private fun typeToWord(type: MnemoType): String {
+        return when (type) {
+            MnemoType.POEM -> "Стих"
+            MnemoType.TALE -> "Сказка"
+            MnemoType.STORY -> "Рассказ"
+            MnemoType.POTESHKA -> "Потешка"
+            MnemoType.DESCRIPTIVE -> "Описательный рассказ"
+        }
     }
+}
