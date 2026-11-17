@@ -206,26 +206,34 @@ object SoundAutomationPdfDrawer {
         canvas.drawText(sub, PAGE_WIDTH / 2f, 100f, subPaint)
     }
 
-    // Вспомогательная функция для отрисовки текста с выделенной буквой (без пробелов)
+    // Вспомогательная функция для отрисовки текста с выделенной буквой (без пробелов).
+    // ИСПРАВЛЕНО: всегда используем LEFT-align внутри функции, иначе при CENTER-align
+    // каждая часть (prefix/target/suffix) рисуется ЦЕНТРОМ вокруг своей точки x,
+    // и узкие соседние буквы (Т, К, Б, В) «наезжают» на выделенную букву Р.
     private fun drawHighlightedText(canvas: Canvas, text: String, highlightIndex: Int, x: Float, y: Float, basePaint: Paint, highlightPaint: Paint) {
+        // Локальные копии с LEFT-align — не трогаем выравнивание у внешнего paint.
+        val leftBase = Paint(basePaint).apply { textAlign = Paint.Align.LEFT }
+        val leftHighlight = Paint(highlightPaint).apply { textAlign = Paint.Align.LEFT }
+
         if (highlightIndex < 0 || highlightIndex >= text.length) {
-            canvas.drawText(text, x, y, basePaint)
+            val w = leftBase.measureText(text)
+            canvas.drawText(text, x - w / 2f, y, leftBase)
             return
         }
         val prefix = text.substring(0, highlightIndex)
         val target = text.substring(highlightIndex, highlightIndex + 1)
         val suffix = text.substring(highlightIndex + 1)
-        
-        val w1 = basePaint.measureText(prefix)
-        val w2 = highlightPaint.measureText(target)
-        val w3 = basePaint.measureText(suffix)
+
+        val w1 = leftBase.measureText(prefix)
+        val w2 = leftHighlight.measureText(target)
+        val w3 = leftBase.measureText(suffix)
         val totalWidth = w1 + w2 + w3
-        
+
         val startX = x - totalWidth / 2f
-        
-        canvas.drawText(prefix, startX, y, basePaint)
-        canvas.drawText(target, startX + w1, y, highlightPaint)
-        canvas.drawText(suffix, startX + w1 + w2, y, basePaint)
+
+        canvas.drawText(prefix, startX, y, leftBase)
+        canvas.drawText(target, startX + w1, y, leftHighlight)
+        canvas.drawText(suffix, startX + w1 + w2, y, leftBase)
     }
 
     private fun drawSyllablesPage(canvas: Canvas, config: SoundAutomationConfig, syllables: List<Pair<String, Int>>) {
@@ -837,15 +845,20 @@ object SoundAutomationPdfDrawer {
             targetPaint.color = highlightColor
             
             if (parts.size == 2) {
-                val w1 = targetPaint.measureText(parts[0])
-                val dashW = targetPaint.measureText("-")
-                val w3 = targetPaint.measureText(parts[1])
+                // ИСПРАВЛЕНО: используем LEFT-align, иначе при CENTER-align тире
+                // рисуется ЦЕНТРОМ вокруг своей точки x и «уезжает» в следующий слог.
+                val leftTarget = Paint(targetPaint).apply { textAlign = Paint.Align.LEFT }
+                val leftText = Paint(textPaint).apply { textAlign = Paint.Align.LEFT }
+
+                val w1 = leftTarget.measureText(parts[0])
+                val dashW = leftText.measureText("-")
+                val w3 = leftTarget.measureText(parts[1])
                 val totalW = w1 + dashW + w3 + 4f
                 val startX = cx - totalW / 2f
-                
-                canvas.drawText(parts[0], startX, cy, targetPaint)
-                canvas.drawText("-", startX + w1 + 2f, cy, textPaint)
-                canvas.drawText(parts[1], startX + w1 + dashW + 4f, cy, targetPaint)
+
+                canvas.drawText(parts[0], startX, cy, leftTarget)
+                canvas.drawText("-", startX + w1 + 2f, cy, leftText)
+                canvas.drawText(parts[1], startX + w1 + dashW + 4f, cy, leftTarget)
             }
             
             for (j in 0 until 3) {
