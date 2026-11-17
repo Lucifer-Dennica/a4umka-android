@@ -107,12 +107,16 @@ object MnemoPdfDrawer {
     }
 
     private fun resolveSchemes(config: MnemoConfig): List<DescriptiveScheme> {
+        // Если выбран конкретный предмет — берём только его (1 схема = 1 лист с 1 блоком).
         if (config.selectedSchemeId != null) {
             MnemoData.getSchemeById(config.selectedSchemeId)?.let { return listOf(it) }
         }
-        // Если выбран конкретный — он один. Если «любой из категории» — берём 2 случайные.
+        // Иначе — sheetsCount × 2 уникальных случайных схем из категории.
+        // 1 лист = 2 картинки, 2 листа = 4, 3 листа = 6.
+        val needed = (config.descriptiveSheetsCount.coerceIn(1, 3)) * 2
         val fromCategory = MnemoData.getSchemesByCategory(config.descriptiveCategory)
-        return if (fromCategory.size >= 2) fromCategory.shuffled().take(2) else fromCategory
+        return if (fromCategory.size >= needed) fromCategory.shuffled().take(needed)
+               else fromCategory
     }
 
     // =====================================================================
@@ -311,42 +315,68 @@ object MnemoPdfDrawer {
         canvas.drawRoundRect(rect, 12f, 12f, cardBg)
         canvas.drawRoundRect(rect, 12f, 12f, cardBorder)
 
-        // ИСПРАВЛЕНО: компактная колонка с эмодзи слева — 90pt, эмодзи 50pt.
-        val emojiColWidth = 90f
-        val emojiSize = 50f
-        val emojiPaint = Paint().apply { textSize = emojiSize; textAlign = Paint.Align.CENTER }
+        // === Слева — крупный эмодзи на цветном фоне, как на сайте-эталоне ===
+        val emojiColWidth = 110f
+        val emojiSize = 80f
+        val circleRadius = 60f
         val emojiCx = x + emojiColWidth / 2f
-        val emojiCy = y + height / 2f - 8f + emojiSize / 3f
-        canvas.drawText(scheme.emoji, emojiCx, emojiCy, emojiPaint)
+        val emojiCy = y + height / 2f - 16f
 
-        val emojiLabelPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = textColor; typeface = sansBold
+        // Цветной фон-кружок (пастельный, по категории)
+        val bgCirclePaint = Paint().apply {
+            color = categoryToPastelColor(scheme.category); style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        canvas.drawCircle(emojiCx, emojiCy, circleRadius, bgCirclePaint)
+
+        // Сам эмодзи
+        val emojiPaint = Paint().apply {
+            textSize = emojiSize; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(scheme.emoji, emojiCx, emojiCy + emojiSize / 3f, emojiPaint)
+
+        // Подпись предмета в "бейдже" — скруглённая плашка под эмодзи
+        val titlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 13f; color = Color.WHITE; typeface = sansBold
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText(scheme.title, emojiCx, y + height - 14f, emojiLabelPaint)
+        val titleBgPaint = Paint().apply {
+            color = numBgColor; style = Paint.Style.FILL
+        }
+        val titleWidth = titlePaint.measureText(scheme.title) + 24f
+        val titleRect = RectF(
+            emojiCx - titleWidth / 2f, y + height - 36f,
+            emojiCx + titleWidth / 2f, y + height - 16f
+        )
+        canvas.drawRoundRect(titleRect, 10f, 10f, titleBgPaint)
+        canvas.drawText(scheme.title, emojiCx, y + height - 21f, titlePaint)
 
-        // Справа — 6 вопросов в сетке 2×3 с иконками.
-        // ИСПРАВЛЕНО: как на сайте-эталоне — компактнее и с иконками.
+        // === Справа — 6 вопросов в сетке 2×3 с иконками ===
         val textLeft = x + emojiColWidth + 6f
         val textWidth = width - emojiColWidth - 16f
         val qCols = 2
         val qRows = 3
         val qGapX = 10f
-        val qGapY = 6f
+        val qGapY = 8f
         val qCellW = (textWidth - qGapX * (qCols - 1)) / qCols
         val qCellH = (height - 20f - qGapY * (qRows - 1)) / qRows
 
-        // Иконки к вопросам (универсальные для всех категорий)
-        val questionIcons = listOf("❓", "🎨", "📐", "👐", "📍", "🍳")
+        val questionIcons = listOf("❓", "🎨", "📐", "👅", "🌱", "🍳")
 
+        val qCardBg = Paint().apply {
+            color = Color.parseColor("#FAFAF5"); style = Paint.Style.FILL
+        }
+        val qCardBorder = Paint().apply {
+            color = Color.parseColor("#E0E0D8"); style = Paint.Style.STROKE; strokeWidth = 1f
+        }
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
             isAntiAlias = true; textSize = 9f; color = Color.WHITE
             typeface = sansBold; textAlign = Paint.Align.CENTER
         }
-        val iconPaint = Paint().apply { textSize = 13f; textAlign = Paint.Align.LEFT }
+        val iconPaint = Paint().apply { textSize = 16f; textAlign = Paint.Align.LEFT }
         val questionPaint = Paint().apply {
-            isAntiAlias = true; textSize = 10f; color = textColor; typeface = sansBold
+            isAntiAlias = true; textSize = 11f; color = textColor; typeface = sansBold
         }
         val answerLine = Paint().apply {
             color = answerLineColor; strokeWidth = 1f
@@ -357,21 +387,39 @@ object MnemoPdfDrawer {
             val row = i / qCols
             val cellX = textLeft + col * (qCellW + qGapX)
             val cellY = y + 10f + row * (qCellH + qGapY)
-            val cy = cellY + 14f
+            // Лёгкая карточка-обводка вокруг вопроса
+            val qRect = RectF(cellX, cellY, cellX + qCellW, cellY + qCellH)
+            canvas.drawRoundRect(qRect, 6f, 6f, qCardBg)
+            canvas.drawRoundRect(qRect, 6f, 6f, qCardBorder)
+
+            val cy = cellY + 18f
 
             // Номер вопроса в кружке
-            val nCx = cellX + 8f
+            val nCx = cellX + 10f
             canvas.drawCircle(nCx, cy - 3f, 7f, numBg)
             canvas.drawText("${i + 1}", nCx, cy - 1f, numText)
 
             // Иконка
-            canvas.drawText(questionIcons[i], cellX + 20f, cy + 4f, iconPaint)
+            canvas.drawText(questionIcons[i], cellX + 22f, cy + 5f, iconPaint)
 
             // Текст вопроса
-            canvas.drawText(scheme.questions[i], cellX + 38f, cy + 2f, questionPaint)
+            canvas.drawText(scheme.questions[i], cellX + 42f, cy + 2f, questionPaint)
 
             // Линия для ответа под вопросом
-            canvas.drawLine(cellX + 20f, cy + 13f, cellX + qCellW - 2f, cy + 13f, answerLine)
+            canvas.drawLine(cellX + 10f, cellY + qCellH - 14f, cellX + qCellW - 6f, cellY + qCellH - 14f, answerLine)
+        }
+    }
+
+    // Пастельный цвет фона под эмодзи — по категории предмета
+    private fun categoryToPastelColor(category: DescriptiveCategory): Int {
+        return when (category) {
+            DescriptiveCategory.VEGETABLES -> Color.parseColor("#FFE0B2")  // персиковый
+            DescriptiveCategory.FRUITS    -> Color.parseColor("#FFCDD2")  // розовый
+            DescriptiveCategory.ANIMALS   -> Color.parseColor("#D7CCC8")  // коричневый
+            DescriptiveCategory.BIRDS     -> Color.parseColor("#BBDEFB")  // голубой
+            DescriptiveCategory.TOYS      -> Color.parseColor("#F8BBD0")  // розовый
+            DescriptiveCategory.TRANSPORT -> Color.parseColor("#CFD8DC")  // стальной
+            DescriptiveCategory.CLOTHES   -> Color.parseColor("#C5CAE9")  // индиго
         }
     }
 
