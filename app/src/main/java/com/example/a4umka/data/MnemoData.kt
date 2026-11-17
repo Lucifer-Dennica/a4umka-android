@@ -1316,10 +1316,10 @@ object MnemoData {
         DescriptiveScheme(id = "desc_veg_7", title = "Картошка", category = DescriptiveCategory.VEGETABLES, emoji = "🥔"),
         DescriptiveScheme(id = "desc_veg_8", title = "Перец", category = DescriptiveCategory.VEGETABLES, emoji = "🫑"),
         DescriptiveScheme(id = "desc_veg_9", title = "Тыква", category = DescriptiveCategory.VEGETABLES, emoji = "🎃"),
-        DescriptiveScheme(id = "desc_veg_10", title = "Свёкла", category = DescriptiveCategory.VEGETABLES, emoji = "🟣"),
-        DescriptiveScheme(id = "desc_veg_11", title = "Редиска", category = DescriptiveCategory.VEGETABLES, emoji = "🔴"),
+        DescriptiveScheme(id = "desc_veg_10", title = "Горошек", category = DescriptiveCategory.VEGETABLES, emoji = "🟢"),
+        DescriptiveScheme(id = "desc_veg_11", title = "Баклажан", category = DescriptiveCategory.VEGETABLES, emoji = "🍆"),
         DescriptiveScheme(id = "desc_veg_12", title = "Кукуруза", category = DescriptiveCategory.VEGETABLES, emoji = "🌽"),
-        // === Фрукты (12) ===
+        // === Фрукты (14) — добавлены ягоды ===
         DescriptiveScheme(id = "desc_fru_1", title = "Яблоко", category = DescriptiveCategory.FRUITS, emoji = "🍎"),
         DescriptiveScheme(id = "desc_fru_2", title = "Груша", category = DescriptiveCategory.FRUITS, emoji = "🍐"),
         DescriptiveScheme(id = "desc_fru_3", title = "Банан", category = DescriptiveCategory.FRUITS, emoji = "🍌"),
@@ -1328,10 +1328,12 @@ object MnemoData {
         DescriptiveScheme(id = "desc_fru_6", title = "Клубника", category = DescriptiveCategory.FRUITS, emoji = "🍓"),
         DescriptiveScheme(id = "desc_fru_7", title = "Лимон", category = DescriptiveCategory.FRUITS, emoji = "🍋"),
         DescriptiveScheme(id = "desc_fru_8", title = "Арбуз", category = DescriptiveCategory.FRUITS, emoji = "🍉"),
-        DescriptiveScheme(id = "desc_fru_9", title = "Слива", category = DescriptiveCategory.FRUITS, emoji = "🔵"),
-        DescriptiveScheme(id = "desc_fru_10", title = "Персик", category = DescriptiveCategory.FRUITS, emoji = "🍑"),
-        DescriptiveScheme(id = "desc_fru_11", title = "Ананас", category = DescriptiveCategory.FRUITS, emoji = "🍍"),
-        DescriptiveScheme(id = "desc_fru_12", title = "Вишня", category = DescriptiveCategory.FRUITS, emoji = "🍒"),
+        DescriptiveScheme(id = "desc_fru_9", title = "Персик", category = DescriptiveCategory.FRUITS, emoji = "🍑"),
+        DescriptiveScheme(id = "desc_fru_10", title = "Ананас", category = DescriptiveCategory.FRUITS, emoji = "🍍"),
+        DescriptiveScheme(id = "desc_fru_11", title = "Вишня", category = DescriptiveCategory.FRUITS, emoji = "🍒"),
+        DescriptiveScheme(id = "desc_fru_12", title = "Черника", category = DescriptiveCategory.FRUITS, emoji = "🫐"),
+        DescriptiveScheme(id = "desc_fru_13", title = "Малина", category = DescriptiveCategory.FRUITS, emoji = "🟥"),
+        DescriptiveScheme(id = "desc_fru_14", title = "Мандарин", category = DescriptiveCategory.FRUITS, emoji = "🍊"),
         // === Животные (15) ===
         DescriptiveScheme(id = "desc_an_1", title = "Корова", category = DescriptiveCategory.ANIMALS, emoji = "🐄"),
         DescriptiveScheme(id = "desc_an_2", title = "Лошадь", category = DescriptiveCategory.ANIMALS, emoji = "🐎"),
@@ -1424,5 +1426,82 @@ object MnemoData {
     fun getRandomScheme(category: DescriptiveCategory): DescriptiveScheme? {
         val list = getSchemesByCategory(category)
         return if (list.isEmpty()) null else list.random()
+    }
+
+    /**
+     * План вопросов и иконок для каждой категории описательного рассказа.
+     * Свой набор из 6 пунктов для овощей, животных, птиц, игрушек, транспорта, одежды.
+     */
+    fun getQuestionsForCategory(category: DescriptiveCategory): QuestionPlan {
+        return when (category) {
+            // Овощи и Фрукты — одинаковый план
+            DescriptiveCategory.VEGETABLES,
+            DescriptiveCategory.FRUITS -> QuestionPlan(
+                questions = listOf(
+                    "Что это?",
+                    "Какого цвета?",
+                    "Какой формы?",
+                    "Какой на вкус?",
+                    "Где растёт?",
+                    "Что из него готовят?"
+                ),
+                icons = listOf("❓", "🎨", "🔷", "👅", "🌱", "🍽️")
+            )
+            DescriptiveCategory.ANIMALS -> QuestionPlan(
+                questions = listOf(
+                    "Кто это?",
+                    "Где живёт?",
+                    "Большой или маленький?",
+                    "Какие у него части тела?",
+                    "Чем питается?",
+                    "Как зовут детёныша?"
+                ),
+                icons = listOf("❓", "🏠", "📏", "🐾", "🍽️", "🐣")
+            )
+            DescriptiveCategory.BIRDS -> QuestionPlan(
+                questions = listOf(
+                    "Кто это?",
+                    "Какие у неё перья?",
+                    "Где живёт?",
+                    "Чем питается?",
+                    "Где вьёт гнездо?",
+                    "Улетает на зиму или остаётся?"
+                ),
+                icons = listOf("❓", "🎨", "🏠", "🍽️", "🪺", "✈️")
+            )
+            DescriptiveCategory.TOYS -> QuestionPlan(
+                questions = listOf(
+                    "Что это?",
+                    "Какого цвета?",
+                    "Какой формы?",
+                    "Из чего сделана?",
+                    "Как с ней играют?",
+                    "Почему она тебе нравится?"
+                ),
+                icons = listOf("❓", "🎨", "🔷", "🪵", "🤲", "❤️")
+            )
+            DescriptiveCategory.TRANSPORT -> QuestionPlan(
+                questions = listOf(
+                    "Что это?",
+                    "Где ездит: по земле, по воде или по воздуху?",
+                    "Какого цвета?",
+                    "Из каких частей состоит?",
+                    "Кто им управляет?",
+                    "Кого или что перевозит?"
+                ),
+                icons = listOf("❓", "🛣️", "🎨", "⚙️", "🧑‍✈️", "📦")
+            )
+            DescriptiveCategory.CLOTHES -> QuestionPlan(
+                questions = listOf(
+                    "Что это?",
+                    "Какого цвета?",
+                    "Из чего сшито?",
+                    "В какую погоду носят?",
+                    "На какую часть тела надевают?",
+                    "Как за этим ухаживать?"
+                ),
+                icons = listOf("❓", "🎨", "🧵", "🌡️", "🧍", "🧺")
+            )
+        }
     }
 }
