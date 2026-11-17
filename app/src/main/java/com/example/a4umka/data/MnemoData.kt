@@ -1303,58 +1303,95 @@ object MnemoData {
     )
 
     // ===========================================================
-    //          ОПИСАТЕЛЬНЫЕ СХЕМЫ (по 6 на категорию × 7 = 42)
+    //          ОПИСАТЕЛЬНЫЕ СХЕМЫ (много на категорию)
     // ===========================================================
     val descriptiveSchemes = listOf(
-        // Овощи (6)
+        // === Овощи (12) ===
         DescriptiveScheme(id = "desc_veg_1", title = "Помидор", category = DescriptiveCategory.VEGETABLES, emoji = "🍅"),
         DescriptiveScheme(id = "desc_veg_2", title = "Огурец", category = DescriptiveCategory.VEGETABLES, emoji = "🥒"),
         DescriptiveScheme(id = "desc_veg_3", title = "Морковь", category = DescriptiveCategory.VEGETABLES, emoji = "🥕"),
         DescriptiveScheme(id = "desc_veg_4", title = "Лук", category = DescriptiveCategory.VEGETABLES, emoji = "🧅"),
         DescriptiveScheme(id = "desc_veg_5", title = "Капуста", category = DescriptiveCategory.VEGETABLES, emoji = "🥬"),
         DescriptiveScheme(id = "desc_veg_6", title = "Чеснок", category = DescriptiveCategory.VEGETABLES, emoji = "🧄"),
-        // Фрукты (6)
+        DescriptiveScheme(id = "desc_veg_7", title = "Картошка", category = DescriptiveCategory.VEGETABLES, emoji = "🥔"),
+        DescriptiveScheme(id = "desc_veg_8", title = "Перец", category = DescriptiveCategory.VEGETABLES, emoji = "🫑"),
+        DescriptiveScheme(id = "desc_veg_9", title = "Тыква", category = DescriptiveCategory.VEGETABLES, emoji = "🎃"),
+        DescriptiveScheme(id = "desc_veg_10", title = "Свёкла", category = DescriptiveCategory.VEGETABLES, emoji = "🟣"),
+        DescriptiveScheme(id = "desc_veg_11", title = "Редиска", category = DescriptiveCategory.VEGETABLES, emoji = "🔴"),
+        DescriptiveScheme(id = "desc_veg_12", title = "Кукуруза", category = DescriptiveCategory.VEGETABLES, emoji = "🌽"),
+        // === Фрукты (12) ===
         DescriptiveScheme(id = "desc_fru_1", title = "Яблоко", category = DescriptiveCategory.FRUITS, emoji = "🍎"),
         DescriptiveScheme(id = "desc_fru_2", title = "Груша", category = DescriptiveCategory.FRUITS, emoji = "🍐"),
         DescriptiveScheme(id = "desc_fru_3", title = "Банан", category = DescriptiveCategory.FRUITS, emoji = "🍌"),
         DescriptiveScheme(id = "desc_fru_4", title = "Апельсин", category = DescriptiveCategory.FRUITS, emoji = "🍊"),
         DescriptiveScheme(id = "desc_fru_5", title = "Виноград", category = DescriptiveCategory.FRUITS, emoji = "🍇"),
         DescriptiveScheme(id = "desc_fru_6", title = "Клубника", category = DescriptiveCategory.FRUITS, emoji = "🍓"),
-        // Животные (6)
+        DescriptiveScheme(id = "desc_fru_7", title = "Лимон", category = DescriptiveCategory.FRUITS, emoji = "🍋"),
+        DescriptiveScheme(id = "desc_fru_8", title = "Арбуз", category = DescriptiveCategory.FRUITS, emoji = "🍉"),
+        DescriptiveScheme(id = "desc_fru_9", title = "Слива", category = DescriptiveCategory.FRUITS, emoji = "🔵"),
+        DescriptiveScheme(id = "desc_fru_10", title = "Персик", category = DescriptiveCategory.FRUITS, emoji = "🍑"),
+        DescriptiveScheme(id = "desc_fru_11", title = "Ананас", category = DescriptiveCategory.FRUITS, emoji = "🍍"),
+        DescriptiveScheme(id = "desc_fru_12", title = "Вишня", category = DescriptiveCategory.FRUITS, emoji = "🍒"),
+        // === Животные (15) ===
         DescriptiveScheme(id = "desc_an_1", title = "Корова", category = DescriptiveCategory.ANIMALS, emoji = "🐄"),
         DescriptiveScheme(id = "desc_an_2", title = "Лошадь", category = DescriptiveCategory.ANIMALS, emoji = "🐎"),
         DescriptiveScheme(id = "desc_an_3", title = "Собака", category = DescriptiveCategory.ANIMALS, emoji = "🐕"),
         DescriptiveScheme(id = "desc_an_4", title = "Кошка", category = DescriptiveCategory.ANIMALS, emoji = "🐈"),
         DescriptiveScheme(id = "desc_an_5", title = "Кролик", category = DescriptiveCategory.ANIMALS, emoji = "🐇"),
         DescriptiveScheme(id = "desc_an_6", title = "Свинья", category = DescriptiveCategory.ANIMALS, emoji = "🐷"),
-        // Птицы (6)
+        DescriptiveScheme(id = "desc_an_7", title = "Медведь", category = DescriptiveCategory.ANIMALS, emoji = "🐻"),
+        DescriptiveScheme(id = "desc_an_8", title = "Лиса", category = DescriptiveCategory.ANIMALS, emoji = "🦊"),
+        DescriptiveScheme(id = "desc_an_9", title = "Волк", category = DescriptiveCategory.ANIMALS, emoji = "🐺"),
+        DescriptiveScheme(id = "desc_an_10", title = "Заяц", category = DescriptiveCategory.ANIMALS, emoji = "🐰"),
+        DescriptiveScheme(id = "desc_an_11", title = "Белка", category = DescriptiveCategory.ANIMALS, emoji = "🐿️"),
+        DescriptiveScheme(id = "desc_an_12", title = "Ёжик", category = DescriptiveCategory.ANIMALS, emoji = "🦔"),
+        DescriptiveScheme(id = "desc_an_13", title = "Панда", category = DescriptiveCategory.ANIMALS, emoji = "🐼"),
+        DescriptiveScheme(id = "desc_an_14", title = "Обезьяна", category = DescriptiveCategory.ANIMALS, emoji = "🐵"),
+        DescriptiveScheme(id = "desc_an_15", title = "Овца", category = DescriptiveCategory.ANIMALS, emoji = "🐑"),
+        // === Птицы (10) ===
         DescriptiveScheme(id = "desc_bird_1", title = "Воробей", category = DescriptiveCategory.BIRDS, emoji = "🐦"),
         DescriptiveScheme(id = "desc_bird_2", title = "Петух", category = DescriptiveCategory.BIRDS, emoji = "🐓"),
         DescriptiveScheme(id = "desc_bird_3", title = "Утка", category = DescriptiveCategory.BIRDS, emoji = "🦆"),
         DescriptiveScheme(id = "desc_bird_4", title = "Гусь", category = DescriptiveCategory.BIRDS, emoji = "🦢"),
         DescriptiveScheme(id = "desc_bird_5", title = "Курица", category = DescriptiveCategory.BIRDS, emoji = "🐔"),
         DescriptiveScheme(id = "desc_bird_6", title = "Сова", category = DescriptiveCategory.BIRDS, emoji = "🦉"),
-        // Игрушки (6)
+        DescriptiveScheme(id = "desc_bird_7", title = "Попугай", category = DescriptiveCategory.BIRDS, emoji = "🦜"),
+        DescriptiveScheme(id = "desc_bird_8", title = "Дятел", category = DescriptiveCategory.BIRDS, emoji = "🐦"),
+        DescriptiveScheme(id = "desc_bird_9", title = "Аист", category = DescriptiveCategory.BIRDS, emoji = "🕊️"),
+        DescriptiveScheme(id = "desc_bird_10", title = "Пингвин", category = DescriptiveCategory.BIRDS, emoji = "🐧"),
+        // === Игрушки (10) ===
         DescriptiveScheme(id = "desc_toy_1", title = "Мяч", category = DescriptiveCategory.TOYS, emoji = "⚽"),
-        DescriptiveScheme(id = "desc_toy_2", title = "Кукла", category = DescriptiveCategory.TOYS, emoji = "🧸"),
+        DescriptiveScheme(id = "desc_toy_2", title = "Кукла", category = DescriptiveCategory.TOYS, emoji = "🪆"),
         DescriptiveScheme(id = "desc_toy_3", title = "Машинка", category = DescriptiveCategory.TOYS, emoji = "🚗"),
         DescriptiveScheme(id = "desc_toy_4", title = "Кубики", category = DescriptiveCategory.TOYS, emoji = "🧱"),
         DescriptiveScheme(id = "desc_toy_5", title = "Пирамида", category = DescriptiveCategory.TOYS, emoji = "🎯"),
         DescriptiveScheme(id = "desc_toy_6", title = "Мишка", category = DescriptiveCategory.TOYS, emoji = "🧸"),
-        // Транспорт (6)
+        DescriptiveScheme(id = "desc_toy_7", title = "Барабан", category = DescriptiveCategory.TOYS, emoji = "🥁"),
+        DescriptiveScheme(id = "desc_toy_8", title = "Робот", category = DescriptiveCategory.TOYS, emoji = "🤖"),
+        DescriptiveScheme(id = "desc_toy_9", title = "Юла", category = DescriptiveCategory.TOYS, emoji = "🌀"),
+        DescriptiveScheme(id = "desc_toy_10", title = "Воздушный змей", category = DescriptiveCategory.TOYS, emoji = "🪁"),
+        // === Транспорт (10) ===
         DescriptiveScheme(id = "desc_tr_1", title = "Машина", category = DescriptiveCategory.TRANSPORT, emoji = "🚗"),
         DescriptiveScheme(id = "desc_tr_2", title = "Самолёт", category = DescriptiveCategory.TRANSPORT, emoji = "✈️"),
         DescriptiveScheme(id = "desc_tr_3", title = "Поезд", category = DescriptiveCategory.TRANSPORT, emoji = "🚂"),
         DescriptiveScheme(id = "desc_tr_4", title = "Корабль", category = DescriptiveCategory.TRANSPORT, emoji = "🚢"),
         DescriptiveScheme(id = "desc_tr_5", title = "Автобус", category = DescriptiveCategory.TRANSPORT, emoji = "🚌"),
         DescriptiveScheme(id = "desc_tr_6", title = "Велосипед", category = DescriptiveCategory.TRANSPORT, emoji = "🚲"),
-        // Одежда (6)
+        DescriptiveScheme(id = "desc_tr_7", title = "Трактор", category = DescriptiveCategory.TRANSPORT, emoji = "🚜"),
+        DescriptiveScheme(id = "desc_tr_8", title = "Вертолёт", category = DescriptiveCategory.TRANSPORT, emoji = "🚁"),
+        DescriptiveScheme(id = "desc_tr_9", title = "Лодка", category = DescriptiveCategory.TRANSPORT, emoji = "⛵"),
+        DescriptiveScheme(id = "desc_tr_10", title = "Ракета", category = DescriptiveCategory.TRANSPORT, emoji = "🚀"),
+        // === Одежда (10) ===
         DescriptiveScheme(id = "desc_cl_1", title = "Шапка", category = DescriptiveCategory.CLOTHES, emoji = "🧢"),
         DescriptiveScheme(id = "desc_cl_2", title = "Куртка", category = DescriptiveCategory.CLOTHES, emoji = "🧥"),
         DescriptiveScheme(id = "desc_cl_3", title = "Шарф", category = DescriptiveCategory.CLOTHES, emoji = "🧣"),
         DescriptiveScheme(id = "desc_cl_4", title = "Рубашка", category = DescriptiveCategory.CLOTHES, emoji = "👔"),
         DescriptiveScheme(id = "desc_cl_5", title = "Платье", category = DescriptiveCategory.CLOTHES, emoji = "👗"),
-        DescriptiveScheme(id = "desc_cl_6", title = "Ботинки", category = DescriptiveCategory.CLOTHES, emoji = "👢")
+        DescriptiveScheme(id = "desc_cl_6", title = "Ботинки", category = DescriptiveCategory.CLOTHES, emoji = "👢"),
+        DescriptiveScheme(id = "desc_cl_7", title = "Варежки", category = DescriptiveCategory.CLOTHES, emoji = "🧤"),
+        DescriptiveScheme(id = "desc_cl_8", title = "Носки", category = DescriptiveCategory.CLOTHES, emoji = "🧦"),
+        DescriptiveScheme(id = "desc_cl_9", title = "Футболка", category = DescriptiveCategory.CLOTHES, emoji = "👕"),
+        DescriptiveScheme(id = "desc_cl_10", title = "Туфли", category = DescriptiveCategory.CLOTHES, emoji = "👟")
     )
 
     // ===========================================================
