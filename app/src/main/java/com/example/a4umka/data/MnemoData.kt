@@ -597,152 +597,295 @@ object MnemoData {
     //                       ПОТЕШКИ
     // ===========================================================
     private val poteshkiTexts = listOf(
+        // === 4-5 лет (4 клетки) ===
         MnemoText(
             id = "poteshki_1", title = "Как у нашего кота",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Как у нашего кота", "🐱"),
-                MnemoLine("Шубка очень хороша", "🧥"),
-                MnemoLine("Как у котика усы", "🐈"),
-                MnemoLine("Красивой всей красы", "✨")
+                MnemoLine("Как у нашего кота шубка очень хороша,", "🐱"),
+                MnemoLine("Как у котика усы удивительной красы,", "🐈"),
+                MnemoLine("Глаза смелые,", "👀"),
+                MnemoLine("Зубки белые.", "🦷")
             )
         ),
         MnemoText(
             id = "poteshki_2", title = "Солнышко-вёдрышко",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Солнышко-вёдрышко", "☀️"),
-                MnemoLine("Выгляни в окошечко", "🪟"),
-                MnemoLine("Твои детки плачут", "😢"),
-                MnemoLine("По камушкам скачут", "🪨")
+                MnemoLine("Солнышко-вёдрышко,", "☀️"),
+                MnemoLine("Выгляни в окошко!", "🪟"),
+                MnemoLine("Твои детки плачут,", "😢"),
+                MnemoLine("По камушкам скачут.", "🪨")
             )
         ),
         MnemoText(
-            id = "poteshki_3", title = "Ладушки, ладушки",
+            id = "poteshki_3", title = "Наша Маша маленька",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Ладушки, ладушки", "👏"),
-                MnemoLine("Где были — у бабушки", "👵"),
-                MnemoLine("Испекла нам оладушки", "🥞"),
-                MnemoLine("Вкусные да пышные", "😋")
+                MnemoLine("Наша Маша маленька,", "👧"),
+                MnemoLine("На ней шубка аленька,", "🧥"),
+                MnemoLine("Опушка бобровая,", "🟤"),
+                MnemoLine("Маша чернобровая.", "👁️")
             )
         ),
         MnemoText(
-            id = "poteshki_4", title = "Водичка-водичка",
+            id = "poteshki_4", title = "Пальчик-мальчик",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Водичка-водичка", "💧"),
-                MnemoLine("Умой моё личико", "👶"),
-                MnemoLine("Чтобы глазоньки блестели", "✨"),
-                MnemoLine("Чтобы щёчки краснели", "😊")
+                MnemoLine("Пальчик-мальчик, где ты был?", "👆"),
+                MnemoLine("С этим братцем в лес ходил,", "👋"),
+                MnemoLine("С этим братцем щи варил,", "🍲"),
+                MnemoLine("С этим братцем кашу ел, с этим братцем песни пел.", "🎵")
             )
         ),
         MnemoText(
-            id = "poteshki_5", title = "Сорока-белобока",
+            id = "poteshki_5", title = "Киска, киска, брысь",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Киска, киска, киска, брысь!", "🐱"),
+                MnemoLine("На дорожку не садись:", "🛤️"),
+                MnemoLine("Наша деточка пойдёт,", "👶"),
+                MnemoLine("Через киску упадёт.", "💥")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_6", title = "Баю-баюшки-баю",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Баю-баюшки-баю,", "🌙"),
+                MnemoLine("Не ложися на краю:", "🛏️"),
+                MnemoLine("Придёт серенький волчок,", "🐺"),
+                MnemoLine("Он ухватит за бочок.", "😱")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_7", title = "Ай, качи-качи-качи",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Ай, качи-качи-качи!", "🎶"),
+                MnemoLine("Глянь — баранки, калачи!", "🥨"),
+                MnemoLine("С пылу, с жару из печи —", "🔥"),
+                MnemoLine("Все румяны, горячи.", "🍞")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_8", title = "Совушка-сова",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Совушка-сова,", "🦉"),
+                MnemoLine("Большая голова,", "🧠"),
+                MnemoLine("На пеньке сидит,", "🪵"),
+                MnemoLine("Во все стороны глядит.", "👀")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_9", title = "Ходит котик по лавочке",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Ходит котик по лавочке,", "🐱"),
+                MnemoLine("Водит кошку за лапочки.", "🐈"),
+                MnemoLine("Топы-топы по лавочке,", "🐾"),
+                MnemoLine("Цапы-цапы за лапочки.", "🤝")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_10", title = "Огуречик, огуречик",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Огуречик, огуречик,", "🥒"),
+                MnemoLine("Не ходи на тот конечик:", "🚫"),
+                MnemoLine("Там мышка живёт,", "🐭"),
+                MnemoLine("Тебе хвостик отгрызёт.", "🪤")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_11", title = "Заинька, попляши",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Заинька, попляши, серенький, попляши!", "🐰"),
+                MnemoLine("Вот так, вот так попляши!", "💃"),
+                MnemoLine("Заинька, топни ножкой, серенький, топни ножкой!", "🦵"),
+                MnemoLine("Вот так, вот так топни ножкой!", "👣")
+            )
+        ),
+        // === 5-6 лет (6 клеток) ===
+        MnemoText(
+            id = "poteshki_12", title = "Сорока-белобока",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
                 MnemoLine("Сорока-белобока", "🐦"),
-                MnemoLine("Кашу варила", "🥘"),
-                MnemoLine("Деток кормила", "🍼"),
-                MnemoLine("Этому дала", "👦"),
-                MnemoLine("Этому дала", "👧"),
-                MnemoLine("А этому не дала", "😢")
+                MnemoLine("Кашу варила,", "🥘"),
+                MnemoLine("Деток кормила.", "🍼"),
+                MnemoLine("Этому дала, этому дала,", "👦👧"),
+                MnemoLine("А этому не дала:", "😢"),
+                MnemoLine("— Ты воды не носил, дров не рубил!", "🪵")
             )
         ),
         MnemoText(
-            id = "poteshki_6", title = "Идёт коза рогатая",
+            id = "poteshki_13", title = "Божья коровка",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Божья коровка,", "🐞"),
+                MnemoLine("Улети на небо,", "🌤️"),
+                MnemoLine("Там твои детки", "👶"),
+                MnemoLine("Кушают конфетки.", "🍬"),
+                MnemoLine("Всем по одной,", "🍭"),
+                MnemoLine("А тебе ни одной!", "🙅")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_14", title = "Дождик, дождик, пуще",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Дождик, дождик, пуще!", "🌧️"),
+                MnemoLine("Дам тебе я гущи.", "🥣"),
+                MnemoLine("Выйду на крылечко,", "🚪"),
+                MnemoLine("Дам огуречка.", "🥒"),
+                MnemoLine("Дам и хлеба каравай —", "🍞"),
+                MnemoLine("Сколько хочешь поливай!", "💧")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_15", title = "Петушок, петушок",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Петушок, петушок,", "🐓"),
+                MnemoLine("Золотой гребешок,", "👑"),
+                MnemoLine("Масляна головушка, шёлкова бородушка,", "💛"),
+                MnemoLine("Что ты рано встаёшь,", "🌅"),
+                MnemoLine("Голосисто поёшь,", "🎶"),
+                MnemoLine("Деткам спать не даёшь?", "😴")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_16", title = "Идёт коза рогатая",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
                 MnemoLine("Идёт коза рогатая", "🐐"),
-                MnemoLine("За малыми ребятами", "👶"),
-                MnemoLine("Ножками топ-топ", "👣"),
-                MnemoLine("Глазками хлоп-хлоп", "👀"),
-                MnemoLine("Кто кашу не ест", "🥣"),
-                MnemoLine("Того забодаю", "💢")
+                MnemoLine("За малыми ребятами.", "👶"),
+                MnemoLine("Ножками топ-топ!", "👣"),
+                MnemoLine("Глазками хлоп-хлоп!", "👀"),
+                MnemoLine("Кто кашу не ест, молока не пьёт —", "🥣"),
+                MnemoLine("Забодает, забодает!", "💢")
             )
         ),
         MnemoText(
-            id = "poteshki_7", title = "Петушок, петушок",
+            id = "poteshki_17", title = "Сидит белка на тележке",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Петушок, петушок", "🐓"),
-                MnemoLine("Золотой гребешок", "👑"),
-                MnemoLine("Масляна головушка", "💛"),
-                MnemoLine("Шёлкова бородушка", "🧵"),
-                MnemoLine("Что ты рано встаёшь", "🌅"),
-                MnemoLine("Голосисто поёшь", "🎶")
+                MnemoLine("Сидит белка на тележке,", "🐿️"),
+                MnemoLine("Продаёт она орешки:", "🌰"),
+                MnemoLine("Лисичке-сестричке,", "🦊"),
+                MnemoLine("Воробью, синичке,", "🐦"),
+                MnemoLine("Мишке толстопятому,", "🐻"),
+                MnemoLine("Заиньке усатому.", "🐰")
             )
         ),
         MnemoText(
-            id = "poteshki_8", title = "Огуречик, огуречик",
+            id = "poteshki_18", title = "Водичка, водичка",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Огуречик, огуречик", "🥒"),
-                MnemoLine("Не ходи на тот конечик", "🚫"),
-                MnemoLine("Там мышка живёт", "🐭"),
-                MnemoLine("Твой хвостик укуси́т", "🪤"),
-                MnemoLine("Хвостик у неё остёр", "⚔️"),
-                MnemoLine("Прячься в огород, дружок", "🌱")
+                MnemoLine("Водичка, водичка,", "💧"),
+                MnemoLine("Умой моё личико,", "👶"),
+                MnemoLine("Чтобы глазки блестели,", "✨"),
+                MnemoLine("Чтобы щёчки краснели,", "😊"),
+                MnemoLine("Чтоб смеялся роток,", "😄"),
+                MnemoLine("Чтоб кусался зубок.", "🦷")
             )
         ),
         MnemoText(
-            id = "poteshki_9", title = "Наша Маша маленька",
-            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_6_7, type = MnemoType.POTESHKA,
+            id = "poteshki_19", title = "Тень-тень-потетень",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Наша Маша маленька", "👧"),
-                MnemoLine("На ней шубка аленька", "🧥"),
-                MnemoLine("Опушка бобровая", "🟤"),
-                MnemoLine("Маша чёрнобровая", "👁️"),
-                MnemoLine("Ждёт у окошка подружек", "🪟"),
-                MnemoLine("Чтоб играть с ней в игрушки", "🧸"),
-                MnemoLine("Покатать на качелях", "🎠"),
-                MnemoLine("Угостить блинами свежими", "🥞"),
-                MnemoLine("И чаём с малиной сладким", "🍵")
+                MnemoLine("Тень-тень-потетень, выше города плетень.", "🏙️"),
+                MnemoLine("Сели звери под плетень, похвалялися весь день.", "🪵"),
+                MnemoLine("Похвалялася лиса: «Всему свету я краса!»", "🦊"),
+                MnemoLine("Похвалялся зайка: «Пойди догоняй-ка!»", "🐰"),
+                MnemoLine("Похвалялися ежи: «У нас шубы хороши!»", "🦔"),
+                MnemoLine("Похвалялся медведь: «Могу песни я петь!»", "🐻")
             )
         ),
         MnemoText(
-            id = "poteshki_10", title = "Тили-тили-тили-бом",
-            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_6_7, type = MnemoType.POTESHKA,
+            id = "poteshki_20", title = "Зайчишка-трусишка",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Тили-тили-тили-бом", "🔔"),
-                MnemoLine("Сбил сосну зайчишка лбом", "🌲"),
-                MnemoLine("Жалко бедного зайчишку", "🐰"),
-                MnemoLine("Нос вспух, как у мышки", "🐭"),
-                MnemoLine("Прискакал к нему медведь", "🐻"),
-                MnemoLine("Стал зайчишку пожалеть", "🤗"),
-                MnemoLine("Лёд к носу приложил", "🧊"),
-                MnemoLine("И в сугроб положил", "❄️"),
-                MnemoLine("Зайчик спит и нос сопит", "😴")
+                MnemoLine("Зайчишка-трусишка по полю бежал,", "🐰"),
+                MnemoLine("В огород забежал,", "🌱"),
+                MnemoLine("Морковку нашёл,", "🥕"),
+                MnemoLine("Капустку нашёл,", "🥬"),
+                MnemoLine("Сидит, грызёт.", "😋"),
+                MnemoLine("Ай, кто-то идёт!", "😱")
             )
         ),
         MnemoText(
-            id = "poteshki_11", title = "Заиньки, заиньки",
-            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_6_7, type = MnemoType.POTESHKA,
+            id = "poteshki_21", title = "Курочка-рябушечка",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Заиньки, заиньки", "🐰"),
-                MnemoLine("Прибежали в садочек", "🌳"),
-                MnemoLine("Стали грызть капустку", "🥬"),
-                MnemoLine("Сладкую и хрусткую", "🥗"),
-                MnemoLine("Прибежал хозяин в сад", "👨‍🌾"),
-                MnemoLine("Стал зайчишек прогонять", "🚫"),
-                MnemoLine("Палочкой стучит-постукивает", "🪵"),
-                MnemoLine("Зайцы в лес пустились наутёк", "🏃"),
-                MnemoLine("С тех пор в саду их и не видели", "🌲")
+                MnemoLine("— Курочка-рябушечка, куда пошла?", "🐔"),
+                MnemoLine("— На речку.", "🏞️"),
+                MnemoLine("— Курочка-рябушечка, зачем пошла?", "❓"),
+                MnemoLine("— За водичкой.", "💧"),
+                MnemoLine("— Курочка-рябушечка, зачем тебе водичка?", "💧"),
+                MnemoLine("— Цыпляток поить. Они пить хотят!", "🐥")
             )
         ),
         MnemoText(
-            id = "poteshki_12", title = "Дождик, дождик, пуще",
+            id = "poteshki_22", title = "Гуси, гуси",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("— Гуси, гуси! — Га-га-га!", "🦢"),
+                MnemoLine("— Есть хотите? — Да-да-да!", "😋"),
+                MnemoLine("— Так летите же домой!", "🏠"),
+                MnemoLine("— Серый волк под горой", "🐺"),
+                MnemoLine("Не пускает нас домой!", "🚫"),
+                MnemoLine("— Ну летите как хотите, только крылья берегите!", "🪶")
+            )
+        ),
+        // === 6-7 лет (9 клеток) ===
+        MnemoText(
+            id = "poteshki_23", title = "Ладушки",
             theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_6_7, type = MnemoType.POTESHKA,
             lines = listOf(
-                MnemoLine("Дождик, дождик, пуще", "🌧️"),
-                MnemoLine("Дам тебе я гущи", "🥣"),
-                MnemoLine("Дам тебе ложку", "🥄"),
-                MnemoLine("Хлебай понемножку", "🍞"),
-                MnemoLine("Дождик, дождик, полно лить", "☔"),
-                MnemoLine("Малых детушек мочить", "👶"),
-                MnemoLine("Хватит по небу гулять", "☁️"),
-                MnemoLine("Хватит землю поливать", "🌱"),
-                MnemoLine("Выгляни скорее солнышко", "☀️")
+                MnemoLine("Ладушки, ладушки!", "👏"),
+                MnemoLine("— Где были? — У бабушки.", "👵"),
+                MnemoLine("— Что ели? — Кашку.", "🥣"),
+                MnemoLine("— Что пили? — Простоквашку.", "🥛"),
+                MnemoLine("Кашка сладенька,", "🍯"),
+                MnemoLine("Бабушка добренька.", "❤️"),
+                MnemoLine("Попили, поели,", "🍽️"),
+                MnemoLine("Шу-у… Домой полетели,", "🕊️"),
+                MnemoLine("На головку сели!", "👶")
+            )
+        ),
+        // НОВЫЕ — длинные потешки по образцу для 9 клеток
+        MnemoText(
+            id = "poteshki_24", title = "Сорока-ворона",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_6_7, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Сорока-ворона кашу варила,", "🐦"),
+                MnemoLine("На порог скакала,", "🚪"),
+                MnemoLine("Гостей поджидала.", "👨‍👩‍👧"),
+                MnemoLine("Приехали гости,", "🐎"),
+                MnemoLine("Стали кланяться:", "🙇"),
+                MnemoLine("«Здравствуй, сорока-ворона!»,", "👋"),
+                MnemoLine("«Чем вас угощать?»", "🍽️"),
+                MnemoLine("«Кашкой с молоком»,", "🥛"),
+                MnemoLine("«И пряником с медком!»", "🍯")
+            )
+        ),
+        MnemoText(
+            id = "poteshki_25", title = "Идёт коза по лесу",
+            theme = MnemoTheme.POTESHKI, age = MnemoAge.AGE_6_7, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Идёт коза по лесу,", "🐐"),
+                MnemoLine("Ищет коза траву.", "🌿"),
+                MnemoLine("Найдёт травку — жуёт,", "🍽️"),
+                MnemoLine("Найдёт цветочек — срывает,", "🌸"),
+                MnemoLine("А потом плясать идёт.", "💃"),
+                MnemoLine("Топ-топ — ножками,", "👣"),
+                MnemoLine("Хлоп-хлоп — лапками,", "👏"),
+                MnemoLine("А козлята вдогонку бегут,", "🏃"),
+                MnemoLine("Хоровод вокруг мамы ведут.", "🌀")
             )
         )
     )
@@ -751,161 +894,199 @@ object MnemoData {
     //                          СКАЗКИ
     // ===========================================================
     private val skazkiTexts = listOf(
+        // === 5-6 лет (6 клеток) ===
         MnemoText(
-            id = "skazki_1", title = "Курочка Ряба",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_4_5, type = MnemoType.TALE,
+            id = "skazki_1", title = "Репка",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
             lines = listOf(
-                MnemoLine("Жили-были дед да баба", "👴👵"),
-                MnemoLine("И была у них курочка Ряба", "🐔"),
-                MnemoLine("Снесла яичко не простое — золотое", "🥚"),
-                MnemoLine("Дед бил-бил — не разбил", "🔨")
+                MnemoLine("Посадил дед репку.", "🌱"),
+                MnemoLine("Выросла репка большая-пребольшая.", "🥬"),
+                MnemoLine("Стал дед репку тянуть: тянет-потянет, вытянуть не может.", "👴"),
+                MnemoLine("Позвал дед бабку, бабка — внучку.", "👵👧"),
+                MnemoLine("Внучка позвала Жучку, Жучка — кошку, кошка — мышку.", "🐕🐈🐭"),
+                MnemoLine("Тянут-потянут — и вытянули репку!", "🎉")
             )
         ),
         MnemoText(
-            id = "skazki_2", title = "Колобок",
+            id = "skazki_2", title = "Курочка Ряба",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Жили-были дед да баба.", "👴👵"),
+                MnemoLine("Была у них курочка Ряба.", "🐔"),
+                MnemoLine("Снесла курочка яичко, не простое — золотое.", "🥚"),
+                MnemoLine("Дед бил-бил — не разбил. Баба била-била — не разбила.", "🔨"),
+                MnemoLine("Мышка бежала, хвостиком махнула — яичко упало и разбилось.", "🐭"),
+                MnemoLine("Курочка говорит: «Не плачьте, снесу вам яичко простое».", "🥚")
+            )
+        ),
+        MnemoText(
+            id = "skazki_3", title = "Теремок",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Стоит в поле теремок.", "🏠"),
+                MnemoLine("Прибежала мышка-норушка, потом лягушка-квакушка.", "🐸🐭"),
+                MnemoLine("Прискакал зайчик-побегайчик.", "🐰"),
+                MnemoLine("Пришли лисичка-сестричка и волчок — серый бочок.", "🦊🐺"),
+                MnemoLine("Пришёл медведь, полез в теремок — и раздавил его.", "🐻"),
+                MnemoLine("Звери построили новый теремок, лучше прежнего.", "🏡")
+            )
+        ),
+        MnemoText(
+            id = "skazki_4", title = "Маша и медведь",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Пошла Маша в лес за грибами и заблудилась.", "👧🍄"),
+                MnemoLine("Нашла избушку, а там жил медведь.", "🏠🐻"),
+                MnemoLine("Стала Маша у медведя жить, по хозяйству помогать.", "🧹"),
+                MnemoLine("Напекла Маша пирожков и спряталась в короб.", "🥧📦"),
+                MnemoLine("Медведь понёс короб в деревню, к дедушке и бабушке.", "🚶"),
+                MnemoLine("Собаки залаяли, медведь убежал, а Маша вернулась домой.", "🐕")
+            )
+        ),
+        MnemoText(
+            id = "skazki_5", title = "Заюшкина избушка",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Была у зайца избушка лубяная, а у лисы — ледяная.", "🐰🦊"),
+                MnemoLine("Пришла весна — у лисы избушка растаяла.", "💧"),
+                MnemoLine("Попросилась лиса к зайцу, да его же и выгнала.", "🚪"),
+                MnemoLine("Не смогли зайчику помочь ни собака, ни медведь.", "🐕🐻"),
+                MnemoLine("Помог петух с косой: «Несу косу на плечах!»", "🐓"),
+                MnemoLine("Лиса испугалась и убежала, а зайчик вернулся домой.", "🏠")
+            )
+        ),
+        MnemoText(
+            id = "skazki_6", title = "Лиса и журавль",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Подружилась лиса с журавлём.", "🦊🦩"),
+                MnemoLine("Позвала лиса журавля в гости и подала кашу на тарелке.", "🥘"),
+                MnemoLine("Журавль стучал клювом, но ничего не съел.", "🦩"),
+                MnemoLine("Позвал журавль лису к себе и подал окрошку в кувшине.", "🫙"),
+                MnemoLine("Лиса вокруг кувшина ходила, но ничего не достала.", "🦊"),
+                MnemoLine("С тех пор дружба у них врозь.", "💔")
+            )
+        ),
+        MnemoText(
+            id = "skazki_7", title = "Каша из топора",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Шёл солдат домой и попросился к старушке переночевать.", "🪖"),
+                MnemoLine("Старушка сказала, что угостить нечем.", "👵"),
+                MnemoLine("Солдат взял топор и стал варить из него кашу.", "🪓"),
+                MnemoLine("Попросил немножко крупы, соли и масла.", "🌾"),
+                MnemoLine("Каша получилась вкусная.", "😋"),
+                MnemoLine("А топор солдат забрал с собой.", "🎒")
+            )
+        ),
+        MnemoText(
+            id = "skazki_8", title = "Петушок и бобовое зёрнышко",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Петушок клевал зёрнышки и подавился.", "🐓"),
+                MnemoLine("Курочка побежала к корове за маслом.", "🐔🐄"),
+                MnemoLine("Корова сказала: «Принеси травы от косцов».", "🌾"),
+                MnemoLine("Косцы попросили хлеба у пекарей.", "🍞"),
+                MnemoLine("Пекари дали хлеба, косцы — травы, корова — масла.", "🤝"),
+                MnemoLine("Курочка смазала горлышко, и петушок запел: «Ку-ка-ре-ку!»", "🎶")
+            )
+        ),
+        MnemoText(
+            id = "skazki_9", title = "Снегурочка",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Жили-были дед да баба, и не было у них детей.", "👴👵"),
+                MnemoLine("Зимой слепили они из снега девочку.", "❄️"),
+                MnemoLine("Девочка ожила — это была Снегурочка.", "👧"),
+                MnemoLine("Весной Снегурочка стала грустной.", "😢"),
+                MnemoLine("Летом подружки позвали её прыгать через костёр.", "🔥"),
+                MnemoLine("Снегурочка прыгнула — и растаяла белым облачком.", "☁️")
+            )
+        ),
+        MnemoText(
+            id = "skazki_10", title = "Рукавичка",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            lines = listOf(
+                MnemoLine("Шёл дед лесом и потерял рукавичку.", "🧤"),
+                MnemoLine("Первой в неё забралась мышка.", "🐭"),
+                MnemoLine("Потом лягушка и зайчик.", "🐸🐰"),
+                MnemoLine("Потом лисичка и волк.", "🦊🐺"),
+                MnemoLine("Последним залез медведь — стало очень тесно.", "🐻"),
+                MnemoLine("Дед вернулся, собака залаяла — и звери разбежались.", "🐕")
+            )
+        ),
+        // === 6-7 лет (9 клеток) ===
+        MnemoText(
+            id = "skazki_11", title = "Колобок",
             theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_6_7, type = MnemoType.TALE,
             lines = listOf(
-                MnemoLine("Испекла бабка колобок", "🍞"),
-                MnemoLine("Положила на окно студить", "🪟"),
-                MnemoLine("Колобок покатился по дорожке", "🛣️"),
-                MnemoLine("Встретил зайца — спел песенку", "🐰"),
-                MnemoLine("Встретил волка — обманул", "🐺"),
-                MnemoLine("Встретил медведя — удрал", "🐻"),
-                MnemoLine("Встретил лису — поверил ей", "🦊"),
-                MnemoLine("Лиса его и съела", "👅"),
-                MnemoLine("Вот и сказке конец", "📖")
+                MnemoLine("Испекла бабушка колобок.", "🍞"),
+                MnemoLine("Положила его на окошко остудиться.", "🪟"),
+                MnemoLine("Колобок спрыгнул и покатился по дорожке.", "🛣️"),
+                MnemoLine("Навстречу ему заяц.", "🐰"),
+                MnemoLine("Потом волк.", "🐺"),
+                MnemoLine("Потом медведь.", "🐻"),
+                MnemoLine("Всем колобок пел песенку и укатывался.", "🎶"),
+                MnemoLine("А потом встретил лису.", "🦊"),
+                MnemoLine("Лиса его — ам! — и съела.", "👅")
             )
         ),
         MnemoText(
-            id = "skazki_3", title = "Репка",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
-            lines = listOf(
-                MnemoLine("Посадил дед репку", "🌱"),
-                MnemoLine("Выросла репка большая-пребольшая", "🥬"),
-                MnemoLine("Дед тянет-потянет — вытянуть не может", "👴"),
-                MnemoLine("Позвал дед бабку", "👵"),
-                MnemoLine("Бабка за дедку, дедка за репку", "🤝"),
-                MnemoLine("Тянут-потянут — вытянуть не могут", "💪")
-            )
-        ),
-        MnemoText(
-            id = "skazki_4", title = "Теремок",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
-            lines = listOf(
-                MnemoLine("Стоит в поле теремок-теремок", "🏠"),
-                MnemoLine("Мышка-норушка в нём живёт", "🐭"),
-                MnemoLine("Лягушка-квакушка пришла", "🐸"),
-                MnemoLine("Зайчик-побегайчик прибежал", "🐰"),
-                MnemoLine("Лисичка-сестричка пришла", "🦊"),
-                MnemoLine("Волчок-серый бочок явился", "🐺")
-            )
-        ),
-        MnemoText(
-            id = "skazki_5", title = "Маша и медведь",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
-            lines = listOf(
-                MnemoLine("Пошла Маша в лес с подругами", "👧🌲"),
-                MnemoLine("Заблудилась — в дом к медведю", "🐻"),
-                MnemoLine("Медведь не пускает её домой", "🚫"),
-                MnemoLine("Маша попросила короб", "📦"),
-                MnemoLine("Села в короб, пирожки сверху", "🥧"),
-                MnemoLine("Медведь нёс короб к деду с бабой", "🏠")
-            )
-        ),
-        MnemoText(
-            id = "skazki_6", title = "Гуси-лебеди",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
-            lines = listOf(
-                MnemoLine("Отец с матерью ушли на работу", "👨‍🌾👩‍🌾"),
-                MnemoLine("А гуси-лебеди унесли братца", "🦢"),
-                MnemoLine("Девочка побежала искать", "🏃‍♀️"),
-                MnemoLine("Печка сказала — съешь пирожок", "🍞"),
-                MnemoLine("Яблоня — стряси яблочко", "🍎"),
-                MnemoLine("Речка — выпей молочка", "🥛")
-            )
-        ),
-        MnemoText(
-            id = "skazki_7", title = "Заюшкина избушка",
+            id = "skazki_12", title = "Гуси-лебеди",
             theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_6_7, type = MnemoType.TALE,
             lines = listOf(
-                MnemoLine("Жили-были лиса да заяц", "🦊🐰"),
-                MnemoLine("У лисы избушка ледяная", "🧊"),
-                MnemoLine("У зайца — лубяная, тёплая", "🪵"),
-                MnemoLine("Весной лисья растаяла", "💧"),
-                MnemoLine("Лиса попросилась к зайцу", "🚪"),
-                MnemoLine("Да и выгнала его вон", "🦊"),
-                MnemoLine("Заяц плачет, петух帮他", "🐓"),
-                MnemoLine("Петух прогнал лису прочь", "⚔️"),
-                MnemoLine("Заяц снова дома живёт", "🏠")
+                MnemoLine("Родители ушли и велели дочке беречь братца.", "👨‍👩‍👧"),
+                MnemoLine("Девочка заигралась, а гуси-лебеди унесли братца.", "🦢"),
+                MnemoLine("Побежала девочка догонять.", "🏃‍♀️"),
+                MnemoLine("Печка просила съесть пирожок.", "🍞"),
+                MnemoLine("Яблоня просила съесть яблочко.", "🍎"),
+                MnemoLine("Речка просила выпить киселька.", "🥛"),
+                MnemoLine("Девочка нашла братца в избушке Бабы-яги.", "🏚️"),
+                MnemoLine("Схватила братца и побежала домой.", "🏃‍♀️"),
+                MnemoLine("Речка, яблоня и печка её спрятали — дети вернулись домой.", "🏠")
             )
         ),
         MnemoText(
-            id = "skazki_8", title = "Волк и семеро козлят",
+            id = "skazki_13", title = "Волк и семеро козлят",
             theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_6_7, type = MnemoType.TALE,
             lines = listOf(
-                MnemoLine("Жила-была коза с козлятами", "🐐"),
-                MnemoLine("Уходила в лес траву щипать", "🌲"),
-                MnemoLine("Козлятам наказывала дверь не открывать", "🚪"),
-                MnemoLine("Волк подслушал — пришёл в дом", "🐺"),
-                MnemoLine("Пел тонким голосом", "🎶"),
-                MnemoLine("Козлята дверь отворили", "🔓"),
-                MnemoLine("Волк их всех проглотал", "😱"),
-                MnemoLine("Коза вернулась, спасла их", "💪"),
-                MnemoLine("С тех пор волк им не страшен", "✨")
+                MnemoLine("Жила-была коза с козлятами.", "🐐"),
+                MnemoLine("Уходила коза в лес и велела никому не открывать.", "🌲"),
+                MnemoLine("Пришёл волк и запел грубым голосом.", "🐺"),
+                MnemoLine("Козлята не открыли: «Это не мамин голос!»", "🚪"),
+                MnemoLine("Волк сделал голос тоньше.", "🎤"),
+                MnemoLine("Козлята открыли — и волк их проглотил.", "😱"),
+                MnemoLine("Только самый маленький спрятался в печке.", "🔥"),
+                MnemoLine("Вернулась коза, и они вместе проучили волка.", "💪"),
+                MnemoLine("Козлята выскочили целые и невредимые!", "🎉")
             )
         ),
+        // НОВЫЕ — русские народные сказки по образцу
         MnemoText(
-            id = "skazki_9", title = "Лисичка со скалочкой",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_6_7, type = MnemoType.TALE,
-            lines = listOf(
-                MnemoLine("Шла лисичка по дорожке", "🦊"),
-                MnemoLine("Нашла скалочку на тропинке", "🥖"),
-                MnemoLine("Постучалась в первый дом — пустили", "🚪"),
-                MnemoLine("Скалочку — за петушка", "🐓"),
-                MnemoLine("Петушка — за гусёночка", "🪿"),
-                MnemoLine("Гусёночка — за индюшонка", "🦃"),
-                MnemoLine("Индюшонка — за шубейку", "🧥"),
-                MnemoLine("Хитрая лисичка всех обменяла", "✨"),
-                MnemoLine("Богаче всех в лесу стала", "💰")
-            )
-        ),
-        MnemoText(
-            id = "skazki_10", title = "Зимовье зверей",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_6_7, type = MnemoType.TALE,
-            lines = listOf(
-                MnemoLine("Собрались звери в лес зимовать", "🌲"),
-                MnemoLine("Бык — брёвна таскал", "🐂"),
-                MnemoLine("Баран — шерстью утеплял", "🐑"),
-                MnemoLine("Свинья — землю рыла", "🐷"),
-                MnemoLine("Кот — крышу крыл", "🐈"),
-                MnemoLine("Петух — на страже стоял", "🐓"),
-                MnemoLine("Волк и медведь хотели их съесть", "🐺🐻"),
-                MnemoLine("Звери их испугали пустой башкой", "💀"),
-                MnemoLine("С тех пор хищники их не трогают", "🚫")
-            )
-        ),
-        MnemoText(
-            id = "skazki_11", title = "Лиса и журавль",
+            id = "skazki_14", title = "Лисичка со скалочкой",
             theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
             lines = listOf(
-                MnemoLine("Подружились лиса с журавлём", "🦊🦩"),
-                MnemoLine("Лиса зовёт журавля в гости", "🏠"),
-                MnemoLine("Кашу на тарелку размазала", "🥞"),
-                MnemoLine("Журавль клювом — ничего не может", "🚫"),
-                MnemoLine("Журавль зовёт лису в гости", "🏠"),
-                MnemoLine("Окрошку в кувшин налил", "🫙")
+                MnemoLine("Шла лисичка по дорожке и нашла скалочку.", "🦊"),
+                MnemoLine("Постучалась в первый дом — пустили переночевать.", "🚪"),
+                MnemoLine("Скалочку — за петушка.", "🥖"),
+                MnemoLine("Петушка — за гусёночка.", "🐓"),
+                MnemoLine("Гусёночка — за индюшонка.", "🦃"),
+                MnemoLine("Индюшонка — за шубейку — всех обменяла!", "🧥")
             )
         ),
         MnemoText(
-            id = "skazki_12", title = "Петушок и бобовое зёрнышко",
-            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_5_6, type = MnemoType.TALE,
+            id = "skazki_15", title = "Зимовье зверей",
+            theme = MnemoTheme.SKAZKI, age = MnemoAge.AGE_6_7, type = MnemoType.TALE,
             lines = listOf(
-                MnemoLine("Петушок клевал бобовое зерно", "🐓"),
-                MnemoLine("Подавился им — заболел", "😢"),
-                MnemoLine("Курочка побежала за водой", "🐔"),
-                MnemoLine("Вода просила у берёзы листьев", "🌳"),
-                MnemoLine("Берёза — у коровы масла", "🐄"),
-                MnemoLine("Корова — у косцов травы", "🌾")
+                MnemoLine("Собрались звери в лес зимовать.", "🌲"),
+                MnemoLine("Бык — брёвна таскал.", "🐂"),
+                MnemoLine("Баран — шерстью утеплял.", "🐑"),
+                MnemoLine("Свинья — землю рыла.", "🐷"),
+                MnemoLine("Кот — крышу крыл.", "🐈"),
+                MnemoLine("Петух — на страже стоял.", "🐓"),
+                MnemoLine("Волк и медведь хотели их съесть.", "🐺🐻"),
+                MnemoLine("Звери их испугали пустой башкой.", "💀"),
+                MnemoLine("С тех пор хищники их не трогают.", "🚫")
             )
         )
     )
@@ -914,157 +1095,209 @@ object MnemoData {
     //                       ПРО ЖИВОТНЫХ
     // ===========================================================
     private val animalsTexts = listOf(
+        // === 4-5 лет (4 клетки) — короткие описания для малышей ===
         MnemoText(
             id = "animals_1", title = "Котик",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_4_5, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("У меня живёт котик", "🐱"),
-                MnemoLine("Шёрстка у него мягкая", "🧶"),
-                MnemoLine("Глазки зелёные, как изумруды", "💚"),
-                MnemoLine("Любит молоко лакать", "🥛")
+                MnemoLine("Это котик.", "🐱"),
+                MnemoLine("У него мягкая шёрстка.", "🧶"),
+                MnemoLine("Котик любит молоко.", "🥛"),
+                MnemoLine("Он ловит мышей.", "🐭")
             )
         ),
         MnemoText(
             id = "animals_2", title = "Собачка",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_4_5, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Гав-гав! Кто это?", "🐕"),
-                MnemoLine("Это моя собачка Шарик", "🐶"),
-                MnemoLine("Он любит косточку грызть", "🦴"),
-                MnemoLine("И громко лает на чужих", "🔊")
+                MnemoLine("Это собачка.", "🐶"),
+                MnemoLine("Она лает: «Гав-гав!»", "🔊"),
+                MnemoLine("Собачка охраняет дом.", "🏠"),
+                MnemoLine("Она любит косточку.", "🦴")
             )
         ),
         MnemoText(
-            id = "animals_3", title = "Лошадка",
+            id = "animals_3", title = "Птичка",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_4_5, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Иго-го! Скачет лошадка", "🐎"),
-                MnemoLine("У неё длинная грива", "💇"),
-                MnemoLine("И пышный хвост до земли", "🐴"),
-                MnemoLine("Любит овёс жевать", "🌾")
+                MnemoLine("Это птичка.", "🐦"),
+                MnemoLine("У неё есть крылышки.", "🪽"),
+                MnemoLine("Птичка летает в небе.", "☁️"),
+                MnemoLine("Она поёт: «Чик-чирик!»", "🎶")
             )
         ),
         MnemoText(
-            id = "animals_4", title = "Корова",
-            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            id = "animals_4", title = "Рыбка",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_4_5, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Му-у-у! Мычит корова", "🐄"),
-                MnemoLine("У неё рога на голове", "🐂"),
-                MnemoLine("Хвост длинный, мух отгоняет", "🪰"),
-                MnemoLine("Травку на лугу щиплет", "🌿"),
-                MnemoLine("Даёт нам вкусное молоко", "🥛"),
-                MnemoLine("Из молока делают сыр и масло", "🧀")
+                MnemoLine("Это рыбка.", "🐟"),
+                MnemoLine("Она живёт в воде.", "💧"),
+                MnemoLine("У рыбки есть хвостик.", "🐠"),
+                MnemoLine("Она плавает быстро-быстро.", "🏊")
             )
         ),
+        // === 5-6 лет (6 клеток) — основные оригинальные тексты ===
         MnemoText(
             id = "animals_5", title = "Ёжик",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("В лесу живёт колючий ёжик", "🦔"),
-                MnemoLine("Спинка вся в иголках острых", "📌"),
-                MnemoLine("Лапки маленькие, но быстрые", "🐾"),
-                MnemoLine("Носиком он ищет жучков", "🐛"),
-                MnemoLine("Любит яблоки и грибы носить", "🍎"),
-                MnemoLine("Зимой он крепко спит в норе", "😴")
+                MnemoLine("Это ёжик.", "🦔"),
+                MnemoLine("У него на спине колючие иголки.", "📌"),
+                MnemoLine("Ёжик живёт в лесу.", "🌲"),
+                MnemoLine("Он ест жуков и червяков.", "🐛"),
+                MnemoLine("Зимой ёжик спит в норке.", "😴"),
+                MnemoLine("Весной он просыпается и ищет еду.", "🌱")
             )
         ),
         MnemoText(
-            id = "animals_6", title = "Зайчик",
+            id = "animals_6", title = "Кошка",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Прыг-прыг! Кто это?", "🐰"),
-                MnemoLine("Это серый зайчик в поле", "🐇"),
-                MnemoLine("Уши у него длинные-длинные", "👂"),
-                MnemoLine("Хвостик короткий белый", "🤍"),
-                MnemoLine("Летом шубка серая, зимой белая", "❄️"),
-                MnemoLine("Любит капусту и морковку", "🥕")
+                MnemoLine("Это кошка.", "🐱"),
+                MnemoLine("У неё мягкая шёрстка и длинный хвост.", "🐈"),
+                MnemoLine("Кошка живёт дома с людьми.", "🏠"),
+                MnemoLine("Она любит молоко и рыбку.", "🥛"),
+                MnemoLine("Кошка ловит мышей.", "🐭"),
+                MnemoLine("Котята играют с клубком.", "🧶")
             )
         ),
         MnemoText(
-            id = "animals_7", title = "Лиса",
+            id = "animals_7", title = "Собака",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("В лесу живёт хитрая лисичка", "🦊"),
-                MnemoLine("Шубка у неё рыжая-прерыжая", "🟧"),
-                MnemoLine("Хвост пушистый, как у огня", "🔥"),
-                MnemoLine("Лапки чёрные, как угольки", "🦶"),
-                MnemoLine("Она мышкует — мышей ловит", "🐭"),
-                MnemoLine("В норе живёт с лисятами", "🏡")
+                MnemoLine("Это собака.", "🐕"),
+                MnemoLine("Она живёт в будке или дома.", "🏡"),
+                MnemoLine("Собака охраняет дом и лает на чужих.", "🔊"),
+                MnemoLine("Она любит грызть косточку.", "🦴"),
+                MnemoLine("Собака — верный друг человека.", "🤝"),
+                MnemoLine("Детёныш собаки — щенок.", "🐶")
             )
         ),
         MnemoText(
-            id = "animals_8", title = "Медведь",
-            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
+            id = "animals_8", title = "Корова",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("В лесу живёт большой медведь", "🐻"),
-                MnemoLine("Шуба бурая, тёплая", "🟫"),
-                MnemoLine("Лапы сильные с когтями", "🐾"),
-                MnemoLine("Любит малину с кустов рвать", "🟥"),
-                MnemoLine("И мёд дикий из дупла есть", "🍯"),
-                MnemoLine("Рыбу в реке лапами ловит", "🐟"),
-                MnemoLine("К осени жир нагуливает", "💪"),
-                MnemoLine("И спит всю зиму в берлоге", "😴"),
-                MnemoLine("Весной выходит с медвежатами", "🐻‍❄️")
+                MnemoLine("Это корова.", "🐄"),
+                MnemoLine("У коровы есть рога и хвост.", "🐂"),
+                MnemoLine("Корова живёт на ферме.", "🌾"),
+                MnemoLine("Она ест траву и сено.", "🌿"),
+                MnemoLine("Корова даёт людям молоко.", "🥛"),
+                MnemoLine("Корова мычит: «Му-у!»", "📢")
             )
         ),
         MnemoText(
-            id = "animals_9", title = "Волк",
-            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
+            id = "animals_9", title = "Лиса",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Серый волк по лесу бродит", "🐺"),
-                MnemoLine("Глаза жёлтые, злые-презлые", "👁️"),
-                MnemoLine("Шерсть серая, лохматая", "🩶"),
-                MnemoLine("Зубы острые, как иголки", "🦷"),
-                MnemoLine("Воет по ночам на луну", "🌕"),
-                MnemoLine("Живёт в логове с волчатами", "🏚️"),
-                MnemoLine("Стаями ходит, добычу ищет", "🐗"),
-                MnemoLine("Может долго бежать без устали", "🏃"),
-                MnemoLine("Но людей он сам не трогает", "🚫")
+                MnemoLine("Это лиса.", "🦊"),
+                MnemoLine("У неё рыжая шубка и пушистый хвост.", "🔥"),
+                MnemoLine("Лиса живёт в лесу, в норе.", "🌲"),
+                MnemoLine("Она охотится на мышей.", "🐭"),
+                MnemoLine("Лиса хитрая и осторожная.", "🧠"),
+                MnemoLine("Детёныш лисы — лисёнок.", "🦊")
             )
         ),
         MnemoText(
-            id = "animals_10", title = "Белка",
-            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
+            id = "animals_10", title = "Медведь",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("По деревьям скачет рыжая белка", "🐿️"),
-                MnemoLine("Шёрстка гладкая, огненная", "🟧"),
-                MnemoLine("Хвост большой, как зонтик", "🍂"),
-                MnemoLine("На ушках кисточки торчат", "👂"),
-                MnemoLine("Лапки цепкие, с коготками", "🐾"),
-                MnemoLine("Грызёт орешки и шишки", "🌰"),
-                MnemoLine("Делает запасы на зиму", "🍄"),
-                MnemoLine("В дупле живёт, как в домике", "🌳"),
-                MnemoLine("Прыгает с ветки на ветку ловко", "🌿")
+                MnemoLine("Это медведь.", "🐻"),
+                MnemoLine("Он большой, сильный и косолапый.", "💪"),
+                MnemoLine("Медведь живёт в лесу.", "🌲"),
+                MnemoLine("Он любит мёд, ягоды и рыбу.", "🍯"),
+                MnemoLine("Зимой медведь спит в берлоге.", "😴"),
+                MnemoLine("Детёныш медведя — медвежонок.", "🐻")
             )
         ),
         MnemoText(
-            id = "animals_11", title = "Лягушка",
-            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
+            id = "animals_11", title = "Заяц",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("У пруда живёт зелёная лягушка", "🐸"),
-                MnemoLine("Квакает громко по вечерам", "🔊"),
-                MnemoLine("Глаза выпуклые, блестящие", "👁️"),
-                MnemoLine("Кожа гладкая, скользкая", "🟢"),
-                MnemoLine("Лапки сильные, для прыжков", "🦵"),
-                MnemoLine("Питается мухами и комарами", "🦟"),
-                MnemoLine("Язык длинный, липкий", "👅"),
-                MnemoLine("Зимой спит подо льдом на дне", "❄️"),
-                MnemoLine("Весной откладывает икру в воду", "🥚")
+                MnemoLine("Это заяц.", "🐰"),
+                MnemoLine("У него длинные уши и короткий хвостик.", "👂"),
+                MnemoLine("Летом шубка у зайца серая, а зимой — белая.", "🐇"),
+                MnemoLine("Заяц ест траву, морковку и кору деревьев.", "🥕"),
+                MnemoLine("Он быстро бегает и далеко прыгает.", "🏃"),
+                MnemoLine("Детёныш зайца — зайчонок.", "🐰")
             )
         ),
         MnemoText(
-            id = "animals_12", title = "Птички зимой",
+            id = "animals_12", title = "Белка",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Это белка.", "🐿️"),
+                MnemoLine("У неё пушистый хвост и кисточки на ушах.", "🍂"),
+                MnemoLine("Белка живёт в дупле на дереве.", "🌳"),
+                MnemoLine("Она ест орехи, шишки и грибы.", "🌰"),
+                MnemoLine("Белка ловко прыгает с ветки на ветку.", "🌿"),
+                MnemoLine("Осенью белка делает запасы на зиму.", "🍄")
+            )
+        ),
+        MnemoText(
+            id = "animals_13", title = "Курица",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Это курица.", "🐔"),
+                MnemoLine("Она живёт в курятнике.", "🏚️"),
+                MnemoLine("Курица клюёт зёрнышки.", "🌾"),
+                MnemoLine("Она несёт яйца.", "🥚"),
+                MnemoLine("Из яиц вылупляются цыплята.", "🐥"),
+                MnemoLine("Курица кудахчет: «Ко-ко-ко!»", "🔊")
+            )
+        ),
+        MnemoText(
+            id = "animals_14", title = "Воробей",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Это воробей.", "🐦"),
+                MnemoLine("Он маленький и серый.", "🩶"),
+                MnemoLine("Воробей живёт рядом с людьми.", "🏙️"),
+                MnemoLine("Он клюёт крошки и семечки.", "🍞"),
+                MnemoLine("Воробей чирикает: «Чик-чирик!»", "🎶"),
+                MnemoLine("Зимой воробей не улетает на юг.", "❄️")
+            )
+        ),
+        MnemoText(
+            id = "animals_15", title = "Лошадь",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Это лошадь.", "🐎"),
+                MnemoLine("У неё длинная грива и хвост.", "💇"),
+                MnemoLine("Лошадь живёт в конюшне.", "🏠"),
+                MnemoLine("Она ест сено и овёс.", "🌾"),
+                MnemoLine("Лошадь возит людей и грузы.", "🛻"),
+                MnemoLine("Детёныш лошади — жеребёнок.", "🐴")
+            )
+        ),
+        // === 6-7 лет (9 клеток) — мои по образцу ===
+        MnemoText(
+            id = "animals_16", title = "Дельфин",
             theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Наступила холодная зима", "❄️"),
-                MnemoLine("Снегом завалило все кусты", "🌲"),
-                MnemoLine("Синички прилетели к кормушке", "🐦"),
-                MnemoLine("Воробьи стайками чирикают", "🐦"),
-                MnemoLine("Снегири на рябине сидят", "🎄"),
-                MnemoLine("Дятел стучит по стволу", "🪵"),
-                MnemoLine("Сорока стрекочет на заборе", "🦜"),
-                MnemoLine("Ворона каркает на берёзе", "🦅"),
-                MnemoLine("Мы им зёрнышек насыпали", "🌾")
+                MnemoLine("Это дельфин.", "🐬"),
+                MnemoLine("Он живёт в море.", "🌊"),
+                MnemoLine("Дельфин очень умный.", "🧠"),
+                MnemoLine("У него гладкое тело и острый нос.", "🔺"),
+                MnemoLine("Дельфин плавает очень быстро.", "🏊"),
+                MnemoLine("Он дышит воздухом.", "💨"),
+                MnemoLine("Дельфины живут стаями.", "👥"),
+                MnemoLine("Они умеют общаться звуками.", "🎶"),
+                MnemoLine("Люди любят дельфинов за доброту.", "❤️")
+            )
+        ),
+        MnemoText(
+            id = "animals_17", title = "Пчела",
+            theme = MnemoTheme.ANIMALS, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Это пчела.", "🐝"),
+                MnemoLine("Она маленькая и полосатая.", "🟡"),
+                MnemoLine("Пчела живёт в улье.", "🏠"),
+                MnemoLine("Она летает над цветами.", "🌸"),
+                MnemoLine("Пчела собирает нектар.", "🍯"),
+                MnemoLine("Из нектара получается мёд.", "🍯"),
+                MnemoLine("Пчёлы живут большой семьёй.", "👨‍👩‍👧"),
+                MnemoLine("У пчелы есть жало.", "⚠️"),
+                MnemoLine("Пчёлы приносят пользу людям.", "✨")
             )
         )
     )
