@@ -69,16 +69,15 @@ data class DescriptiveScheme(
     val id: String,
     val title: String,           // "Помидор"
     val category: DescriptiveCategory,
-    val emoji: String,           // "🍅"
-    // 6 коротких вопросов по плану — помещаются в ячейки 2×3 рядом с иконкой:
-    val questions: List<String> = listOf(
-        "Что это?",
-        "Какого цвета?",
-        "Какой формы?",
-        "Какой на вкус?",
-        "Где растёт?",
-        "Что из него готовят?"
-    )
+    val emoji: String            // "🍅"
+    // Вопросы и иконки берутся из MnemoData.getQuestionsForCategory(category)
+    // — они свои для каждой категории (животные, овощи, одежда и т.д.)
+)
+
+// === План вопросов и иконок для каждой категории ===
+data class QuestionPlan(
+    val questions: List<String>,
+    val icons: List<String>
 )
 
 // === Конфиг генератора ===
