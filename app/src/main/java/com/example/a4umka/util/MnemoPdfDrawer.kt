@@ -42,12 +42,12 @@ object MnemoPdfDrawer {
     // =====================================================================
 
     fun generatePreview(config: MnemoConfig, context: Context): List<Bitmap> {
-        return renderPages(config) { canvas -> canvas }
+        return renderPages(config)
     }
 
     fun drawDocument(document: PdfDocument, config: MnemoConfig, context: Context) {
         var pageNum = 1
-        val bitmaps = renderPages(config) { canvas -> canvas }
+        val bitmaps = renderPages(config)
         // Каждая «логическая страница» уже отрисована в отдельный Bitmap — переносим в PDF как есть.
         bitmaps.forEach { bmp ->
             val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
@@ -57,22 +57,24 @@ object MnemoPdfDrawer {
         }
     }
 
-    private inline fun renderPages(config: MnemoConfig, crossinline onCanvas: (android.graphics.Canvas) -> Unit): List<Bitmap> {
+    private fun renderPages(config: MnemoConfig): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
         val resolver = resolveText(config)
 
         when (config.mode) {
             MnemoMode.READY_TABLE -> {
                 resolver?.let { text ->
-                    val bmp = createCanvas()
-                    drawReadyTable(bmp, text, config.showText)
+                    val bmp = newBitmap()
+                    val canvas = android.graphics.Canvas(bmp)
+                    drawReadyTable(canvas, text, config.showText)
                     pages.add(bmp)
                 }
             }
             MnemoMode.DRAW_YOURSELF -> {
                 resolver?.let { text ->
-                    val bmp = createCanvas()
-                    drawDrawYourself(bmp, text, config.showText)
+                    val bmp = newBitmap()
+                    val canvas = android.graphics.Canvas(bmp)
+                    drawDrawYourself(canvas, text, config.showText)
                     pages.add(bmp)
                 }
             }
@@ -80,8 +82,9 @@ object MnemoPdfDrawer {
                 val schemes = resolveSchemes(config)
                 // По 2 схемы на лист
                 schemes.chunked(2).forEach { pair ->
-                    val bmp = createCanvas()
-                    drawDescriptivePair(bmp, pair)
+                    val bmp = newBitmap()
+                    val canvas = android.graphics.Canvas(bmp)
+                    drawDescriptivePair(canvas, pair)
                     pages.add(bmp)
                 }
             }
@@ -89,11 +92,13 @@ object MnemoPdfDrawer {
         return pages
     }
 
-    private fun createCanvas(): android.graphics.Canvas {
+    private fun newBitmap(): Bitmap {
         val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bmp)
-        canvas.drawColor(bgColor)
-        return canvas
+        // Заливаем фоновым цветом заранее — это безопаснее, чем надеяться, что
+        // каждый draw-метод сделает это сам.
+        val c = android.graphics.Canvas(bmp)
+        c.drawColor(bgColor)
+        return bmp
     }
 
     private fun resolveText(config: MnemoConfig): MnemoText? {
