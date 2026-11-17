@@ -113,10 +113,17 @@ object MnemoPdfDrawer {
         }
         // Иначе — sheetsCount × 2 уникальных случайных схем из категории.
         // 1 лист = 2 картинки, 2 листа = 4, 3 листа = 6.
+        // Используем randomSeed, чтобы кнопка «Обновить» давала новый набор.
         val needed = (config.descriptiveSheetsCount.coerceIn(1, 3)) * 2
         val fromCategory = MnemoData.getSchemesByCategory(config.descriptiveCategory)
-        return if (fromCategory.size >= needed) fromCategory.shuffled().take(needed)
-               else fromCategory
+        // Воспроизводимое перемешивание по seed — android.util.Random не deterministic на старых API,
+        // поэтому используем kotlin.random.Random с явным seed.
+        val random = kotlin.random.Random(config.randomSeed)
+        return if (fromCategory.size >= needed) {
+            fromCategory.shuffled(random).take(needed)
+        } else {
+            fromCategory
+        }
     }
 
     // =====================================================================
@@ -315,27 +322,26 @@ object MnemoPdfDrawer {
         canvas.drawRoundRect(rect, 12f, 12f, cardBg)
         canvas.drawRoundRect(rect, 12f, 12f, cardBorder)
 
-        // === Слева — крупный эмодзи на цветном фоне, как на сайте-эталоне ===
-        val emojiColWidth = 110f
-        val emojiSize = 80f
-        val circleRadius = 60f
+        // === Слева — большая иконка предмета на цветном круге (как на сайте-эталоне) ===
+        val emojiColWidth = 120f
         val emojiCx = x + emojiColWidth / 2f
-        val emojiCy = y + height / 2f - 16f
+        val emojiCy = y + height / 2f - 18f
 
-        // Цветной фон-кружок (пастельный, по категории)
+        // Цветной круг-подложка (пастельный, по категории)
+        val bgCircleRadius = 55f
         val bgCirclePaint = Paint().apply {
             color = categoryToPastelColor(scheme.category); style = Paint.Style.FILL
             isAntiAlias = true
         }
-        canvas.drawCircle(emojiCx, emojiCy, circleRadius, bgCirclePaint)
+        canvas.drawCircle(emojiCx, emojiCy, bgCircleRadius, bgCirclePaint)
 
-        // Сам эмодзи
+        // Крупный эмодзи предмета
         val emojiPaint = Paint().apply {
-            textSize = emojiSize; textAlign = Paint.Align.CENTER
+            textSize = 72f; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText(scheme.emoji, emojiCx, emojiCy + emojiSize / 3f, emojiPaint)
+        canvas.drawText(scheme.emoji, emojiCx, emojiCy + emojiPaint.textSize / 3f, emojiPaint)
 
-        // Подпись предмета в "бейдже" — скруглённая плашка под эмодзи
+        // Подпись предмета в "бейдже" под эмодзи
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 13f; color = Color.WHITE; typeface = sansBold
             textAlign = Paint.Align.CENTER
@@ -343,40 +349,55 @@ object MnemoPdfDrawer {
         val titleBgPaint = Paint().apply {
             color = numBgColor; style = Paint.Style.FILL
         }
-        val titleWidth = titlePaint.measureText(scheme.title) + 24f
+        val titleWidth = titlePaint.measureText(scheme.title) + 28f
         val titleRect = RectF(
-            emojiCx - titleWidth / 2f, y + height - 36f,
-            emojiCx + titleWidth / 2f, y + height - 16f
+            emojiCx - titleWidth / 2f, y + height - 38f,
+            emojiCx + titleWidth / 2f, y + height - 18f
         )
         canvas.drawRoundRect(titleRect, 10f, 10f, titleBgPaint)
-        canvas.drawText(scheme.title, emojiCx, y + height - 21f, titlePaint)
+        canvas.drawText(scheme.title, emojiCx, y + height - 23f, titlePaint)
 
-        // === Справа — 6 вопросов в сетке 2×3 с иконками ===
-        val textLeft = x + emojiColWidth + 6f
-        val textWidth = width - emojiColWidth - 16f
+        // === Справа — 6 КРУПНЫХ иконок-кнопок в сетке 2×3 (как на сайте-эталоне) ===
+        val textLeft = x + emojiColWidth + 4f
+        val textWidth = width - emojiColWidth - 14f
         val qCols = 2
         val qRows = 3
-        val qGapX = 10f
-        val qGapY = 8f
+        val qGapX = 8f
+        val qGapY = 6f
         val qCellW = (textWidth - qGapX * (qCols - 1)) / qCols
-        val qCellH = (height - 20f - qGapY * (qRows - 1)) / qRows
+        val qCellH = (height - 16f - qGapY * (qRows - 1)) / qRows
 
+        // Крупные иконки к вопросам (как на сайте-эталоне)
         val questionIcons = listOf("❓", "🎨", "📐", "👅", "🌱", "🍳")
 
         val qCardBg = Paint().apply {
             color = Color.parseColor("#FAFAF5"); style = Paint.Style.FILL
         }
         val qCardBorder = Paint().apply {
-            color = Color.parseColor("#E0E0D8"); style = Paint.Style.STROKE; strokeWidth = 1f
+            color = Color.parseColor("#D0D0C8"); style = Paint.Style.STROKE; strokeWidth = 1f
+        }
+        // Цветной кружок под иконкой вопроса (по номеру — разные пастельные)
+        val iconBgColors = listOf(
+            Color.parseColor("#E3F2FD"),  // голубой для "Что это?"
+            Color.parseColor("#FCE4EC"),  // розовый для "Цвет"
+            Color.parseColor("#F3E5F5"),  // лиловый для "Форма"
+            Color.parseColor("#FFF3E0"),  // оранжевый для "Вкус"
+            Color.parseColor("#E8F5E9"),  // зелёный для "Где растёт"
+            Color.parseColor("#FFFDE7")   // жёлтый для "Что готовят"
+        )
+        val iconCirclePaint = Paint().apply { style = Paint.Style.FILL; isAntiAlias = true }
+
+        val iconPaint = Paint().apply {
+            textSize = 28f; textAlign = Paint.Align.CENTER
         }
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
-            isAntiAlias = true; textSize = 9f; color = Color.WHITE
+            isAntiAlias = true; textSize = 10f; color = Color.WHITE
             typeface = sansBold; textAlign = Paint.Align.CENTER
         }
-        val iconPaint = Paint().apply { textSize = 16f; textAlign = Paint.Align.LEFT }
         val questionPaint = Paint().apply {
-            isAntiAlias = true; textSize = 11f; color = textColor; typeface = sansBold
+            isAntiAlias = true; textSize = 10f; color = textColor; typeface = sansBold
+            textAlign = Paint.Align.CENTER
         }
         val answerLine = Paint().apply {
             color = answerLineColor; strokeWidth = 1f
@@ -386,27 +407,30 @@ object MnemoPdfDrawer {
             val col = i % qCols
             val row = i / qCols
             val cellX = textLeft + col * (qCellW + qGapX)
-            val cellY = y + 10f + row * (qCellH + qGapY)
-            // Лёгкая карточка-обводка вокруг вопроса
+            val cellY = y + 8f + row * (qCellH + qGapY)
+
+            // Карточка вопроса
             val qRect = RectF(cellX, cellY, cellX + qCellW, cellY + qCellH)
-            canvas.drawRoundRect(qRect, 6f, 6f, qCardBg)
-            canvas.drawRoundRect(qRect, 6f, 6f, qCardBorder)
+            canvas.drawRoundRect(qRect, 8f, 8f, qCardBg)
+            canvas.drawRoundRect(qRect, 8f, 8f, qCardBorder)
 
-            val cy = cellY + 18f
+            // === Верх карточки: круглая иконка вопроса ===
+            val iconCx = cellX + qCellW / 2f
+            val iconCy = cellY + 22f
+            iconCirclePaint.color = iconBgColors[i]
+            canvas.drawCircle(iconCx, iconCy, 18f, iconCirclePaint)
+            canvas.drawText(questionIcons[i], iconCx, iconCy + iconPaint.textSize / 3f, iconPaint)
 
-            // Номер вопроса в кружке
+            // === Центр карточки: текст вопроса ===
+            canvas.drawText(scheme.questions[i], iconCx, iconCy + 26f, questionPaint)
+
+            // === Низ карточки: номер + линия для ответа ===
             val nCx = cellX + 10f
-            canvas.drawCircle(nCx, cy - 3f, 7f, numBg)
-            canvas.drawText("${i + 1}", nCx, cy - 1f, numText)
-
-            // Иконка
-            canvas.drawText(questionIcons[i], cellX + 22f, cy + 5f, iconPaint)
-
-            // Текст вопроса
-            canvas.drawText(scheme.questions[i], cellX + 42f, cy + 2f, questionPaint)
-
-            // Линия для ответа под вопросом
-            canvas.drawLine(cellX + 10f, cellY + qCellH - 14f, cellX + qCellW - 6f, cellY + qCellH - 14f, answerLine)
+            val answerY = cellY + qCellH - 12f
+            canvas.drawCircle(nCx, answerY - 3f, 6f, numBg)
+            canvas.drawText("${i + 1}", nCx, answerY - 1f, numText)
+            // Линия для ответа от номера до правого края
+            canvas.drawLine(cellX + 18f, answerY, cellX + qCellW - 6f, answerY, answerLine)
         }
     }
 
@@ -522,4 +546,3 @@ object MnemoPdfDrawer {
         MnemoType.POTESHKA -> "Потешка"
         MnemoType.DESCRIPTIVE -> "Описательный рассказ"
     }
-}
