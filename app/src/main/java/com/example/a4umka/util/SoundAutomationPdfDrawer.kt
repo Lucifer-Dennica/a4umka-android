@@ -524,73 +524,156 @@ object SoundAutomationPdfDrawer {
             headerTextPaint.typeface = safeTypefaceBold
             canvas.drawText("Где живёт звук ${config.sound.letter}?", margin, 120f, headerTextPaint)
 
-            var currentY = 150f
-            val rowHeight = 35f
+            // === НОВОЕ: поддержка 1 или 2 столбцов ===
+            val columns = if (config.answerColumns >= 2) 2 else 1
+            val gap = 10f
+            val usableWidth = PAGE_WIDTH - margin * 2
+            val colWidth = if (columns == 2) (usableWidth - gap) / 2 else usableWidth
+            val itemsCount = words.size
+            val rowsInCol = if (columns == 2) (itemsCount + 1) / 2 else itemsCount
+            val rowHeight = if (columns == 2) 60f else 42f
+
             val textPaint = Paint()
             textPaint.isAntiAlias = true
-            textPaint.textSize = 12f
+            textPaint.textSize = if (columns == 2) 12f else 13f
             textPaint.color = textColor
             textPaint.typeface = safeTypeface
-            
+
             val emojiPaint = Paint()
-            emojiPaint.textSize = 20f
+            emojiPaint.textSize = if (columns == 2) 20f else 22f
             emojiPaint.textAlign = Paint.Align.CENTER
-            
+
             val numBg = Paint()
-            numBg.color = Color.WHITE
+            numBg.color = greenCircleColor
             numBg.style = Paint.Style.FILL
-            
-            val numBorder = Paint()
-            numBorder.color = Color.LTGRAY
-            numBorder.style = Paint.Style.STROKE
-            numBorder.strokeWidth = 1f
-            
-            // ИСПРАВЛЕНО: Теперь всё в ОДИН СТОЛБЕЦ (список)
+
+            val numTextPaint = Paint()
+            numTextPaint.isAntiAlias = true
+            numTextPaint.textSize = 11f
+            numTextPaint.color = Color.WHITE
+            numTextPaint.typeface = safeTypefaceBold
+            numTextPaint.textAlign = Paint.Align.CENTER
+
+            val pillBg = Paint()
+            pillBg.color = Color.WHITE
+            pillBg.style = Paint.Style.FILL
+
+            val pillBorder = Paint()
+            pillBorder.color = borderColor
+            pillBorder.style = Paint.Style.STROKE
+            pillBorder.strokeWidth = 1f
+
+            val activePaint = Paint()
+            activePaint.color = Color.parseColor("#FFB74D")
+            activePaint.style = Paint.Style.FILL
+
+            val boxStroke = Paint()
+            boxStroke.color = Color.LTGRAY
+            boxStroke.style = Paint.Style.STROKE
+            boxStroke.strokeWidth = 1f
+
+            val grayTextPaint = Paint(textPaint)
+            grayTextPaint.color = Color.GRAY
+            grayTextPaint.textSize = if (columns == 2) 10f else 11f
+
+            val startY = 145f
+
             for (index in words.indices) {
                 val word = words[index]
-                
-                val left = margin
-                
-                val pillRect = RectF(left, currentY - 12f, left + 350f, currentY + 12f)
-                canvas.drawRoundRect(pillRect, 12f, 12f, numBg)
-                canvas.drawRoundRect(pillRect, 12f, 12f, numBorder)
-                
-                canvas.drawText("${index + 1}", left + 10f, currentY + 4f, textPaint)
-                canvas.drawText(word.emoji, left + 35f, currentY + 6f, emojiPaint)
-                canvas.drawText(word.word.lowercase(), left + 55f, currentY + 4f, textPaint)
+                val col: Int
+                val row: Int
+                if (columns == 2) {
+                    col = index / rowsInCol
+                    row = index % rowsInCol
+                } else {
+                    col = 0
+                    row = index
+                }
 
-                val boxSize = 12f
-                val boxX = left + 200f
-                val boxY = currentY - 6f
-                
-                val posText = when(word.position) {
+                val left = margin + col * (colWidth + gap)
+                val top = startY + row * rowHeight
+                val pillHeight = rowHeight - 6f
+
+                // Фон-пилюля на всю ширину столбца
+                val pillRect = RectF(left, top, left + colWidth, top + pillHeight)
+                canvas.drawRoundRect(pillRect, 10f, 10f, pillBg)
+                canvas.drawRoundRect(pillRect, 10f, 10f, pillBorder)
+
+                val posText = when (word.position) {
                     0 -> "в начале"
                     1 -> "в середине"
                     else -> "в конце"
                 }
-                
-                for (i in 0 until 3) {
-                    val rect = RectF(boxX + i * (boxSize + 2f), boxY, boxX + i * (boxSize + 2f) + boxSize, boxY + boxSize)
-                    if (i == word.position) {
-                        val pill = RectF(rect.left - 2f, rect.top - 1f, rect.right + 2f, rect.bottom + 1f)
-                        val pillPaint = Paint()
-                        pillPaint.color = Color.parseColor("#FFB74D")
-                        pillPaint.style = Paint.Style.FILL
-                        canvas.drawRoundRect(pill, 4f, 4f, pillPaint)
-                    } else {
-                        val whitePaint = Paint()
-                        whitePaint.color = Color.WHITE
-                        whitePaint.style = Paint.Style.FILL
-                        canvas.drawRoundRect(rect, 2f, 2f, whitePaint)
-                        canvas.drawRoundRect(rect, 2f, 2f, numBorder)
-                    }
-                }
-                
-                val grayTextPaint = Paint(textPaint)
-                grayTextPaint.color = Color.GRAY
-                canvas.drawText(posText, boxX + 60f, currentY + 4f, grayTextPaint)
 
-                currentY += rowHeight
+                if (columns == 1) {
+                    // ОДНА строка: номер + emoji + слово + 3 бокса + текст позиции
+                    val cy = top + pillHeight / 2f
+                    val numCx = left + 18f
+
+                    canvas.drawCircle(numCx, cy, 11f, numBg)
+                    canvas.drawText("${index + 1}", numCx, cy + 4f, numTextPaint)
+
+                    canvas.drawText(word.emoji, left + 50f, cy + emojiPaint.textSize / 3f, emojiPaint)
+                    canvas.drawText(word.word.lowercase(), left + 72f, cy + 4f, textPaint)
+
+                    // 3 бокса с подсветкой нужного + текст позиции (прижаты вправо)
+                    val boxSize = 22f
+                    val boxGap = 3f
+                    val boxesWidth = boxSize * 3 + boxGap * 2
+                    val posTextWidth = grayTextPaint.measureText(posText)
+                    val rightBlockWidth = boxesWidth + 8f + posTextWidth
+                    val rightBlockStart = left + colWidth - rightBlockWidth - 14f
+                    val boxY = cy - boxSize / 2f
+
+                    for (i in 0 until 3) {
+                        val r = RectF(
+                            rightBlockStart + i * (boxSize + boxGap), boxY,
+                            rightBlockStart + i * (boxSize + boxGap) + boxSize, boxY + boxSize
+                        )
+                        if (i == word.position) {
+                            canvas.drawRoundRect(r, 3f, 3f, activePaint)
+                        } else {
+                            canvas.drawRoundRect(r, 3f, 3f, pillBg)
+                            canvas.drawRoundRect(r, 3f, 3f, boxStroke)
+                        }
+                    }
+
+                    canvas.drawText(posText, rightBlockStart + boxesWidth + 8f, cy + 4f, grayTextPaint)
+                } else {
+                    // ДВЕ строки: номер + emoji + слово сверху; 3 бокса + текст позиции снизу
+                    val line1Y = top + 19f
+                    val line2Y = top + 41f
+                    val numCx = left + 14f
+
+                    canvas.drawCircle(numCx, line1Y, 9f, numBg)
+                    canvas.drawText("${index + 1}", numCx, line1Y + 3f, numTextPaint)
+
+                    canvas.drawText(word.emoji, left + 38f, line1Y + 7f, emojiPaint)
+                    canvas.drawText(word.word.lowercase(), left + 58f, line1Y + 4f, textPaint)
+
+                    val boxSize = 18f
+                    val boxGap = 3f
+                    val boxesWidth = boxSize * 3 + boxGap * 2
+                    val posTextWidth = grayTextPaint.measureText(posText)
+                    val rightBlockWidth = boxesWidth + 6f + posTextWidth
+                    val rightBlockStart = left + colWidth - rightBlockWidth - 10f
+                    val boxY = line2Y - boxSize / 2f
+
+                    for (i in 0 until 3) {
+                        val r = RectF(
+                            rightBlockStart + i * (boxSize + boxGap), boxY,
+                            rightBlockStart + i * (boxSize + boxGap) + boxSize, boxY + boxSize
+                        )
+                        if (i == word.position) {
+                            canvas.drawRoundRect(r, 3f, 3f, activePaint)
+                        } else {
+                            canvas.drawRoundRect(r, 3f, 3f, pillBg)
+                            canvas.drawRoundRect(r, 3f, 3f, boxStroke)
+                        }
+                    }
+
+                    canvas.drawText(posText, rightBlockStart + boxesWidth + 6f, line2Y + 4f, grayTextPaint)
+                }
             }
             return
         }
@@ -980,27 +1063,44 @@ object SoundAutomationPdfDrawer {
         headerTextPaint.typeface = safeTypefaceBold
         canvas.drawText("Различаем ${config.pair.title}", margin, 120f, headerTextPaint)
 
-        var currentY = 150f
-        val rowHeight = 35f
+        // === НОВОЕ: поддержка 1 или 2 столбцов ===
+        val columns = if (config.answerColumns >= 2) 2 else 1
+        val gap = 10f
+        val usableWidth = PAGE_WIDTH - margin * 2
+        val colWidth = if (columns == 2) (usableWidth - gap) / 2 else usableWidth
+        val itemsCount = pairData.words.size
+        val rowsInCol = if (columns == 2) (itemsCount + 1) / 2 else itemsCount
+        val rowHeight = if (columns == 2) 55f else 42f
         
         val textPaint = Paint()
         textPaint.isAntiAlias = true
-        textPaint.textSize = 12f
+        textPaint.textSize = if (columns == 2) 12f else 13f
         textPaint.color = textColor
         textPaint.typeface = safeTypeface
         
         val emojiPaint = Paint()
-        emojiPaint.textSize = 20f
+        emojiPaint.textSize = if (columns == 2) 20f else 22f
         emojiPaint.textAlign = Paint.Align.CENTER
-        
+
         val numBg = Paint()
-        numBg.color = Color.WHITE
+        numBg.color = greenCircleColor
         numBg.style = Paint.Style.FILL
+
+        val numTextPaint = Paint()
+        numTextPaint.isAntiAlias = true
+        numTextPaint.textSize = 11f
+        numTextPaint.color = Color.WHITE
+        numTextPaint.typeface = safeTypefaceBold
+        numTextPaint.textAlign = Paint.Align.CENTER
         
-        val numBorder = Paint()
-        numBorder.color = Color.LTGRAY
-        numBorder.style = Paint.Style.STROKE
-        numBorder.strokeWidth = 1f
+        val pillBg = Paint()
+        pillBg.color = Color.WHITE
+        pillBg.style = Paint.Style.FILL
+
+        val pillBorder = Paint()
+        pillBorder.color = borderColor
+        pillBorder.style = Paint.Style.STROKE
+        pillBorder.strokeWidth = 1f
         
         val greenBoxBg = Paint()
         greenBoxBg.color = greenCircleColor
@@ -1008,30 +1108,79 @@ object SoundAutomationPdfDrawer {
         
         val greenBoxText = Paint()
         greenBoxText.isAntiAlias = true
-        greenBoxText.textSize = 12f
+        greenBoxText.textSize = if (columns == 2) 13f else 15f
         greenBoxText.color = Color.WHITE
         greenBoxText.typeface = safeTypefaceBold
         greenBoxText.textAlign = Paint.Align.CENTER
 
-        // ИСПРАВЛЕНО: Теперь всё в ОДИН СТОЛБЕЦ (список)
+        val grayLabelPaint = Paint(textPaint)
+        grayLabelPaint.color = Color.GRAY
+        grayLabelPaint.textSize = if (columns == 2) 10f else 11f
+
+        val startY = 145f
+
         for (index in pairData.words.indices) {
             val word = pairData.words[index]
+            val col: Int
+            val row: Int
+            if (columns == 2) {
+                col = index / rowsInCol
+                row = index % rowsInCol
+            } else {
+                col = 0
+                row = index
+            }
             
-            val left = margin
-            
-            val pillRect = RectF(left, currentY - 12f, left + 300f, currentY + 12f)
-            canvas.drawRoundRect(pillRect, 12f, 12f, numBg)
-            canvas.drawRoundRect(pillRect, 12f, 12f, numBorder)
-            
-            canvas.drawText("${index + 1}", left + 10f, currentY + 4f, textPaint)
-            canvas.drawText(word.emoji, left + 35f, currentY + 6f, emojiPaint)
-            canvas.drawText(word.word.lowercase(), left + 55f, currentY + 4f, textPaint)
+            val left = margin + col * (colWidth + gap)
+            val top = startY + row * rowHeight
+            val pillHeight = rowHeight - 6f
 
-            val boxRect = RectF(left + 200f, currentY - 10f, left + 230f, currentY + 10f)
-            canvas.drawRoundRect(boxRect, 8f, 8f, greenBoxBg)
-            canvas.drawText(word.correctSound, left + 215f, currentY + 4f, greenBoxBg.let { greenBoxText })
+            // Фон-пилюля на всю ширину столбца
+            val pillRect = RectF(left, top, left + colWidth, top + pillHeight)
+            canvas.drawRoundRect(pillRect, 10f, 10f, pillBg)
+            canvas.drawRoundRect(pillRect, 10f, 10f, pillBorder)
 
-            currentY += rowHeight
+            if (columns == 1) {
+                // ОДНА строка: номер + emoji + слово + бокс с буквой справа
+                val cy = top + pillHeight / 2f
+                val numCx = left + 18f
+
+                canvas.drawCircle(numCx, cy, 11f, numBg)
+                canvas.drawText("${index + 1}", numCx, cy + 4f, numTextPaint)
+
+                canvas.drawText(word.emoji, left + 50f, cy + emojiPaint.textSize / 3f, emojiPaint)
+                canvas.drawText(word.word.lowercase(), left + 72f, cy + 4f, textPaint)
+
+                // Подпись "звук:" + зелёный бокс с буквой прижаты вправо
+                val boxW = 36f
+                val boxH = 26f
+                val boxX = left + colWidth - boxW - 14f
+                val boxY = cy - boxH / 2f
+                canvas.drawText("звук:", boxX - 35f, cy + 4f, grayLabelPaint)
+                val boxRect = RectF(boxX, boxY, boxX + boxW, boxY + boxH)
+                canvas.drawRoundRect(boxRect, 6f, 6f, greenBoxBg)
+                canvas.drawText(word.correctSound, boxX + boxW / 2f, cy + 5f, greenBoxText)
+            } else {
+                // ДВЕ строки: номер + emoji + слово сверху; бокс с буквой справа снизу
+                val line1Y = top + 19f
+                val line2Y = top + 41f
+                val numCx = left + 14f
+
+                canvas.drawCircle(numCx, line1Y, 9f, numBg)
+                canvas.drawText("${index + 1}", numCx, line1Y + 3f, numTextPaint)
+
+                canvas.drawText(word.emoji, left + 38f, line1Y + 7f, emojiPaint)
+                canvas.drawText(word.word.lowercase(), left + 58f, line1Y + 4f, textPaint)
+
+                val boxW = 30f
+                val boxH = 22f
+                val boxX = left + colWidth - boxW - 10f
+                val boxY = line2Y - boxH / 2f
+                canvas.drawText("звук:", boxX - 32f, line2Y + 4f, grayLabelPaint)
+                val boxRect = RectF(boxX, boxY, boxX + boxW, boxY + boxH)
+                canvas.drawRoundRect(boxRect, 5f, 5f, greenBoxBg)
+                canvas.drawText(word.correctSound, boxX + boxW / 2f, line2Y + 5f, greenBoxText)
+            }
         }
     }
 }
