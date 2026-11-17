@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -279,6 +280,21 @@ fun MnemoGeneratorScreen(onBack: () -> Unit) {
                                 "На каждом листе 2 описательные схемы с 6 вопросами по плану",
                                 fontSize = 12.sp, color = Color.Gray
                             )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                            // НОВОЕ: кнопка «Обновить» — меняет randomSeed, превью пересчитается автоматически
+                            OutlinedButton(
+                                onClick = { config = config.copy(randomSeed = System.currentTimeMillis()) },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = config.selectedSchemeId == null  // активна только в режиме «любая из категории»
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = null
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Обновить — другой случайный набор")
+                            }
                         }
                     }
                 }
