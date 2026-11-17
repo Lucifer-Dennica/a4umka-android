@@ -11,105 +11,161 @@ object MnemoData {
     //                          ОСЕНЬ
     // ===========================================================
     private val autumnTexts = listOf(
+        // 4-5 лет (4 клетки)
         MnemoText(
             id = "autumn_1", title = "Листья жёлтые летят",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Листья жёлтые летят", "🍂"),
-                MnemoLine("Под ногами шелестят", "👣"),
-                MnemoLine("По небу тучки бегут", "☁️"),
-                MnemoLine("Дождик тут и там стучит", "🌧️")
+                MnemoLine("Листья жёлтые летят,", "🍂"),
+                MnemoLine("Под ногами шелестят.", "👣"),
+                MnemoLine("Тучки по небу бегут,", "☁️"),
+                MnemoLine("Дождик льётся тут и тут.", "🌧️")
             )
         ),
         MnemoText(
-            id = "autumn_2", title = "Осень пришла",
+            id = "autumn_2", title = "Тучка хмурится, ворчит",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Пожелтел на дереве лист", "🍁"),
-                MnemoLine("Ветер тихо листья носит", "💨"),
-                MnemoLine("Птицы на юг улетают", "🕊️"),
-                MnemoLine("Звери норы копают", "🦔")
+                MnemoLine("Тучка хмурится, ворчит,", "☁️"),
+                MnemoLine("Дождик по окну стучит.", "💧"),
+                MnemoLine("Сапоги скорей надень —", "🥾"),
+                MnemoLine("Будем в лужах шлёпать день!", "💦")
             )
         ),
         MnemoText(
-            id = "autumn_3", title = "Осенний лес",
+            id = "autumn_3", title = "Яблоко румяное",
+            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Яблоко румяное", "🍎"),
+                MnemoLine("Выросло в саду.", "🌳"),
+                MnemoLine("Я его сорву сейчас", "✋"),
+                MnemoLine("И маме отнесу.", "👩")
+            )
+        ),
+        MnemoText(
+            id = "autumn_4", title = "Белка прыгает по веткам",
+            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Белка прыгает по веткам,", "🐿️"),
+                MnemoLine("Носит шишки своим деткам.", "🌰"),
+                MnemoLine("Спрячет в дупле грибок —", "🍄"),
+                MnemoLine("Будет сытым мой зверёк.", "😋")
+            )
+        ),
+        // 5-6 лет (6 клеток)
+        MnemoText(
+            id = "autumn_5", title = "Осень",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Пошёл Миша в осенний лес", "🌲"),
-                MnemoLine("Под ногами шуршат листья", "🍂"),
-                MnemoLine("На пне сидит рыжая белка", "🐿️"),
-                MnemoLine("Она грызёт орешек", "🌰"),
-                MnemoLine("Миша помахал ей рукой", "👋"),
-                MnemoLine("И побежал домой", "🏃")
+                MnemoLine("Наступила осень.", "🍂"),
+                MnemoLine("Небо хмурое, часто идёт дождь.", "🌧️"),
+                MnemoLine("Листья на деревьях желтеют и опадают.", "🍁"),
+                MnemoLine("Птицы улетают в тёплые края.", "🕊️"),
+                MnemoLine("Белка запасает на зиму грибы и орехи.", "🐿️"),
+                MnemoLine("Люди собирают урожай.", "🧺")
             )
         ),
         MnemoText(
-            id = "autumn_4", title = "Дождик осенний",
+            id = "autumn_6", title = "Осень по лесу гуляет",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Кап-кап-кап — стучит дождь", "💧"),
-                MnemoLine("По стеклу окна ведёт", "🪟"),
-                MnemoLine("Лужи большие на дворе", "💦"),
-                MnemoLine("Зонтик я в руках держу", "☂️"),
-                MnemoLine("В сапогах по лужам шлёп", "🥾"),
-                MnemoLine("До крыльца я дойду сам", "🏠")
+                MnemoLine("Осень по лесу гуляет,", "🌲"),
+                MnemoLine("Листья с веток обрывает.", "🍂"),
+                MnemoLine("Ёжик в норку поспешил,", "🦔"),
+                MnemoLine("Спать до солнышка решил.", "😴"),
+                MnemoLine("Белка шишки собирает,", "🐿️"),
+                MnemoLine("Зиму в гости поджидает.", "❄️")
             )
         ),
         MnemoText(
-            id = "autumn_5", title = "Сбор урожая",
+            id = "autumn_7", title = "Урожай",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Пришла осень в огород", "🌾"),
-                MnemoLine("Бабка тянет морковку", "🥕"),
-                MnemoLine("Дед копает картошку", "🥔"),
-                MnemoLine("Внучка срывает капусту", "🥬"),
-                MnemoLine("Жучка лает на кролика", "🐕"),
-                MnemoLine("Корзины полны — домой", "🧺")
+                MnemoLine("Осенью в огороде собирают урожай.", "🌾"),
+                MnemoLine("Бабушка копает картошку.", "🥔"),
+                MnemoLine("Дедушка срезает большую тыкву.", "🎃"),
+                MnemoLine("Мама собирает помидоры и огурцы.", "🍅"),
+                MnemoLine("Я дёргаю морковку за зелёный хвостик.", "🥕"),
+                MnemoLine("Вечером мы варим вкусный суп.", "🍲")
             )
         ),
         MnemoText(
-            id = "autumn_6", title = "Осень в лесу",
-            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
+            id = "autumn_8", title = "За грибами",
+            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Ходит осень по лесам", "🌲"),
-                MnemoLine("Красит листья в разные цвета", "🍁"),
-                MnemoLine("Ёжик таскает яблоки", "🦔"),
-                MnemoLine("Белка сушит грибочки", "🍄"),
-                MnemoLine("Медведь берлогу строит", "🐻"),
-                MnemoLine("Лиса в норе свернулась", "🦊"),
-                MnemoLine("Зайчик шубку поменял", "🐇"),
-                MnemoLine("Птицы клином улетают", "🕊️"),
-                MnemoLine("Лес к зиме готовится", "❄️")
+                MnemoLine("Осенью мы с папой пошли в лес за грибами.", "🌲"),
+                MnemoLine("Взяли с собой корзинку.", "🧺"),
+                MnemoLine("Под берёзой нашли подберёзовик.", "🍄"),
+                MnemoLine("В траве прятались рыжие лисички.", "🦊"),
+                MnemoLine("А мухомор мы не тронули — он ядовитый.", "🔴"),
+                MnemoLine("Дома мама сварила грибной суп.", "🍲")
             )
         ),
         MnemoText(
-            id = "autumn_7", title = "Грибы",
+            id = "autumn_9", title = "Перелётные птицы",
+            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Осенью становится холодно.", "🥶"),
+                MnemoLine("Насекомые прячутся, и птицам нечего есть.", "🐛"),
+                MnemoLine("Птицы собираются в стаи.", "🐦"),
+                MnemoLine("Утки и гуси улетают на юг.", "🦢"),
+                MnemoLine("Там тепло и много корма.", "☀️"),
+                MnemoLine("Весной птицы вернутся домой.", "🌸")
+            )
+        ),
+        MnemoText(
+            id = "autumn_10", title = "Что надеть осенью",
+            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Осенью на улице прохладно.", "🍂"),
+                MnemoLine("Мы надеваем тёплую куртку.", "🧥"),
+                MnemoLine("На голову — шапку.", "🧢"),
+                MnemoLine("На шею — шарф.", "🧣"),
+                MnemoLine("Когда идёт дождь, берём зонтик.", "☂️"),
+                MnemoLine("А на ноги — резиновые сапоги.", "🥾")
+            )
+        ),
+        MnemoText(
+            id = "autumn_11", title = "Листопад",
+            theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_5_6, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Листопад, листопад —", "🍂"),
+                MnemoLine("Листья по ветру летят.", "💨"),
+                MnemoLine("Жёлтый, красный, золотой —", "🍁"),
+                MnemoLine("Лес стоит совсем другой.", "🌲"),
+                MnemoLine("Соберу букет большой", "💐"),
+                MnemoLine("И домой возьму с собой.", "🏠")
+            )
+        ),
+        // 6-7 лет (9 клеток)
+        MnemoText(
+            id = "autumn_12", title = "Как звери готовятся к зиме",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Рано утром в лес пошли", "🌅"),
-                MnemoLine("С корзинкой в руках идём", "🧺"),
-                MnemoLine("Под берёзой — боровик", "🍄"),
-                MnemoLine("У пенька — лисички ряд", "🍄"),
-                MnemoLine("На тропинке — мухомор", "🔴"),
-                MnemoLine("Его в корзину не берём", "🚫"),
-                MnemoLine("Под ёлкой прячется опёнок", "🌲"),
-                MnemoLine("Наклонились — собрали", "🙌"),
-                MnemoLine("Полна корзина — домой", "🏠")
+                MnemoLine("Осенью звери готовятся к зиме.", "🍂"),
+                MnemoLine("Белка сушит грибы на ветках.", "🐿️"),
+                MnemoLine("Ёжик носит в норку сухие листья.", "🦔"),
+                MnemoLine("Медведь ищет берлогу.", "🐻"),
+                MnemoLine("Заяц меняет серую шубку на белую.", "🐇"),
+                MnemoLine("Барсук запасает корешки и жёлуди.", "🦡"),
+                MnemoLine("Бобры строят хатку из веток.", "🦫"),
+                MnemoLine("Мышка тащит в норку зёрнышки.", "🐭"),
+                MnemoLine("Теперь зверям не страшна зима.", "❄️")
             )
         ),
         MnemoText(
-            id = "autumn_8", title = "Осенний день",
+            id = "autumn_13", title = "Осень в лесу",
             theme = MnemoTheme.AUTUMN, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Утром туман на лугу", "🌫️"),
-                MnemoLine("Солнце греет еле-еле", "🌅"),
-                MnemoLine("Листья падают кружась", "🍂"),
-                MnemoLine("Ветер гонит облака", "💨"),
-                MnemoLine("Грачи на проводах сидят", "🐦"),
-                MnemoLine("Паутина в воздухе", "🕸️"),
-                MnemoLine("День становится короче", "🌗"),
-                MnemoLine("Вечером рано темнеет", "🌆"),
-                MnemoLine("Осень вступает в права", "🍁")
+                MnemoLine("Ходит осень по лесам,", "🌲"),
+                MnemoLine("Красит листья в разные цвета.", "🍁"),
+                MnemoLine("Ёжик таскает яблоки.", "🦔"),
+                MnemoLine("Белка сушит грибочки.", "🐿️"),
+                MnemoLine("Медведь берлогу строит.", "🐻"),
+                MnemoLine("Лиса в норе свернулась.", "🦊"),
+                MnemoLine("Зайчик шубку поменял.", "🐇"),
+                MnemoLine("Птицы клином улетают.", "🕊️"),
+                MnemoLine("Лес к зиме готовится.", "❄️")
             )
         )
     )
@@ -118,105 +174,137 @@ object MnemoData {
     //                          ЗИМА
     // ===========================================================
     private val winterTexts = listOf(
+        // 4-5 лет (4 клетки)
         MnemoText(
-            id = "winter_1", title = "Снег идёт",
+            id = "winter_1", title = "Снег пушистый за окном",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("С неба падают снежинки", "❄️"),
-                MnemoLine("Белым станет всё вокруг", "⬜"),
-                MnemoLine("Дети лепят снеговика", "⛄"),
-                MnemoLine("Радостно на дворе", "😄")
+                MnemoLine("Снег пушистый за окном,", "❄️"),
+                MnemoLine("Белым стал и сад, и дом.", "🏠"),
+                MnemoLine("Мы на санках мчим с горы —", "🛷"),
+                MnemoLine("Нет веселее поры!", "😄")
             )
         ),
         MnemoText(
-            id = "winter_2", title = "Зимой в лесу",
+            id = "winter_2", title = "Снеговик",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Деревья в снегу стоят", "🌲"),
-                MnemoLine("Зайчик прыгает в сугроб", "🐇"),
-                MnemoLine("Птички у кормушки ждут", "🐦"),
-                MnemoLine("Я им зёрнышек несу", "🌾")
+                MnemoLine("Мы слепили снеговика:", "⛄"),
+                MnemoLine("Нос-морковка, два уголька.", "🥕"),
+                MnemoLine("Шапка-ведро на голове —", "🪣"),
+                MnemoLine("Стоит довольный во дворе.", "😊")
             )
         ),
         MnemoText(
-            id = "winter_3", title = "Зимняя прогулка",
+            id = "winter_3", title = "Снежинка",
+            theme = MnemoTheme.WINTER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Снежинка с неба прилетела,", "❄️"),
+                MnemoLine("На варежку мою присела.", "🧤"),
+                MnemoLine("Я подышал — и вот беда:", "💨"),
+                MnemoLine("Осталась капелька-вода.", "💧")
+            )
+        ),
+        MnemoText(
+            id = "winter_4", title = "Как на тоненький ледок",
+            theme = MnemoTheme.WINTER, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Как на тоненький ледок выпал беленький снежок.", "❄️"),
+                MnemoLine("Выпал беленький снежок, ехал Ванечка-дружок.", "🛷"),
+                MnemoLine("Ваня ехал, поспешал,", "🏇"),
+                MnemoLine("Со добра коня упал.", "😮")
+            )
+        ),
+        // 5-6 лет (6 клеток)
+        MnemoText(
+            id = "winter_5", title = "Зима",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Оделся тепло и пошёл", "🧥"),
-                MnemoLine("На мне шапка и шарф", "🧣"),
-                MnemoLine("Варежки тёплые на руках", "🧤"),
-                MnemoLine("На ногах валенки", "🥾"),
-                MnemoLine("Снег хрустит под ногами", "👣"),
-                MnemoLine("Свежий воздух — как хорошо", "✨")
+                MnemoLine("Пришла зима.", "❄️"),
+                MnemoLine("На улице холодно, дует ветер.", "💨"),
+                MnemoLine("Падает снег, всё вокруг белое.", "⛄"),
+                MnemoLine("Реки покрылись льдом.", "🧊"),
+                MnemoLine("Медведь спит в берлоге.", "🐻"),
+                MnemoLine("Дети катаются на санках и лепят снеговика.", "⛄")
             )
         ),
         MnemoText(
-            id = "winter_4", title = "Снеговик",
+            id = "winter_6", title = "Новый год",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Дети вышли во двор", "🚪"),
-                MnemoLine("Снега навалили кучу", "⛄"),
-                MnemoLine("Слепили три больших шара", "⚪"),
-                MnemoLine("Поставили друг на друга", "🧱"),
-                MnemoLine("Нос — морковка, глаза — уголь", "🥕"),
-                MnemoLine("Ведро на голову надели", "🪣")
+                MnemoLine("Скоро Новый год!", "🎉"),
+                MnemoLine("Мы наряжаем ёлку игрушками.", "🎄"),
+                MnemoLine("На верхушке горит звезда.", "⭐"),
+                MnemoLine("Под ёлкой лежат подарки.", "🎁"),
+                MnemoLine("В гости приходит Дед Мороз.", "🎅"),
+                MnemoLine("Все водят хоровод и поют песни.", "🎶")
             )
         ),
         MnemoText(
-            id = "winter_5", title = "Новый год",
+            id = "winter_7", title = "Зимующие птицы",
+            theme = MnemoTheme.WINTER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Зимой многие птицы остаются с нами.", "🐦"),
+                MnemoLine("Это воробьи, синицы и снегири.", "🐦"),
+                MnemoLine("Им холодно и голодно.", "🥶"),
+                MnemoLine("Мы сделали для птиц кормушку.", "🏠"),
+                MnemoLine("Насыпали в неё семечки и крошки.", "🌾"),
+                MnemoLine("Птицы прилетают и благодарят нас песней.", "🎶")
+            )
+        ),
+        MnemoText(
+            id = "winter_8", title = "Белый снег лежит кругом",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_5_6, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Вот и праздник Новый год", "🎉"),
-                MnemoLine("Ёлку в дом мы принесли", "🎄"),
-                MnemoLine("Шарики повесили", "🎄"),
-                MnemoLine("Гирлянды зажгли огнями", "✨"),
-                MnemoLine("Дед Мороз идёт к нам в гости", "🎅"),
-                MnemoLine("Подарки под ёлкой лежат", "🎁")
+                MnemoLine("Белый снег лежит кругом,", "❄️"),
+                MnemoLine("Мы на горку все бегом!", "🏃"),
+                MnemoLine("Санки мчатся с ветерком,", "🛷"),
+                MnemoLine("Лепим бабу мы потом.", "⛄"),
+                MnemoLine("А на катке у пруда —", "🧊"),
+                MnemoLine("Гладкий, крепкий лёд всегда.", "⛸️")
             )
         ),
         MnemoText(
-            id = "winter_6", title = "Зимние забавы",
+            id = "winter_9", title = "Зимой в лесу",
+            theme = MnemoTheme.WINTER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Зимой в лесу тихо.", "🌲"),
+                MnemoLine("Деревья стоят в белых шапках.", "🌲"),
+                MnemoLine("На снегу видны следы зайца.", "🐇"),
+                MnemoLine("Лиса ищет мышей под снегом.", "🦊"),
+                MnemoLine("Сорока трещит на ветке.", "🐦"),
+                MnemoLine("Медведь крепко спит в берлоге до весны.", "🐻")
+            )
+        ),
+        // 6-7 лет (9 клеток)
+        MnemoText(
+            id = "winter_10", title = "Зимние забавы",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Наступила снежная зима", "❄️"),
-                MnemoLine("Ребята на горку пришли", "⛷️"),
-                MnemoLine("На санках катаемся вниз", "🛷"),
-                MnemoLine("На коньках по льду скользим", "⛸️"),
-                MnemoLine("Лепят крепость из снега", "🏰"),
-                MnemoLine("Играют в снежки активно", "❄️"),
-                MnemoLine("Лыжи надели — по лыжне", "🎿"),
-                MnemoLine("Холодно, но весело всем", "😄"),
-                MnemoLine("Домой идём за чаем греться", "☕")
+                MnemoLine("Зимой много снега на улице.", "❄️"),
+                MnemoLine("Дети катаются с горы на санках.", "🛷"),
+                MnemoLine("На коньках скользят по льду.", "⛸️"),
+                MnemoLine("Лепят снеговика во дворе.", "⛄"),
+                MnemoLine("Играют в снежки весело.", "❄️"),
+                MnemoLine("Строят крепость из снега.", "🏰"),
+                MnemoLine("На лыжах катаются по лыжне.", "🎿"),
+                MnemoLine("Щёки румяные от мороза.", "🥶"),
+                MnemoLine("Холодно, но очень весело!", "😄")
             )
         ),
         MnemoText(
-            id = "winter_7", title = "Как звери зимуют",
+            id = "winter_11", title = "Как звери зимуют",
             theme = MnemoTheme.WINTER, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Медведь в берлоге спит", "🐻"),
-                MnemoLine("Ёж под листьями свернулся", "🦔"),
-                MnemoLine("Барсук в норе отдыхает", "🦡"),
-                MnemoLine("Белка по веткам скачет", "🐿️"),
-                MnemoLine("Заяц шубку поменял", "🐇"),
-                MnemoLine("Лиса мышкует в снегу", "🦊"),
-                MnemoLine("Волк стаями бродит", "🐺"),
-                MnemoLine("Птицы на юг улетели", "🕊️"),
-                MnemoLine("Каждый по-своему зиму ждёт", "❄️")
-            )
-        ),
-        MnemoText(
-            id = "winter_8", title = "Мороз и солнце",
-            theme = MnemoTheme.WINTER, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
-            lines = listOf(
-                MnemoLine("Мороз и солнце — день чудес", "☀️"),
-                MnemoLine("Снег искрится под ногами", "✨"),
-                MnemoLine("Деревья в серебре стоят", "🌲"),
-                MnemoLine("Сосульки на крышах висят", "🧊"),
-                MnemoLine("Дым из труб столбом идёт", "🏭"),
-                MnemoLine("Лёд на реке крепкий-крепкий", "🧊"),
-                MnemoLine("Дети катаются на коньках", "⛸️"),
-                MnemoLine("Щёки румяные от мороза", "❄️"),
-                MnemoLine("Зимний день такой прекрасен", "🌟")
+                MnemoLine("Зимой лесным зверям холодно.", "❄️"),
+                MnemoLine("Медведь спит в тёплой берлоге.", "🐻"),
+                MnemoLine("Ёж свернулся клубком под листьями.", "🦔"),
+                MnemoLine("Барсук спит в глубокой норе.", "🦡"),
+                MnemoLine("Белка прыгает по веткам.", "🐿️"),
+                MnemoLine("Заяц в белой шубке бегает.", "🐇"),
+                MnemoLine("Лиса мышкует — ищет мышей под снегом.", "🦊"),
+                MnemoLine("Волк бродит по лесу стаями.", "🐺"),
+                MnemoLine("У каждого свой способ зимовать.", "🌲")
             )
         )
     )
@@ -225,105 +313,145 @@ object MnemoData {
     //                          ВЕСНА
     // ===========================================================
     private val springTexts = listOf(
+        // 4-5 лет (4 клетки)
         MnemoText(
-            id = "spring_1", title = "Весна пришла",
+            id = "spring_1", title = "Солнце светит, снег растаял",
             theme = MnemoTheme.SPRING, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Снег растаял, бегут ручьи", "💧"),
-                MnemoLine("Солнышко греет сильнее", "☀️"),
-                MnemoLine("Появились первые цветы", "🌷"),
-                MnemoLine("Птички весело поют", "🐦")
+                MnemoLine("Солнце светит, снег растаял,", "☀️"),
+                MnemoLine("Побежал в овраг ручей.", "💧"),
+                MnemoLine("Скворушка домой вернулся,", "🐦"),
+                MnemoLine("Стало в мире веселей.", "😊")
             )
         ),
         MnemoText(
-            id = "spring_2", title = "Подснежники",
+            id = "spring_2", title = "Первый цветок",
             theme = MnemoTheme.SPRING, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("В лесу под снегом — чудо", "❄️"),
-                MnemoLine("Там подснежник расцвёл", "🌸"),
-                MnemoLine("Беленький, маленький цветок", "🌼"),
-                MnemoLine("Вестник тёплой весны", "🌤️")
+                MnemoLine("Из-под снега на лужок", "❄️"),
+                MnemoLine("Появился первый цветок —", "🌸"),
+                MnemoLine("Нежный, белый, голубой,", "🌼"),
+                MnemoLine("Он принёс весну с собой.", "🌷")
             )
         ),
         MnemoText(
-            id = "spring_3", title = "Весна в лесу",
+            id = "spring_3", title = "Кораблик",
+            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Мы кораблик смастерили,", "🛶"),
+                MnemoLine("По ручью его пустили.", "💧"),
+                MnemoLine("Плыви, кораблик, далеко —", "🌊"),
+                MnemoLine("Тебе на солнышке легко!", "☀️")
+            )
+        ),
+        MnemoText(
+            id = "spring_4", title = "Ёжик спал всю зиму в норке",
+            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Ёжик спал всю зиму в норке,", "🦔"),
+                MnemoLine("Под листвой на тихой горке.", "🍂"),
+                MnemoLine("А весной проснулся он:", "🌅"),
+                MnemoLine("Солнце светит, птичий звон!", "🐦")
+            )
+        ),
+        MnemoText(
+            id = "spring_5", title = "Бабочка проснулась",
+            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Бабочка проснулась,", "🦋"),
+                MnemoLine("Крылышки раскрыла.", "🦋"),
+                MnemoLine("На цветок уселась —", "🌸"),
+                MnemoLine("Весна наступила!", "🌷")
+            )
+        ),
+        MnemoText(
+            id = "spring_6", title = "Жаворонки, прилетите",
+            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Жаворонки, прилетите,", "🐦"),
+                MnemoLine("Студёну зиму унесите,", "❄️"),
+                MnemoLine("Тёплу весну принесите:", "🌸"),
+                MnemoLine("Зима нам надоела, весь хлеб у нас поела!", "🌾")
+            )
+        ),
+        // 5-6 лет (6 клеток)
+        MnemoText(
+            id = "spring_7", title = "Весна",
             theme = MnemoTheme.SPRING, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Снег в лесу растаял", "💧"),
-                MnemoLine("Появились проталины", "🌿"),
-                MnemoLine("На деревьях набухли почки", "🌱"),
-                MnemoLine("Вернулись с юга грачи", "🐦"),
-                MnemoLine("Медведь проснулся в берлоге", "🐻"),
-                MnemoLine("Зашевелился ёжик в норе", "🦔")
+                MnemoLine("Наступила весна.", "🌸"),
+                MnemoLine("Солнце светит ярче и греет.", "☀️"),
+                MnemoLine("Тает снег, бегут ручьи.", "💧"),
+                MnemoLine("На деревьях появляются листочки.", "🌱"),
+                MnemoLine("Прилетают птицы и вьют гнёзда.", "🐦"),
+                MnemoLine("Из берлоги выходит медведь.", "🐻")
             )
         ),
         MnemoText(
-            id = "spring_4", title = "Весенний сад",
-            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_5_6, type = MnemoType.POEM,
-            lines = listOf(
-                MnemoLine("В саду расцвели деревья", "🌸"),
-                MnemoLine("Яблоня в розовом наряде", "🍎"),
-                MnemoLine("Вишня в белом кружеве", "🌸"),
-                MnemoLine("Пчёлы жужжат над цветами", "🐝"),
-                MnemoLine("Бабочки порхают легко", "🦋"),
-                MnemoLine("Пахнет весной и теплом", "☀️")
-            )
-        ),
-        MnemoText(
-            id = "spring_5", title = "Скворцы прилетели",
+            id = "spring_8", title = "Скворечник",
             theme = MnemoTheme.SPRING, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Папа повесил скворечник", "🏠"),
-                MnemoLine("На берёзе, высоко", "🌲"),
-                MnemoLine("Через неделю прилетели скворцы", "🐦"),
-                MnemoLine("Стали петь по утрам звонко", "🎶"),
-                MnemoLine("Самка села высиживать птенцов", "🥚"),
-                MnemoLine("Скоро вылетят маленькие", "🐤")
+                MnemoLine("Весной мы с дедушкой сделали скворечник.", "🏠"),
+                MnemoLine("Повесили его на высокую берёзу.", "🌳"),
+                MnemoLine("Скоро прилетел скворец.", "🐦"),
+                MnemoLine("Он поселился в домике.", "🏡"),
+                MnemoLine("Скворец носил в домик травинки и пух.", "🪹"),
+                MnemoLine("А потом у него появились птенцы.", "🐣")
             )
         ),
         MnemoText(
-            id = "spring_6", title = "Весеннее пробуждение",
+            id = "spring_9", title = "Огород весной",
+            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Весной мы копаем грядки.", "🌱"),
+                MnemoLine("Сажаем семена.", "🌰"),
+                MnemoLine("Поливаем их водой из лейки.", "💧"),
+                MnemoLine("Скоро появляются ростки.", "🌱"),
+                MnemoLine("Мы выдёргиваем сорняки.", "🌿"),
+                MnemoLine("Летом у нас будет урожай.", "🥕")
+            )
+        ),
+        MnemoText(
+            id = "spring_10", title = "Весна, весна красная",
+            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_5_6, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Весна, весна красная!", "🌸"),
+                MnemoLine("Приди, весна, с радостью,", "😊"),
+                MnemoLine("С великою милостью:", "✨"),
+                MnemoLine("Со льном высоким,", "🌾"),
+                MnemoLine("С корнем глубоким,", "🌳"),
+                MnemoLine("С хлебом обильным!", "🌾")
+            )
+        ),
+        // 6-7 лет (9 клеток)
+        MnemoText(
+            id = "spring_11", title = "Весеннее пробуждение",
             theme = MnemoTheme.SPRING, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Зима ушла, пришла весна", "🌸"),
-                MnemoLine("Солнце греет всё сильней", "☀️"),
-                MnemoLine("Снег растаял, мокро кругом", "💧"),
-                MnemoLine("Побежали ручьи звонко", "💦"),
-                MnemoLine("На деревьях почки лопнули", "🌱"),
-                MnemoLine("Появилась зелёная травка", "🌿"),
-                MnemoLine("Первоцветы украсили луг", "🌼"),
-                MnemoLine("Птицы весёлые песни поют", "🐦"),
-                MnemoLine("Природа проснулась ото сна", "🌅")
+                MnemoLine("Зима ушла, пришла весна.", "🌸"),
+                MnemoLine("Солнце греет всё сильней.", "☀️"),
+                MnemoLine("Снег растаял, мокро кругом.", "💧"),
+                MnemoLine("Побежали ручьи звонко.", "💦"),
+                MnemoLine("На деревьях почки лопнули.", "🌱"),
+                MnemoLine("Появилась зелёная травка.", "🌿"),
+                MnemoLine("Первоцветы украсили луг.", "🌼"),
+                MnemoLine("Птицы весёлые песни поют.", "🐦"),
+                MnemoLine("Природа проснулась ото сна.", "🌅")
             )
         ),
         MnemoText(
-            id = "spring_7", title = "Как мы огород сажали",
+            id = "spring_12", title = "Весенний лес",
             theme = MnemoTheme.SPRING, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Наступила тёплая весна", "🌤️"),
-                MnemoLine("Папа вскопал грядки", "🪏"),
-                MnemoLine("Мы принесли семена", "🌱"),
-                MnemoLine("Мама посадила редиску", "🔴"),
-                MnemoLine("Я сажал морковку", "🥕"),
-                MnemoLine("Сестра — горох и фасоль", "🫛"),
-                MnemoLine("Полили всё тёплой водой", "💧"),
-                MnemoLine("Поставили пугало на грядки", "🧑‍🌾"),
-                MnemoLine("Ждём урожая к лету", "☀️")
-            )
-        ),
-        MnemoText(
-            id = "spring_8", title = "Весенний дождик",
-            theme = MnemoTheme.SPRING, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
-            lines = listOf(
-                MnemoLine("Тучка по небу плывёт", "☁️"),
-                MnemoLine("Дождик тёплый полил поля", "🌧️"),
-                MnemoLine("Земля напилась воды вдоволь", "💧"),
-                MnemoLine("Травка полезла зелёная", "🌱"),
-                MnemoLine("Деревья умылись росой", "🌲"),
-                MnemoLine("Цветы подняли головки", "🌷"),
-                MnemoLine("Птицы купаются в лужах", "🐦"),
-                MnemoLine("Радуга дугой на небе", "🌈"),
-                MnemoLine("Снова солнышко сияет", "☀️")
+                MnemoLine("Весной лес оживает.", "🌲"),
+                MnemoLine("Снег растаял, появились проталины.", "🌿"),
+                MnemoLine("На деревьях набухли почки.", "🌱"),
+                MnemoLine("Вернулись с юга грачи.", "🐦"),
+                MnemoLine("Медведь проснулся в берлоге.", "🐻"),
+                MnemoLine("Зашевелился ёжик в норе.", "🦔"),
+                MnemoLine("Заяц меняет шубку на серую.", "🐇"),
+                MnemoLine("Распустились подснежники.", "🌸"),
+                MnemoLine("Лес наполняется звуками.", "🎶")
             )
         )
     )
@@ -332,105 +460,135 @@ object MnemoData {
     //                          ЛЕТО
     // ===========================================================
     private val summerTexts = listOf(
+        // 4-5 лет (4 клетки)
         MnemoText(
-            id = "summer_1", title = "Лето красное",
+            id = "summer_1", title = "Летом солнышко печёт",
             theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Солнце ярко светит", "☀️"),
-                MnemoLine("Травка зелёная кругом", "🌿"),
-                MnemoLine("Цветочки пёстрые в полях", "🌸"),
-                MnemoLine("Птички весело поют", "🐦")
+                MnemoLine("Летом солнышко печёт,", "☀️"),
+                MnemoLine("Речка тёплая течёт.", "🌊"),
+                MnemoLine("Мы купаемся с утра —", "🏊"),
+                MnemoLine("Эх, весёлая пора!", "😄")
             )
         ),
         MnemoText(
-            id = "summer_2", title = "На реке",
-            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_4_5, type = MnemoType.STORY,
+            id = "summer_2", title = "Радуга-дуга встаёт",
+            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Жаркий день, идём на речку", "🌊"),
-                MnemoLine("Вода в реке прохладная", "💧"),
-                MnemoLine("Купаемся и плескаемся", "🏊"),
-                MnemoLine("На песке лежим загораем", "🏖️")
+                MnemoLine("Дождик кончился, и вот —", "🌧️"),
+                MnemoLine("Радуга-дуга встаёт!", "🌈"),
+                MnemoLine("Словно мостик через речку,", "🌉"),
+                MnemoLine("Словно яркое колечко.", "💍")
             )
         ),
         MnemoText(
-            id = "summer_3", title = "Летний день",
-            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_5_6, type = MnemoType.POEM,
+            id = "summer_3", title = "Одуванчик",
+            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Утром солнце встаёт рано", "🌅"),
-                MnemoLine("Роса блестит на траве", "💧"),
-                MnemoLine("Птицы поют на все лады", "🐦"),
-                MnemoLine("Пчёлы летят на луга", "🐝"),
-                MnemoLine("День длинный-длинный стоит", "☀️"),
-                MnemoLine("Вечером закат золотой", "🌇")
+                MnemoLine("Одуванчик золотой", "🌼"),
+                MnemoLine("Был весёлый, молодой.", "☀️"),
+                MnemoLine("А теперь он — пух седой:", "🌬️"),
+                MnemoLine("Дунешь — пух летит гурьбой!", "🌬️")
             )
         ),
         MnemoText(
-            id = "summer_4", title = "На даче",
+            id = "summer_4", title = "Прыгает кузнечик",
+            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_4_5, type = MnemoType.POEM,
+            lines = listOf(
+                MnemoLine("Прыгает кузнечик", "🦗"),
+                MnemoLine("По зелёной травке,", "🌿"),
+                MnemoLine("Звонко он стрекочет", "🎶"),
+                MnemoLine("На лесной полянке.", "🌳")
+            )
+        ),
+        MnemoText(
+            id = "summer_5", title = "Радуга-дуга",
+            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_4_5, type = MnemoType.POTESHKA,
+            lines = listOf(
+                MnemoLine("Радуга-дуга,", "🌈"),
+                MnemoLine("Не давай дождя,", "🚫"),
+                MnemoLine("Давай солнышка —", "☀️"),
+                MnemoLine("Колоколнышка!", "🔔")
+            )
+        ),
+        // 5-6 лет (6 клеток)
+        MnemoText(
+            id = "summer_6", title = "Лето",
             theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Летом мы живём на даче", "🏡"),
-                MnemoLine("У нас большой огород", "🌱"),
-                MnemoLine("Поливаем грядки водой", "💧"),
-                MnemoLine("Помидоры краснеют на солнце", "🍅"),
-                MnemoLine("Огурцы висят на плети", "🥒"),
-                MnemoLine("Клубника сладкая в саду", "🍓")
+                MnemoLine("Наступило лето.", "☀️"),
+                MnemoLine("Жарко, светит яркое солнце.", "🌞"),
+                MnemoLine("Цветут цветы, летают бабочки.", "🦋"),
+                MnemoLine("В лесу поспевают ягоды.", "🍓"),
+                MnemoLine("Дети купаются в речке.", "🏊"),
+                MnemoLine("Иногда бывает гроза с громом и молнией.", "⛈️")
             )
         ),
         MnemoText(
-            id = "summer_5", title = "Лесные ягоды",
+            id = "summer_7", title = "На даче",
             theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
             lines = listOf(
-                MnemoLine("Пошли в лес за ягодами", "🧺"),
-                MnemoLine("На полянке земляника", "🍓"),
-                MnemoLine("Под кустами черника", "🫐"),
-                MnemoLine("На кочках морошка", "🍊"),
-                MnemoLine("Малина в малиннике зреет", "🟥"),
-                MnemoLine("Корзина полная — домой", "🏠")
+                MnemoLine("Летом мы живём на даче.", "🏡"),
+                MnemoLine("Утром я помогаю бабушке поливать огород.", "💧"),
+                MnemoLine("Днём мы ходим на речку.", "🏊"),
+                MnemoLine("В лесу собираем землянику.", "🍓"),
+                MnemoLine("Вечером пьём чай на веранде.", "☕"),
+                MnemoLine("А ночью смотрим на звёзды.", "⭐")
             )
         ),
         MnemoText(
-            id = "summer_6", title = "Жаркий полдень",
+            id = "summer_8", title = "Летом в лесу",
+            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Летом в лесу много интересного.", "🌲"),
+                MnemoLine("Поют птицы.", "🐦"),
+                MnemoLine("Жужжат пчёлы.", "🐝"),
+                MnemoLine("На полянке растут цветы и ягоды.", "🌸"),
+                MnemoLine("Муравьи строят муравейник.", "🐜"),
+                MnemoLine("В кустах прячется ёжик.", "🦔")
+            )
+        ),
+        MnemoText(
+            id = "summer_9", title = "На море",
+            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_5_6, type = MnemoType.STORY,
+            lines = listOf(
+                MnemoLine("Летом мы поехали на море.", "🌊"),
+                MnemoLine("Там тёплый песок и солнце.", "🏖️"),
+                MnemoLine("Я построил замок из песка.", "🏰"),
+                MnemoLine("Мы купались в тёплых волнах.", "🏊"),
+                MnemoLine("Я нашёл красивую ракушку.", "🐚"),
+                MnemoLine("На море было очень весело!", "😄")
+            )
+        ),
+        // 6-7 лет (9 клеток)
+        MnemoText(
+            id = "summer_10", title = "Жаркий полдень",
             theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Солнце в зените палит", "☀️"),
-                MnemoLine("Воздух дрожит от жары", "🔥"),
-                MnemoLine("Трава пожелтела на лугу", "🌾"),
-                MnemoLine("Кузнечики стрекочут в траве", "🦗"),
-                MnemoLine("Птицы спрятались в тень", "🌳"),
-                MnemoLine("Пчёлы в ульях жужжат", "🐝"),
-                MnemoLine("Собака лежит в тени", "🐕"),
-                MnemoLine("Люди в реке спасаются", "🌊"),
-                MnemoLine("Ждём вечерней прохлады", "🌆")
+                MnemoLine("Солнце в зените палит.", "☀️"),
+                MnemoLine("Воздух дрожит от жары.", "🔥"),
+                MnemoLine("Трава пожелтела на лугу.", "🌾"),
+                MnemoLine("Кузнечики стрекочут в траве.", "🦗"),
+                MnemoLine("Птицы спрятались в тень.", "🌳"),
+                MnemoLine("Пчёлы в ульях жужжат.", "🐝"),
+                MnemoLine("Собака лежит в тени.", "🐕"),
+                MnemoLine("Люди в реке спасаются.", "🏊"),
+                MnemoLine("Ждём вечерней прохлады.", "🌆")
             )
         ),
         MnemoText(
-            id = "summer_7", title = "Летний луг",
-            theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_6_7, type = MnemoType.STORY,
-            lines = listOf(
-                MnemoLine("Вышли мы на луг летним днём", "🌞"),
-                MnemoLine("Трава на нём высокая", "🌾"),
-                MnemoLine("Цветы разные-разноцветные", "🌼"),
-                MnemoLine("Бабочки порхают над цветами", "🦋"),
-                MnemoLine("Пчёлы жужжат, собирают нектар", "🐝"),
-                MnemoLine("Кузнечики скачут под ногами", "🦗"),
-                MnemoLine("В траве прячется божья коровка", "🐞"),
-                MnemoLine("Стрекоза на стебле отдыхает", "🟦"),
-                MnemoLine("А вдали звенит ручей", "💧")
-            )
-        ),
-        MnemoText(
-            id = "summer_8", title = "Летний вечер",
+            id = "summer_11", title = "Летний вечер",
             theme = MnemoTheme.SUMMER, age = MnemoAge.AGE_6_7, type = MnemoType.POEM,
             lines = listOf(
-                MnemoLine("Солнце садится за лес", "🌇"),
-                MnemoLine("Небо окрасилось в розовое", "🌸"),
-                MnemoLine("Тени на земле удлинились", "🌑"),
-                MnemoLine("Птицы стихли в гнёздах", "🐦"),
-                MnemoLine("Светлячки зажглись в траве", "✨"),
-                MnemoLine("Звёзды на небе замигали", "⭐"),
-                MnemoLine("Луна выплыла на небо", "🌙"),
-                MnemoLine("Кузнечики затянули песню", "🦗"),
-                MnemoLine("Тихий летний вечер настал", "🌆")
+                MnemoLine("Солнце садится за лес.", "🌇"),
+                MnemoLine("Небо окрасилось в розовое.", "🌸"),
+                MnemoLine("Тени на земле удлинились.", "🌑"),
+                MnemoLine("Птицы стихли в гнёздах.", "🐦"),
+                MnemoLine("Светлячки зажглись в траве.", "✨"),
+                MnemoLine("Звёзды на небе замигали.", "⭐"),
+                MnemoLine("Луна выплыла на небо.", "🌙"),
+                MnemoLine("Кузнечики затянули песню.", "🦗"),
+                MnemoLine("Тихий летний вечер настал.", "🌆")
             )
         )
     )
