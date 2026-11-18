@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -152,18 +154,61 @@ fun StressSyllablesGeneratorScreen(onBack: () -> Unit) {
 
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
                     Text("Ударение и слоги", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Ребёнок смотрит на картинку и слово, разделённое на слоги дефисами.\n\n" +
-                        "Задание:\n" +
-                        "• посчитай, сколько слогов в слове, и впиши число в кружок;\n" +
-                        "• поставь знак ударения ´ над ударной гласной.\n\n" +
-                        "На листе ответов (вторая страница) кружки заполнены, а ударение отмечено.\n\n" +
-                        "Выбери 6, 8 или 10 слов. Кнопка «Обновить» даёт новый случайный набор.",
+                        "Умение разделить слово на слоги и услышать ударный — основа грамотного чтения и письма. " +
+                        "Генератор собирает лист A4: под картинкой дано слово, ребёнок делит его на слоги, " +
+                        "считает их и ставит знак ударения над нужной гласной. Нажал кнопку — получил новый вариант.",
                         style = MaterialTheme.typography.bodyLarge
                     )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Что развивают эти листы", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "• Фонематический слух — умение слышать, из каких частей состоит слово и где падает голос.\n" +
+                        "• Слоговой анализ — навык делить слово на слоги, без которого трудно научиться плавному чтению.\n" +
+                        "• Чувство ударения — основу правильного произношения и будущей орфографии (безударные гласные).\n" +
+                        "• Внимание и счёт — ребёнок считает слоги и вписывает число в кружок.\n" +
+                        "• Мелкую моторику — проведение чёрточек и постановка значка готовят руку к письму.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Для какого возраста", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Задания рассчитаны на детей 5–7 лет — старшая и подготовительная группы детского сада и первый класс.\n\n" +
+                        "• 5 лет — короткие слова из одного-двух слогов. Делите вслух вместе, хлопая в ладоши.\n" +
+                        "• 6 лет — трёхсложные слова, просите самостоятельно ставить ударение.\n" +
+                        "• 7 лет — давайте лист целиком и просите объяснять, почему ударение именно здесь.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Как пользоваться", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Выберите количество слов (6, 8 или 10) и нажмите «Обновить» для нового набора. " +
+                        "Лист рассчитан на A4 — подойдёт любой принтер. Вторым листом добавляются ответы: " +
+                        "ударение и число слогов уже проставлены — удобно для быстрой проверки.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Советы родителям", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "• Хлопайте по слогам. Произнесите слово, хлопая в ладоши на каждую часть. Сколько хлопков — столько слогов.\n" +
+                        "• «Позовите» слово. Чтобы найти ударение, протяжно позовите слово, будто оно далеко.\n" +
+                        "• Не торопите. Пусть ребёнок сам поделит и поставит значок — подсказывайте только наводящими вопросами.\n" +
+                        "• Хвалите за попытку. Даже если ударение не там, отметьте, что ребёнок рассуждал и проговаривал.\n" +
+                        "• Оптимально — 2–3 коротких занятия в неделю по 10–15 минут, один лист за раз.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
