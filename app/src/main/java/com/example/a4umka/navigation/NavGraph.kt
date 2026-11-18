@@ -100,6 +100,7 @@ fun NavGraph() {
                 categoryId == "reading" && taskId == "sound_automation" -> SoundAutomationGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "mnemo" -> MnemoGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "stress_syllables" -> StressSyllablesGeneratorScreen(onBack = { navController.popBackStack() })
+                categoryId == "reading" && taskId == "unstressed_vowels" -> UnstressedVowelsGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "syllable_tables" -> SyllableTableGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "assemble_word" -> AssembleWordGeneratorScreen(onBack = { navController.popBackStack() })
                 categoryId == "reading" && taskId == "fillword" -> FillwordGeneratorScreen(onBack = { navController.popBackStack() }, onPlayInteractive = { currentFillwordConfig = it; navController.navigate(Routes.INTERACTIVE_FILLWORD) })
