@@ -48,7 +48,7 @@ object MnemoPdfDrawer {
     fun drawDocument(document: PdfDocument, config: MnemoConfig, context: Context) {
         var pageNum = 1
         val bitmaps = renderPages(config)
-        val scale = 3
+        val scale = 6
         bitmaps.forEach { bmp ->
             val scaledBmp = Bitmap.createScaledBitmap(
                 bmp, PAGE_WIDTH.toInt() * scale, PAGE_HEIGHT.toInt() * scale, true
