@@ -136,11 +136,10 @@ object StressSyllablesPdfDrawer {
 
             // === Слово с дефисами — по центру карточки ===
             val syllableText = word.syllables.joinToString("-")
-            // Измеряем ширину слова, чтобы отцентрировать в доступном пространстве
             val wordWidth = wordPaint.measureText(syllableText)
-            // Доступное пространство: от x=80 до x=usableWidth-90 (оставляем место под кружок)
             val wordAreaStart = left + 80f
-            val wordAreaEnd = left + usableWidth - 90f
+            // ИСПРАВЛЕНО: сдвинули кружок и «слогов» левее (с 90 до 130 отступ от правого края)
+            val wordAreaEnd = left + usableWidth - 130f
             val wordAreaWidth = wordAreaEnd - wordAreaStart
             val wordX = wordAreaStart + (wordAreaWidth - wordWidth) / 2f
             val wordY = centerY + 7f
@@ -152,7 +151,8 @@ object StressSyllablesPdfDrawer {
             }
 
             // === Справа: кружок для количества слогов + "слогов" ===
-            val circleCx = left + usableWidth - 55f
+            // ИСПРАВЛЕНО: сдвинули левее (было usableWidth-55, стало usableWidth-95)
+            val circleCx = left + usableWidth - 95f
             val circleR = 16f
 
             canvas.drawCircle(circleCx, centerY, circleR, circlePaint)
@@ -188,7 +188,8 @@ object StressSyllablesPdfDrawer {
             if (i == word.stressedSyllable) {
                 val syllableWidth = wordPaint.measureText(syllable)
                 val markX = currentX + syllableWidth / 2f - 4f
-                val markY = y - 18f
+                // ИСПРАВЛЕНО: знак ударения опущен ниже (было y-18f, стало y-10f) — ближе к букве
+                val markY = y - 10f
                 canvas.drawText("´", markX, markY, stressPaint)
             }
 
