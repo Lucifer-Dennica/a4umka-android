@@ -57,10 +57,23 @@ object UnstressedVowelsPdfDrawer {
     fun drawDocument(document: PdfDocument, config: UnstressedVowelsConfig, context: Context) {
         var pageNum = 1
         val pages = generatePreview(config, context)
+        // ИСПРАВЛЕНО: рендерим в 3× разрешении для высокого качества PDF
+        val scale = 3
         pages.forEach { bmp ->
-            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
+            val scaledBmp = Bitmap.createScaledBitmap(
+                bmp,
+                PAGE_WIDTH.toInt() * scale,
+                PAGE_HEIGHT.toInt() * scale,
+                true
+            )
+            val pageInfo = PdfDocument.PageInfo.Builder(
+                PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++
+            ).create()
             val page = document.startPage(pageInfo)
-            page.canvas.drawBitmap(bmp, 0f, 0f, null)
+            // Рисуем масштабированный bitmap на canvas страницы, масштабируя обратно
+            val srcRect = android.graphics.Rect(0, 0, scaledBmp.width, scaledBmp.height)
+            val dstRect = android.graphics.RectF(0f, 0f, PAGE_WIDTH, PAGE_HEIGHT)
+            page.canvas.drawBitmap(scaledBmp, srcRect, dstRect, null)
             document.finishPage(page)
         }
     }
@@ -161,20 +174,45 @@ object UnstressedVowelsPdfDrawer {
     ) {
         val fullWord = word.word
         var currentX = x
+        // Размер клетки для пропущенной буквы
+        val cellSize = 14f
+        val cellGap = 1f
+
         for (i in fullWord.indices) {
             val ch = fullWord[i]
             if (i == word.missingIndex) {
                 if (isAnswer) {
-                    // В ответах: рисуем правильную букву красным
-                    canvas.drawText(ch.toString(), currentX, y, answerPaint)
+                    // В ответах: рисуем правильную букву красным в клетке
+                    val cellRect = RectF(currentX, y - cellSize + 2f, currentX + cellSize, y + 2f)
+                    val cellPaint = Paint().apply {
+                        color = Color.parseColor("#FFF3E0"); style = Paint.Style.FILL
+                    }
+                    val cellBorder = Paint().apply {
+                        color = answerColor; style = Paint.Style.STROKE; strokeWidth = 1f
+                    }
+                    canvas.drawRect(cellRect, cellPaint)
+                    canvas.drawRect(cellRect, cellBorder)
+                    // Буква по центру клетки
+                    val letterPaint = Paint(answerPaint).apply { textAlign = Paint.Align.CENTER }
+                    canvas.drawText(ch.toString(), currentX + cellSize / 2f, y, letterPaint)
+                    currentX += cellSize + cellGap
                 } else {
-                    // В задании: рисуем пропуск "_"
-                    canvas.drawText("_", currentX, y, wordPaint)
+                    // В задании: рисуем красивый прямоугольник-клетку
+                    val cellRect = RectF(currentX, y - cellSize + 2f, currentX + cellSize, y + 2f)
+                    val cellPaint = Paint().apply {
+                        color = Color.parseColor("#FAFAF5"); style = Paint.Style.FILL
+                    }
+                    val cellBorder = Paint().apply {
+                        color = Color.parseColor("#888888"); style = Paint.Style.STROKE; strokeWidth = 1f
+                    }
+                    canvas.drawRect(cellRect, cellPaint)
+                    canvas.drawRect(cellRect, cellBorder)
+                    currentX += cellSize + cellGap
                 }
             } else {
                 canvas.drawText(ch.toString(), currentX, y, wordPaint)
+                currentX += wordPaint.measureText(ch.toString())
             }
-            currentX += wordPaint.measureText(ch.toString())
         }
     }
 
