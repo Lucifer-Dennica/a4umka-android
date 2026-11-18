@@ -56,10 +56,16 @@ object StressSyllablesPdfDrawer {
     fun drawDocument(document: PdfDocument, config: StressSyllablesConfig, context: Context) {
         var pageNum = 1
         val pages = generatePreview(config, context)
+        val scale = 3
         pages.forEach { bmp ->
+            val scaledBmp = Bitmap.createScaledBitmap(
+                bmp, PAGE_WIDTH.toInt() * scale, PAGE_HEIGHT.toInt() * scale, true
+            )
             val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
             val page = document.startPage(pageInfo)
-            page.canvas.drawBitmap(bmp, 0f, 0f, null)
+            val srcRect = android.graphics.Rect(0, 0, scaledBmp.width, scaledBmp.height)
+            val dstRect = android.graphics.RectF(0f, 0f, PAGE_WIDTH, PAGE_HEIGHT)
+            page.canvas.drawBitmap(scaledBmp, srcRect, dstRect, null)
             document.finishPage(page)
         }
     }
