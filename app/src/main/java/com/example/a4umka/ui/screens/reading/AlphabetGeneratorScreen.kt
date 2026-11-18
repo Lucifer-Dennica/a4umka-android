@@ -2,7 +2,6 @@ package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -19,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.sp // <-- ДОБАВЛЕН ИМПОРТ
 import com.example.a4umka.data.*
 import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.AlphabetPdfDrawer
@@ -36,16 +35,10 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(AlphabetConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА — 4K (масштаб ×6 = 3570×5052 px)
-    val previewScale = 6
+    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА
     val previewBitmap = remember(config) {
-        val bmp = Bitmap.createBitmap(
-            (AlphabetPdfDrawer.PAGE_WIDTH * previewScale).toInt(),
-            (AlphabetPdfDrawer.PAGE_HEIGHT * previewScale).toInt(),
-            Bitmap.Config.ARGB_8888
-        )
+        val bmp = Bitmap.createBitmap(AlphabetPdfDrawer.PAGE_WIDTH.toInt(), AlphabetPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = AndroidCanvas(bmp)
-        canvas.scale(previewScale.toFloat(), previewScale.toFloat())
         AlphabetPdfDrawer.drawLayout(canvas, config, context)
         bmp
     }
@@ -79,137 +72,95 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(16.dp)
         ) {
-            // БЛОК: Вид листа
             item {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Вид листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = config.layoutType == AlphabetLayoutType.POSTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.POSTER) }, label = { Text("Плакат") })
-                            FilterChip(selected = config.layoutType == AlphabetLayoutType.FLASHCARDS, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FLASHCARDS) }, label = { Text("Карточки") })
-                            FilterChip(selected = config.layoutType == AlphabetLayoutType.COLORING, onClick = { config = config.copy(layoutType = AlphabetLayoutType.COLORING) }, label = { Text("Раскраска") })
-                        }
+                Text("Вид листа:", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = config.layoutType == AlphabetLayoutType.POSTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.POSTER) }, label = { Text("Плакат") })
+                    FilterChip(selected = config.layoutType == AlphabetLayoutType.FLASHCARDS, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FLASHCARDS) }, label = { Text("Карточки") })
+                    FilterChip(selected = config.layoutType == AlphabetLayoutType.COLORING, onClick = { config = config.copy(layoutType = AlphabetLayoutType.COLORING) }, label = { Text("Раскраска") })
+                }
 
-                        if (config.layoutType == AlphabetLayoutType.FLASHCARDS) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Карточек на лист:", style = MaterialTheme.typography.labelLarge)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                listOf(1, 2, 4, 6).forEach { count ->
-                                    FilterChip(selected = config.cardsPerPage == count, onClick = { config = config.copy(cardsPerPage = count) }, label = { Text("$count") })
-                                }
-                            }
+                if (config.layoutType == AlphabetLayoutType.FLASHCARDS) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Карточек на лист:", style = MaterialTheme.typography.labelLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(1, 2, 4, 6).forEach { count ->
+                            FilterChip(selected = config.cardsPerPage == count, onClick = { config = config.copy(cardsPerPage = count) }, label = { Text("$count") })
                         }
                     }
                 }
-            }
 
-            // БЛОК: Диапазон букв
-            item {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Диапазон букв", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            LetterDropdown(
-                                label = "От", selectedIndex = config.startLetterIndex,
-                                onSelect = { config = config.copy(startLetterIndex = it.coerceAtMost(config.endLetterIndex)) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LetterDropdown(
-                                label = "До", selectedIndex = config.endLetterIndex,
-                                onSelect = { config = config.copy(endLetterIndex = it.coerceAtLeast(config.startLetterIndex)) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Диапазон букв:", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    LetterDropdown(
+                        label = "От", selectedIndex = config.startLetterIndex,
+                        onSelect = { config = config.copy(startLetterIndex = it.coerceAtMost(config.endLetterIndex)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    LetterDropdown(
+                        label = "До", selectedIndex = config.endLetterIndex,
+                        onSelect = { config = config.copy(endLetterIndex = it.coerceAtLeast(config.startLetterIndex)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Какие буквы:", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = config.filter == AlphabetFilter.ALL, onClick = { config = config.copy(filter = AlphabetFilter.ALL) }, label = { Text("Все") })
+                    FilterChip(selected = config.filter == AlphabetFilter.VOWELS, onClick = { config = config.copy(filter = AlphabetFilter.VOWELS) }, label = { Text("Гласные") })
+                    FilterChip(selected = config.filter == AlphabetFilter.CONSONANTS, onClick = { config = config.copy(filter = AlphabetFilter.CONSONANTS) }, label = { Text("Согласные") })
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Регистр букв:", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = config.case == AlphabetCase.UPPERCASE, onClick = { config = config.copy(case = AlphabetCase.UPPERCASE) }, label = { Text("АБВ") })
+                    FilterChip(selected = config.case == AlphabetCase.LOWERCASE, onClick = { config = config.copy(case = AlphabetCase.LOWERCASE) }, label = { Text("абв") })
+                    FilterChip(selected = config.case == AlphabetCase.BOTH, onClick = { config = config.copy(case = AlphabetCase.BOTH) }, label = { Text("АаБб") })
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Цвет листа:", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = config.color == PosterColor.WHITE, onClick = { config = config.copy(color = PosterColor.WHITE) }, label = { Text("Белый") })
+                    FilterChip(selected = config.color == PosterColor.GREEN, onClick = { config = config.copy(color = PosterColor.GREEN) }, label = { Text("Зеленый") })
+                    FilterChip(selected = config.color == PosterColor.BLUE, onClick = { config = config.copy(color = PosterColor.BLUE) }, label = { Text("Синий") })
+                    FilterChip(selected = config.color == PosterColor.BLACK_WHITE, onClick = { config = config.copy(color = PosterColor.BLACK_WHITE) }, label = { Text("Ч/Б") })
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Прописные буквы", modifier = Modifier.weight(1f))
+                    Switch(checked = config.isCursive, onCheckedChange = { config = config.copy(isCursive = it) })
+                }
+
+                if (config.layoutType != AlphabetLayoutType.COLORING) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Печатать картинку", modifier = Modifier.weight(1f))
+                        Switch(checked = config.showImage, onCheckedChange = { config = config.copy(showImage = it) })
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Печатать слово", modifier = Modifier.weight(1f))
+                        Switch(checked = config.showWord, onCheckedChange = { config = config.copy(showWord = it) })
                     }
                 }
-            }
-
-            // БЛОК: Фильтр и регистр
-            item {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Column {
-                            Text("Какие буквы", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FilterChip(selected = config.filter == AlphabetFilter.ALL, onClick = { config = config.copy(filter = AlphabetFilter.ALL) }, label = { Text("Все") })
-                                FilterChip(selected = config.filter == AlphabetFilter.VOWELS, onClick = { config = config.copy(filter = AlphabetFilter.VOWELS) }, label = { Text("Гласные") })
-                                FilterChip(selected = config.filter == AlphabetFilter.CONSONANTS, onClick = { config = config.copy(filter = AlphabetFilter.CONSONANTS) }, label = { Text("Согласные") })
-                            }
-                        }
-                        Column {
-                            Text("Регистр букв", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FilterChip(selected = config.case == AlphabetCase.UPPERCASE, onClick = { config = config.copy(case = AlphabetCase.UPPERCASE) }, label = { Text("АБВ") })
-                                FilterChip(selected = config.case == AlphabetCase.LOWERCASE, onClick = { config = config.copy(case = AlphabetCase.LOWERCASE) }, label = { Text("абв") })
-                                FilterChip(selected = config.case == AlphabetCase.BOTH, onClick = { config = config.copy(case = AlphabetCase.BOTH) }, label = { Text("АаБб") })
-                            }
-                        }
-                    }
-                }
-            }
-
-            // БЛОК: Оформление
-            item {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Оформление", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = config.color == PosterColor.WHITE, onClick = { config = config.copy(color = PosterColor.WHITE) }, label = { Text("Белый") })
-                            FilterChip(selected = config.color == PosterColor.GREEN, onClick = { config = config.copy(color = PosterColor.GREEN) }, label = { Text("Зеленый") })
-                            FilterChip(selected = config.color == PosterColor.BLUE, onClick = { config = config.copy(color = PosterColor.BLUE) }, label = { Text("Синий") })
-                            FilterChip(selected = config.color == PosterColor.BLACK_WHITE, onClick = { config = config.copy(color = PosterColor.BLACK_WHITE) }, label = { Text("Ч/Б") })
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Прописные буквы", modifier = Modifier.weight(1f))
-                            Switch(checked = config.isCursive, onCheckedChange = { config = config.copy(isCursive = it) })
-                        }
-
-                        if (config.layoutType != AlphabetLayoutType.COLORING) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Печатать картинку", modifier = Modifier.weight(1f))
-                                Switch(checked = config.showImage, onCheckedChange = { config = config.copy(showImage = it) })
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Печатать слово", modifier = Modifier.weight(1f))
-                                Switch(checked = config.showWord, onCheckedChange = { config = config.copy(showWord = it) })
-                            }
-                        }
-                    }
-                }
-            }
-
-            // СОВЕТ
-            item {
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                
                 Text(
-                    text = "Совет: не учите больше 1–2 букв за раз.",
+                    text = "💡 Совет: не учите больше 1–2 букв за раз.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
-            }
-
-            // ПРЕДПРОСМОТР
-            item {
-                Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -221,7 +172,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
                     )
                 }
-
+                
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ElevatedCard(
@@ -256,7 +207,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                         }
                     }
                 }
-
+                
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -279,7 +230,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                         "• Вешайте плакат на уровне глаз ребёнка.",
                         style = MaterialTheme.typography.bodyLarge
                     )
-
+                    
                     Spacer(modifier = Modifier.height(24.dp))
                     Text("Буквы Ъ, Ы и Ь", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
@@ -297,7 +248,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                         "• Раскраска: Буквы контуром плюс пустое окошко с заданием нарисовать то, что на неё начинается.",
                         style = MaterialTheme.typography.bodyLarge
                     )
-
+                    
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
