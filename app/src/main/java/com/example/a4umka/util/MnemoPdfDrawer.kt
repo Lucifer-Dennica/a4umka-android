@@ -322,18 +322,12 @@ object MnemoPdfDrawer {
         canvas.drawRoundRect(rect, 12f, 12f, cardBg)
         canvas.drawRoundRect(rect, 12f, 12f, cardBorder)
 
-        // === Слева — большая иконка предмета на цветном круге (как на сайте-эталоне) ===
+        // === Слева — большая иконка предмета (БЕЗ круга, как на сайте-эталоне) ===
         val emojiColWidth = 120f
         val emojiCx = x + emojiColWidth / 2f
         val emojiCy = y + height / 2f - 18f
 
-        // Цветной круг-подложка (пастельный, по категории)
-        val bgCircleRadius = 55f
-        val bgCirclePaint = Paint().apply {
-            color = categoryToPastelColor(scheme.category); style = Paint.Style.FILL
-            isAntiAlias = true
-        }
-        canvas.drawCircle(emojiCx, emojiCy, bgCircleRadius, bgCirclePaint)
+        // ИСПРАВЛЕНО: убран цветной круг-подложка — на сайте его нет
 
         // Крупный эмодзи предмета
         val emojiPaint = Paint().apply {
@@ -380,8 +374,9 @@ object MnemoPdfDrawer {
             color = Color.parseColor("#D0D0C8"); style = Paint.Style.STROKE; strokeWidth = 1f
         }
         // НЕТ круглого цветного фона под иконками — как на сайте-эталоне
+        // ИСПРАВЛЕНО: textSize=66f — размер иконки ~66×53px как на сайте-эталоне
         val iconPaint = Paint().apply {
-            textSize = 32f; textAlign = Paint.Align.CENTER
+            textSize = 66f; textAlign = Paint.Align.CENTER
         }
         val numBg = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
         val numText = Paint().apply {
@@ -408,9 +403,12 @@ object MnemoPdfDrawer {
             canvas.drawRoundRect(qRect, 8f, 8f, qCardBorder)
 
             val centerX = cellX + qCellW / 2f
+            val centerY = cellY + qCellH / 2f
 
             // === Иконка по центру карточки (БЕЗ круглого фона) ===
-            val iconY = cellY + 28f
+            // ИСПРАВЛЕНО: иконка отцентрирована по вертикали ячейки.
+            // Базовая линия текста = centerY + textSize/3 (т.к. эмодзи рисуется от baseline вверх)
+            val iconY = centerY + iconPaint.textSize / 3f
             canvas.drawText(questionIcons[i], centerX, iconY, iconPaint)
 
             // === Номер вопроса слева сверху ===
@@ -420,7 +418,7 @@ object MnemoPdfDrawer {
             canvas.drawText("${i + 1}", nCx, nCy + 3f, numText)
 
             // === Текст вопроса под иконкой ===
-            // Длинные вопросы переносим — разбиваем на 2 строки если нужно
+            // ИСПРАВЛЕНО: текст отодвинут от иконки (iconY + 28f) с учётом размера 66pt
             val qText = questions[i]
             val maxWidth = qCellW - 8f
             if (questionPaint.measureText(qText) > maxWidth) {
@@ -435,28 +433,15 @@ object MnemoPdfDrawer {
                         line2 = "$line2 $w".trim()
                     }
                 }
-                canvas.drawText(line1, centerX, iconY + 18f, questionPaint)
-                canvas.drawText(line2, centerX, iconY + 30f, questionPaint)
+                canvas.drawText(line1, centerX, iconY + 28f, questionPaint)
+                canvas.drawText(line2, centerX, iconY + 40f, questionPaint)
                 // Линия для ответа под вопросом
                 canvas.drawLine(cellX + 6f, cellY + qCellH - 8f, cellX + qCellW - 6f, cellY + qCellH - 8f, answerLine)
             } else {
-                canvas.drawText(qText, centerX, iconY + 18f, questionPaint)
+                canvas.drawText(qText, centerX, iconY + 28f, questionPaint)
                 // Линия для ответа под вопросом
                 canvas.drawLine(cellX + 6f, cellY + qCellH - 8f, cellX + qCellW - 6f, cellY + qCellH - 8f, answerLine)
             }
-        }
-    }
-
-    // Пастельный цвет фона под эмодзи — по категории предмета
-    private fun categoryToPastelColor(category: DescriptiveCategory): Int {
-        return when (category) {
-            DescriptiveCategory.VEGETABLES -> Color.parseColor("#FFE0B2")  // персиковый
-            DescriptiveCategory.FRUITS    -> Color.parseColor("#FFCDD2")  // розовый
-            DescriptiveCategory.ANIMALS   -> Color.parseColor("#D7CCC8")  // коричневый
-            DescriptiveCategory.BIRDS     -> Color.parseColor("#BBDEFB")  // голубой
-            DescriptiveCategory.TOYS      -> Color.parseColor("#F8BBD0")  // розовый
-            DescriptiveCategory.TRANSPORT -> Color.parseColor("#CFD8DC")  // стальной
-            DescriptiveCategory.CLOTHES   -> Color.parseColor("#C5CAE9")  // индиго
         }
     }
 
