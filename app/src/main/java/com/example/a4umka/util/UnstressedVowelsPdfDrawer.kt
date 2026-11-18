@@ -58,7 +58,7 @@ object UnstressedVowelsPdfDrawer {
         var pageNum = 1
         val pages = generatePreview(config, context)
         // ИСПРАВЛЕНО: рендерим в 3× разрешении для высокого качества PDF
-        val scale = 3
+        val scale = 6
         pages.forEach { bmp ->
             val scaledBmp = Bitmap.createScaledBitmap(
                 bmp,
@@ -175,15 +175,20 @@ object UnstressedVowelsPdfDrawer {
         val fullWord = word.word
         var currentX = x
         // Размер клетки для пропущенной буквы
-        val cellSize = 14f
-        val cellGap = 1f
+        // ИСПРАВЛЕНО: увеличена высота (+2pt) и добавлен отступ слева от буквы (gap=2f)
+        val cellW = 13f
+        val cellH = 17f
+        val cellGap = 2f  // отступ от буквы слева
+        val letterGap = 2f // небольшой отступ между обычными буквами для пропорциональности
 
         for (i in fullWord.indices) {
             val ch = fullWord[i]
             if (i == word.missingIndex) {
+                // Отступ слева от буквы, чтобы клетка не ложилась на неё
+                currentX += cellGap
                 if (isAnswer) {
                     // В ответах: рисуем правильную букву красным в клетке
-                    val cellRect = RectF(currentX, y - cellSize + 2f, currentX + cellSize, y + 2f)
+                    val cellRect = RectF(currentX, y - cellH + 4f, currentX + cellW, y + 4f)
                     val cellPaint = Paint().apply {
                         color = Color.parseColor("#FFF3E0"); style = Paint.Style.FILL
                     }
@@ -194,11 +199,11 @@ object UnstressedVowelsPdfDrawer {
                     canvas.drawRect(cellRect, cellBorder)
                     // Буква по центру клетки
                     val letterPaint = Paint(answerPaint).apply { textAlign = Paint.Align.CENTER }
-                    canvas.drawText(ch.toString(), currentX + cellSize / 2f, y, letterPaint)
-                    currentX += cellSize + cellGap
+                    canvas.drawText(ch.toString(), currentX + cellW / 2f, y, letterPaint)
+                    currentX += cellW + cellGap
                 } else {
                     // В задании: рисуем красивый прямоугольник-клетку
-                    val cellRect = RectF(currentX, y - cellSize + 2f, currentX + cellSize, y + 2f)
+                    val cellRect = RectF(currentX, y - cellH + 4f, currentX + cellW, y + 4f)
                     val cellPaint = Paint().apply {
                         color = Color.parseColor("#FAFAF5"); style = Paint.Style.FILL
                     }
@@ -207,7 +212,7 @@ object UnstressedVowelsPdfDrawer {
                     }
                     canvas.drawRect(cellRect, cellPaint)
                     canvas.drawRect(cellRect, cellBorder)
-                    currentX += cellSize + cellGap
+                    currentX += cellW + cellGap
                 }
             } else {
                 canvas.drawText(ch.toString(), currentX, y, wordPaint)
