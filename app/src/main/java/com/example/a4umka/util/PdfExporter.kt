@@ -184,6 +184,12 @@ object PdfExporter {
         return saveDocument(context, document, "stress_syllables_${System.currentTimeMillis()}.pdf")
     }
 
+    fun exportUnstressedVowels(context: Context, config: UnstressedVowelsConfig): String? {
+        val document = PdfDocument()
+        UnstressedVowelsPdfDrawer.drawDocument(document, config, context)
+        return saveDocument(context, document, "unstressed_vowels_${System.currentTimeMillis()}.pdf")
+    }
+
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
         return try {
             val outputStream: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
