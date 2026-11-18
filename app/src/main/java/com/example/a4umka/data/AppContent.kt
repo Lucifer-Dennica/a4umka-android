@@ -49,7 +49,8 @@ object AppContent {
         TaskItem("prepositions", "Предлоги в картинках", "Учимся говорить: на, под, в, за и другие", "🧭", isInteractive = true),
         TaskItem("sound_scheme", "Звуко-буквенный анализ", "Классическая звуковая схема слова по цветам", "🎨"),
         TaskItem("sound_automation", "Автоматизация звуков", "Логопедические листы: слоги, слова, фразы", "🦁", isInteractive = false),
-        TaskItem("mnemo", "Мнемотаблицы", "Стихи и сказки по клеточкам: готовые, нарисуй сам и описательный рассказ", "🧩", isInteractive = false)
+        TaskItem("mnemo", "Мнемотаблицы", "Стихи и сказки по клеточкам: готовые, нарисуй сам и описательный рассказ", "🧩", isInteractive = false),
+        TaskItem("stress_syllables", "Ударение и слоги", "Дели слова на слоги, считай и ставь ударение", "✏️", isInteractive = false)
     )
 
     private val handTasks = listOf(
