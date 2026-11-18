@@ -56,7 +56,7 @@ object StressSyllablesPdfDrawer {
     fun drawDocument(document: PdfDocument, config: StressSyllablesConfig, context: Context) {
         var pageNum = 1
         val pages = generatePreview(config, context)
-        val scale = 3
+        val scale = 6
         pages.forEach { bmp ->
             val scaledBmp = Bitmap.createScaledBitmap(
                 bmp, PAGE_WIDTH.toInt() * scale, PAGE_HEIGHT.toInt() * scale, true
