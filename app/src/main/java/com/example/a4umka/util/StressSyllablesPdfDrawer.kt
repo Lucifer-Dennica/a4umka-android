@@ -15,6 +15,8 @@ import com.example.a4umka.data.*
  *
  * Лист 1 (задание): эмодзи + слово с дефисами между слогами + пустой кружок + «слогов».
  * Лист 2 (ответы, опционально): то же, но ударение отмечено и кружок заполнен.
+ *
+ * Layout: 1 слово на строку, полная ширина листа — как на сайте-эталоне.
  */
 object StressSyllablesPdfDrawer {
     const val PAGE_WIDTH = 595f
@@ -27,7 +29,7 @@ object StressSyllablesPdfDrawer {
     private val numBgColor = Color.parseColor("#4A7A40")
     private val titleColor = Color.parseColor("#2E5C8A")
     private val stressColor = Color.parseColor("#D84315")
-    private val circleColor = Color.parseColor("#888888")
+    private val circleColor = Color.parseColor("#999999")
 
     private val sans = Typeface.create("sans-serif", Typeface.NORMAL)
     private val sansBold = Typeface.create("sans-serif", Typeface.BOLD)
@@ -37,13 +39,11 @@ object StressSyllablesPdfDrawer {
         val words = StressSyllablesData.getRandomWords(config.wordsCount, config.randomSeed)
         val pages = mutableListOf<Bitmap>()
 
-        // Лист с заданием
         val bmp1 = newBitmap()
         val canvas1 = Canvas(bmp1)
         drawWorksheet(canvas1, words, isAnswer = false)
         pages.add(bmp1)
 
-        // Лист с ответами
         if (config.showAnswers) {
             val bmp2 = newBitmap()
             val canvas2 = Canvas(bmp2)
@@ -74,29 +74,25 @@ object StressSyllablesPdfDrawer {
     private fun drawWorksheet(canvas: Canvas, words: List<StressWord>, isAnswer: Boolean) {
         val margin = 40f
 
-        // === Шапка ===
         drawHeader(canvas, margin, isAnswer)
 
-        // === Карточки со словами ===
         val usableWidth = PAGE_WIDTH - margin * 2
-        val startY = 150f
-        // По 2 слова в ряд
-        val cols = 2
-        val gap = 12f
-        val cardW = (usableWidth - gap * (cols - 1)) / cols
-        val cardH = 85f
+        val startY = 140f
+        // 1 слово на строку — полная ширина, как на сайте-эталоне
+        val rowH = 58f
+        val gap = 8f
 
         val cardBg = Paint().apply { color = cardColor; style = Paint.Style.FILL }
         val cardBorder = Paint().apply {
             color = borderColor; style = Paint.Style.STROKE; strokeWidth = 1f
         }
-        val emojiPaint = Paint().apply { textSize = 36f; textAlign = Paint.Align.CENTER }
+        val emojiPaint = Paint().apply { textSize = 32f; textAlign = Paint.Align.CENTER }
         val wordPaint = Paint().apply {
-            isAntiAlias = true; textSize = 20f; color = textColor; typeface = sansBold
+            isAntiAlias = true; textSize = 22f; color = textColor; typeface = sansBold
             textAlign = Paint.Align.LEFT
         }
         val stressMarkPaint = Paint().apply {
-            isAntiAlias = true; textSize = 20f; color = stressColor; typeface = sansBold
+            isAntiAlias = true; textSize = 22f; color = stressColor; typeface = sansBold
             textAlign = Paint.Align.LEFT
         }
         val circlePaint = Paint().apply {
@@ -106,11 +102,11 @@ object StressSyllablesPdfDrawer {
             color = numBgColor; style = Paint.Style.FILL
         }
         val numTextPaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = Color.WHITE
+            isAntiAlias = true; textSize = 16f; color = Color.WHITE
             typeface = sansBold; textAlign = Paint.Align.CENTER
         }
         val labelPaint = Paint().apply {
-            isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = sans
+            isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = sans
             textAlign = Paint.Align.LEFT
         }
         val numBgPaint = Paint().apply { color = numBgColor; style = Paint.Style.FILL }
@@ -120,54 +116,53 @@ object StressSyllablesPdfDrawer {
         }
 
         words.forEachIndexed { index, word ->
-            val col = index % cols
-            val row = index / cols
-            val left = margin + col * (cardW + gap)
-            val top = startY + row * (cardH + gap)
-            val rect = RectF(left, top, left + cardW, top + cardH)
+            val left = margin
+            val top = startY + index * (rowH + gap)
+            val rect = RectF(left, top, left + usableWidth, top + rowH)
 
             canvas.drawRoundRect(rect, 10f, 10f, cardBg)
             canvas.drawRoundRect(rect, 10f, 10f, cardBorder)
 
-            // Номер слова в кружке слева сверху
-            val nCx = left + 16f
-            val nCy = top + 16f
-            canvas.drawCircle(nCx, nCy, 11f, numBgPaint)
-            canvas.drawText("${index + 1}", nCx, nCy + 4f, numCircleText)
+            val centerY = top + rowH / 2f
 
-            // Эмодзи слева
-            val emojiCx = left + 50f
-            val emojiCy = top + cardH / 2f
-            canvas.drawText(word.emoji, emojiCx, emojiCy + emojiPaint.textSize / 3f, emojiPaint)
+            // === Номер слова в кружке слева ===
+            val numCx = left + 18f
+            canvas.drawCircle(numCx, centerY, 11f, numBgPaint)
+            canvas.drawText("${index + 1}", numCx, centerY + 4f, numCircleText)
 
-            // Слово с дефисами между слогами — по центру карточки
+            // === Эмодзи ===
+            val emojiCx = left + 55f
+            canvas.drawText(word.emoji, emojiCx, centerY + emojiPaint.textSize / 3f, emojiPaint)
+
+            // === Слово с дефисами — по центру карточки ===
             val syllableText = word.syllables.joinToString("-")
-            val wordX = left + 80f
-            val wordY = top + cardH / 2f + 7f
+            // Измеряем ширину слова, чтобы отцентрировать в доступном пространстве
+            val wordWidth = wordPaint.measureText(syllableText)
+            // Доступное пространство: от x=80 до x=usableWidth-90 (оставляем место под кружок)
+            val wordAreaStart = left + 80f
+            val wordAreaEnd = left + usableWidth - 90f
+            val wordAreaWidth = wordAreaEnd - wordAreaStart
+            val wordX = wordAreaStart + (wordAreaWidth - wordWidth) / 2f
+            val wordY = centerY + 7f
 
             if (isAnswer) {
-                // В ответах: рисуем слоги по одному, над ударным слогом ставим знак ´
                 drawWordWithStress(canvas, word, wordX, wordY, wordPaint, stressMarkPaint)
             } else {
-                // В задании: просто слово с дефисами
                 canvas.drawText(syllableText, wordX, wordY, wordPaint)
             }
 
-            // Справа: кружок для количества слогов + "слогов"
-            val circleCx = left + cardW - 55f
-            val circleCy = top + cardH / 2f
+            // === Справа: кружок для количества слогов + "слогов" ===
+            val circleCx = left + usableWidth - 55f
             val circleR = 16f
 
-            canvas.drawCircle(circleCx, circleCy, circleR, circlePaint)
+            canvas.drawCircle(circleCx, centerY, circleR, circlePaint)
 
             if (isAnswer) {
-                // Заполненный кружок с числом
-                canvas.drawCircle(circleCx, circleCy, circleR, circleFillPaint)
-                canvas.drawText("${word.syllablesCount}", circleCx, circleCy + 5f, numTextPaint)
+                canvas.drawCircle(circleCx, centerY, circleR, circleFillPaint)
+                canvas.drawText("${word.syllablesCount}", circleCx, centerY + 6f, numTextPaint)
             }
 
-            // Подпись "слогов"
-            canvas.drawText("слогов", circleCx + circleR + 6f, circleCy + 4f, labelPaint)
+            canvas.drawText("слогов", circleCx + circleR + 6f, centerY + 4f, labelPaint)
         }
     }
 
@@ -190,10 +185,8 @@ object StressSyllablesPdfDrawer {
             val syllable = word.syllables[i]
             canvas.drawText(syllable, currentX, y, wordPaint)
 
-            // Над ударным слогом рисуем ´
             if (i == word.stressedSyllable) {
                 val syllableWidth = wordPaint.measureText(syllable)
-                // Ставим знак ударения примерно над серединой слога
                 val markX = currentX + syllableWidth / 2f - 4f
                 val markY = y - 18f
                 canvas.drawText("´", markX, markY, stressPaint)
@@ -204,7 +197,6 @@ object StressSyllablesPdfDrawer {
     }
 
     private fun drawHeader(canvas: Canvas, margin: Float, isAnswer: Boolean) {
-        // Имя / Дата
         val boxPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
         val boxBorder = Paint().apply {
             color = borderColor; style = Paint.Style.STROKE; strokeWidth = 1f
@@ -219,7 +211,6 @@ object StressSyllablesPdfDrawer {
         canvas.drawText("Имя:", margin + 5f, 38f, labelPaint)
         canvas.drawLine(margin + 30f, 40f, margin + 110f, 40f, linePaint)
 
-        // Центральная метка
         val centerBg = Paint().apply {
             color = Color.parseColor("#FFF3E0"); style = Paint.Style.FILL
         }
@@ -237,25 +228,22 @@ object StressSyllablesPdfDrawer {
         canvas.drawText("Дата:", PAGE_WIDTH - margin - 115f, 38f, labelPaint)
         canvas.drawLine(PAGE_WIDTH - margin - 85f, 40f, PAGE_WIDTH - margin - 10f, 40f, linePaint)
 
-        // Заголовок листа
         val titlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 26f; color = titleColor; typeface = cursive
+            isAntiAlias = true; textSize = 24f; color = titleColor; typeface = cursive
             textAlign = Paint.Align.CENTER
         }
         val title = if (isAnswer) "Ответы" else "Ударение и слоги"
-        canvas.drawText(title, PAGE_WIDTH / 2f, 80f, titlePaint)
+        canvas.drawText(title, PAGE_WIDTH / 2f, 75f, titlePaint)
 
-        // Инструкция
         val subPaint = Paint().apply {
             isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = sans
             textAlign = Paint.Align.CENTER
         }
         val sub = if (isAnswer) "Для взрослого" else "Раздели на слоги, посчитай и поставь ударение"
-        canvas.drawText(sub, PAGE_WIDTH / 2f, 100f, subPaint)
+        canvas.drawText(sub, PAGE_WIDTH / 2f, 92f, subPaint)
 
-        // В ответах — вторая строка инструкции
         if (isAnswer) {
-            canvas.drawText("Раздели на слоги, посчитай и поставь ударение", PAGE_WIDTH / 2f, 116f, subPaint)
+            canvas.drawText("Раздели на слоги, посчитай и поставь ударение", PAGE_WIDTH / 2f, 108f, subPaint)
         }
     }
 }
