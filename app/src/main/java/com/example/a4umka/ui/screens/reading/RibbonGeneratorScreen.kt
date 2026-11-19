@@ -60,9 +60,6 @@ fun RibbonGeneratorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onPlayInteractive) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "Играть")
-                    }
                     IconButton(onClick = { showInfoSheet = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
                     }
@@ -206,6 +203,19 @@ fun RibbonGeneratorScreen(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
+            }
+
+            // КНОПКА: РЕШАТЬ НА ТЕЛЕФОНЕ
+            item {
+                Button(
+                    onClick = onPlayInteractive,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Решать на телефоне")
+                }
             }
 
             // ПРЕДПРОСМОТР
