@@ -38,10 +38,8 @@ object PdfExporter {
 
     fun exportRibbon(context: Context, config: RibbonConfig): String? {
         val document = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
-        val page = document.startPage(pageInfo)
-        RibbonPdfDrawer.drawRibbon(page.canvas, config, context, isAnswerKey = false)
-        document.finishPage(page)
+        // Для BOARD — 4 страницы, для остальных — 1 (+ страница ответов при showAnswers)
+        RibbonPdfDrawer.drawDocument(document, config, context)
         return saveDocument(context, document, "ribbon_${System.currentTimeMillis()}.pdf")
     }
 
