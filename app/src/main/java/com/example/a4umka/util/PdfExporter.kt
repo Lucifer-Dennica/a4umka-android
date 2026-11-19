@@ -24,10 +24,15 @@ object PdfExporter {
 
     fun exportAlphabetPoster(context: Context, config: AlphabetConfig): String? {
         val document = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(AlphabetPdfDrawer.PAGE_WIDTH.toInt(), AlphabetPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
-        val page = document.startPage(pageInfo)
-        AlphabetPdfDrawer.drawLayout(page.canvas, config, context)
-        document.finishPage(page)
+        // Для FULL_PAGE_LETTER — многостраничный экспорт (по одной странице на каждую букву)
+        if (config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER) {
+            AlphabetPdfDrawer.drawFullPageLetterDocument(document, config, context)
+        } else {
+            val pageInfo = PdfDocument.PageInfo.Builder(AlphabetPdfDrawer.PAGE_WIDTH.toInt(), AlphabetPdfDrawer.PAGE_HEIGHT.toInt(), 1).create()
+            val page = document.startPage(pageInfo)
+            AlphabetPdfDrawer.drawLayout(page.canvas, config, context)
+            document.finishPage(page)
+        }
         return saveDocument(context, document, "alphabet_${System.currentTimeMillis()}.pdf")
     }
 
@@ -170,24 +175,6 @@ object PdfExporter {
         val document = PdfDocument()
         SoundAutomationPdfDrawer.drawDocument(document, config, context)
         return saveDocument(context, document, "sound_automation_${config.sound.letter}_${System.currentTimeMillis()}.pdf")
-    }
-
-    fun exportMnemo(context: Context, config: MnemoConfig): String? {
-        val document = PdfDocument()
-        MnemoPdfDrawer.drawDocument(document, config, context)
-        return saveDocument(context, document, "mnemo_${config.mode.name.lowercase()}_${System.currentTimeMillis()}.pdf")
-    }
-
-    fun exportStressSyllables(context: Context, config: StressSyllablesConfig): String? {
-        val document = PdfDocument()
-        StressSyllablesPdfDrawer.drawDocument(document, config, context)
-        return saveDocument(context, document, "stress_syllables_${System.currentTimeMillis()}.pdf")
-    }
-
-    fun exportUnstressedVowels(context: Context, config: UnstressedVowelsConfig): String? {
-        val document = PdfDocument()
-        UnstressedVowelsPdfDrawer.drawDocument(document, config, context)
-        return saveDocument(context, document, "unstressed_vowels_${System.currentTimeMillis()}.pdf")
     }
 
     private fun saveDocument(context: Context, document: PdfDocument, fileName: String): String? {
