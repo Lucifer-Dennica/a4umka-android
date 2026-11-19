@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -77,40 +78,61 @@ fun AnagramGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Тип анаграммы
             item {
-                Text("Что переставляем:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.type == AnagramType.SYLLABLES, onClick = { config = config.copy(type = AnagramType.SYLLABLES) })
-                        Text("Слоги — КА-РУ → РУ-КА (легче)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.type == AnagramType.LETTERS, onClick = { config = config.copy(type = AnagramType.LETTERS) })
-                        Text("Буквы — Т-О-К → КОТ (сложнее)")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
-                    Text("Добавить вторым листом ответы")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сколько листов:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2, 3).forEach { count ->
-                        FilterChip(
-                            selected = config.pagesCount == count,
-                            onClick = { config = config.copy(pagesCount = count) },
-                            label = { Text("$count") }
-                        )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Что переставляем", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.type == AnagramType.SYLLABLES, onClick = { config = config.copy(type = AnagramType.SYLLABLES) })
+                                Text("Слоги — КА-РУ → РУ-КА (легче)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.type == AnagramType.LETTERS, onClick = { config = config.copy(type = AnagramType.LETTERS) })
+                                Text("Буквы — Т-О-К → КОТ (сложнее)")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
+                            Text("Добавить вторым листом ответы")
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Сколько листов
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сколько листов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2, 3).forEach { count ->
+                                FilterChip(
+                                    selected = config.pagesCount == count,
+                                    onClick = { config = config.copy(pagesCount = count) },
+                                    label = { Text("$count") }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // КНОПКА ИНТЕРАКТИВНОГО РЕЖИМА
+            item {
                 Button(
                     onClick = { onPlayInteractive(config) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -120,10 +142,12 @@ fun AnagramGeneratorScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Решать на экране")
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
