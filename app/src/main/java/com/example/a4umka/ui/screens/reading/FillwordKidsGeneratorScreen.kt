@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -72,50 +73,72 @@ fun FillwordKidsGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Сложность
             item {
-                Text("Сложность:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == FillwordKidsDifficulty.EASY, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.EASY) })
-                        Text("Легко (7×7, 5 слов, только горизонталь)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == FillwordKidsDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.MEDIUM) })
-                        Text("Средне (9×9, 6 слов)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == FillwordKidsDifficulty.HARD, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.HARD) })
-                        Text("Сложно (11×11, 8 слов)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == FillwordKidsDifficulty.SUPER_HARD, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.SUPER_HARD) })
-                        Text("Суперсложно (13×13, 10 слов)")
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сложность", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == FillwordKidsDifficulty.EASY, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.EASY) })
+                                Text("Легко (7×7, 5 слов, только горизонталь)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == FillwordKidsDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.MEDIUM) })
+                                Text("Средне (9×9, 6 слов)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == FillwordKidsDifficulty.HARD, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.HARD) })
+                                Text("Сложно (11×11, 8 слов)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == FillwordKidsDifficulty.SUPER_HARD, onClick = { config = config.copy(difficulty = FillwordKidsDifficulty.SUPER_HARD) })
+                                Text("Суперсложно (13×13, 10 слов)")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Опции
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Опции", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.onlyPictures, onCheckedChange = { config = config.copy(onlyPictures = it) })
+                            Text("Только картинки в подсказках (сложнее)", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.addTraps, onCheckedChange = { config = config.copy(addTraps = it) })
+                            Text("Ловушки (почти-слова, как ЛИСО)", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
+                            Text("Добавить лист с ответами", fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
 
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.onlyPictures, onCheckedChange = { config = config.copy(onlyPictures = it) })
-                    Text("Только картинки в подсказках (сложнее)", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.addTraps, onCheckedChange = { config = config.copy(addTraps = it) })
-                    Text("Ловушки (почти-слова, как ЛИСО)", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
-                    Text("Добавить лист с ответами", fontSize = 14.sp)
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge)
-                if (previewPages.size > 1) {
-                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
                 }
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
