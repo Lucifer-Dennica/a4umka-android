@@ -82,6 +82,12 @@ object RibbonPdfDrawer {
             Typeface.DEFAULT
         }
 
+        // Для COLORING — отдельная отрисовка с цветными полосами
+        if (config.mode == RibbonMode.COLORING) {
+            drawColoringPage(canvas, config, font, isAnswerKey)
+            return
+        }
+
         val titleText = when {
             isAnswerKey -> "Ответы"
             config.mode == RibbonMode.DESK -> "Лента букв"
@@ -195,9 +201,12 @@ object RibbonPdfDrawer {
         val title: String,
         val subtitle: String,
         val category: String,  // «гласные» / «согласные» / «знаки»
-        val rows: List<List<RibbonLetter>>,  // ряды букв (1 или 2 ряда)
+        val rows: List<List<RibbonLetter>>,  // ряды букв (1 или 2 ряда) — левая колонка
         val showBell: Boolean,  // 🔔 верхний ряд — звонкие
-        val showHeadphones: Boolean  // 🎧 нижний ряд — глухие
+        val showHeadphones: Boolean,  // 🎧 нижний ряд — глухие
+        // Для стр. 4: правая колонка со знаками
+        val rightRows: List<List<RibbonLetter>>? = null,
+        val rightTitle: String? = null
     )
 
     // ============ 4 страницы BOARD согласно сайту ============
@@ -232,16 +241,19 @@ object RibbonPdfDrawer {
             showBell = true,
             showHeadphones = true
         )
-        // Стр. 4: Глухие непарные + Ь, Ъ (4 в 1 ряд + 2 знака)
+        // Стр. 4: Глухие непарные (слева) + Ь, Ъ (справа вертикально)
         val unpairedVoiceless = RibbonData.bottomConsonants.subList(6, 10)  // Х Ц Ч Щ
-        val combinedRow = unpairedVoiceless + RibbonData.signs
+        // Знаки — вертикально, каждый знак в своей клетке
+        val signsVertical = RibbonData.signs.map { listOf(it) }
         val page4 = BoardPage(
             title = "Глухие непарные, Ь и Ъ",
-            subtitle = "Х Ц Ч Щ — нет пары, Ь и Ъ не обозначают звуков",
-            category = "согласные и знаки",
-            rows = listOf(combinedRow),
+            subtitle = "Х Ц Ч Щ — нет звонкой пары, Ь и Ъ звуков не обозначают",
+            category = "согласные",
+            rows = listOf(unpairedVoiceless),  // Хх Цц Чч Щщ — один ряд
             showBell = false,
-            showHeadphones = true
+            showHeadphones = true,
+            rightRows = signsVertical,  // Ьь и Ъъ — вертикально
+            rightTitle = "знаки"
         )
         return listOf(page1, page2, page3, page4)
     }
@@ -284,22 +296,39 @@ object RibbonPdfDrawer {
 
         // Клетки: 1 или 2 ряда
         val rows = page.rows
-        val maxCols = rows.maxOf { it.size }
-        val rowCount = rows.size
+        val rightRows = page.rightRows
 
         // Адаптивный размер клетки
-        val maxCellByCols = (PAGE_WIDTH - 80f) / maxCols - 4f
+        // Если есть правая колонка — резервируем под неё место (3 клетки)
+        val reservedRight = if (rightRows != null) 3 * 110f + 60f else 0f
+        val maxColsLeft = rows.maxOf { it.size }
+        val rowCount = rows.size
+
+        // Учитываем правую колонку при расчёте ширины
+        val availableWidth = PAGE_WIDTH - 80f - reservedRight
+        val maxCellByCols = availableWidth / maxColsLeft - 4f
         val maxCellByRows = (PAGE_HEIGHT - 270f) / rowCount - 4f
-        val cellSize = minOf(maxCellByCols, maxCellByRows, 110f)
+        var cellSize = minOf(maxCellByCols, maxCellByRows, 110f)
+        // Если правая колонка есть — её клетки могут быть больше
+        if (rightRows != null) {
+            val rightRowCount = rightRows.size
+            val maxCellByRightRows = (PAGE_HEIGHT - 270f) / rightRowCount - 4f
+            // Подбираем размер так, чтобы обе колонки смотрелись
+            cellSize = minOf(cellSize, maxCellByRightRows, 110f)
+        }
         val gap = 4f
         val colWidth = cellSize + gap
         val rowHeight = cellSize + gap
 
-        // Центрируем по горизонтали (каждый ряд отдельно, если их длина разная)
-        // Общая ширина определяется самым длинным рядом
-        val totalWidth = maxCols * colWidth - gap
+        // Центрируем по горизонтали
+        val totalWidth = maxColsLeft * colWidth - gap
         val totalHeight = rowCount * rowHeight - gap
-        val baseX = (PAGE_WIDTH - totalWidth) / 2f
+        // Если правая колонка есть — базовый X левее, чтобы было место для знаков
+        val baseX = if (rightRows != null) {
+            60f  // отступ слева
+        } else {
+            (PAGE_WIDTH - totalWidth) / 2f
+        }
         val startY = 120f + (PAGE_HEIGHT - 120f - 100f - totalHeight) / 2f
 
         val emptyMissing = emptySet<String>()
@@ -334,6 +363,28 @@ object RibbonPdfDrawer {
             rowLetters.forEachIndexed { colIndex, letter ->
                 val x = rowStartX + colIndex * colWidth
                 drawCell(canvas, letter, config, x, rowY, cellSize, emptyMissing, font, false)
+            }
+        }
+
+        // Правая колонка со знаками (для стр. 4)
+        if (rightRows != null && page.rightTitle != null) {
+            val rightX = PAGE_WIDTH - 60f - cellSize
+            val rightTotalHeight = rightRows.size * rowHeight - gap
+            val rightStartY = 120f + (PAGE_HEIGHT - 120f - 100f - rightTotalHeight) / 2f
+
+            // Заголовок «знаки» над правой колонкой
+            val rightTitlePaint = Paint().apply {
+                isAntiAlias = true; textSize = 12f; color = Color.parseColor("#9E9E9E")
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC); textAlign = Paint.Align.CENTER
+            }
+            canvas.drawText(page.rightTitle, rightX + cellSize / 2f, rightStartY - 8f, rightTitlePaint)
+
+            rightRows.forEachIndexed { rowIndex, rowLetters ->
+                val rowY = rightStartY + rowIndex * rowHeight
+                rowLetters.forEachIndexed { colIndex, letter ->
+                    val x = rightX + colIndex * colWidth
+                    drawCell(canvas, letter, config, x, rowY, cellSize, emptyMissing, font, false)
+                }
             }
         }
 
@@ -463,6 +514,191 @@ object RibbonPdfDrawer {
                 canvas.drawText(text, x + size / 2f, baselineY, textPaint)
             }
         }
+    }
+
+    // ============ РЕЖИМ «РАСКРАСЬ ЛЕНТУ БУКВ» ============
+    // Цветные полосы-заголовки секций + прямоугольные клетки с буквой (контур — для раскраски)
+    private fun drawColoringPage(canvas: Canvas, config: RibbonConfig, font: Typeface, isAnswerKey: Boolean) {
+        // Заголовок
+        val titlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 32f; color = Color.DKGRAY
+            typeface = font; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(
+            if (isAnswerKey) "Ответы" else "Раскрась ленту букв",
+            PAGE_WIDTH / 2f, 50f, titlePaint
+        )
+
+        // Подзаголовок
+        val subtitlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; color = Color.GRAY
+            typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(
+            if (isAnswerKey) "лента букв целиком"
+            else "раскрась клетки по правилам",
+            PAGE_WIDTH / 2f, 70f, subtitlePaint
+        )
+
+        // Поля «Имя» и «Дата»
+        val fieldPaint = Paint().apply {
+            isAntiAlias = true; textSize = 16f; color = Color.DKGRAY
+            typeface = Typeface.DEFAULT
+        }
+        val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
+        canvas.drawText("Имя:", 40f, 110f, fieldPaint)
+        canvas.drawLine(80f, 112f, 200f, 112f, linePaint)
+        canvas.drawText("Дата:", PAGE_WIDTH - 160f, 110f, fieldPaint)
+        canvas.drawLine(PAGE_WIDTH - 115f, 112f, PAGE_WIDTH - 40f, 112f, linePaint)
+
+        // === 3 секции с цветными полосами ===
+        // Секция 1: Гласные (красная полоса)
+        // Секция 2: Согласные (синяя полоса)
+        // Секция 3: Знаки (коричневая полоса)
+        val sectionMargin = 40f
+        val sectionGap = 20f
+        val labelHeight = 28f
+        val cellHeight = 44f
+        val cellGap = 2f
+
+        var currentY = 150f
+
+        // ====== Секция 1: Гласные ======
+        val vowels = (RibbonData.topVowels + RibbonData.bottomVowels)
+        val vowelCount = vowels.size
+        val vowelAvailableWidth = PAGE_WIDTH - sectionMargin * 2
+        val vowelCellWidth = (vowelAvailableWidth - (vowelCount - 1) * cellGap) / vowelCount
+        // Цветная полоса-заголовок
+        val vowelBarPaint = Paint().apply { color = Color.parseColor("#EF5350"); style = Paint.Style.FILL }
+        canvas.drawRect(sectionMargin, currentY, PAGE_WIDTH - sectionMargin, currentY + labelHeight, vowelBarPaint)
+        // Текст на полосе
+        val barTextPaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; color = Color.WHITE
+            typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("гласные", PAGE_WIDTH / 2f, currentY + 19f, barTextPaint)
+        currentY += labelHeight + 4f
+
+        // Клетки с буквами (контур, без фона; если ответы — с цветом)
+        drawColoringRow(canvas, vowels, config, sectionMargin, currentY, vowelCellWidth, cellHeight, cellGap, font, isAnswerKey, 2)  // 2 в ряд: 5+5
+        currentY += cellHeight * 2 + cellGap + sectionGap
+
+        // ====== Секция 2: Согласные ======
+        val topCons = RibbonData.topConsonants
+        val botCons = RibbonData.bottomConsonants
+        val consonantCount = maxOf(topCons.size, botCons.size)
+        val consonantAvailableWidth = PAGE_WIDTH - sectionMargin * 2
+        val consonantCellWidth = (consonantAvailableWidth - (consonantCount - 1) * cellGap) / consonantCount
+        // Синяя полоса
+        val consBarPaint = Paint().apply { color = Color.parseColor("#42A5F5"); style = Paint.Style.FILL }
+        canvas.drawRect(sectionMargin, currentY, PAGE_WIDTH - sectionMargin, currentY + labelHeight, consBarPaint)
+        // 🔔 и 🎧 на полосе
+        val iconPaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("🔔", sectionMargin + 30f, currentY + 20f, iconPaint)
+        canvas.drawText("🎧", sectionMargin + 55f, currentY + 20f, iconPaint)
+        canvas.drawText("согласные", PAGE_WIDTH / 2f, currentY + 19f, barTextPaint)
+        currentY += labelHeight + 4f
+
+        drawColoringRow(canvas, topCons, config, sectionMargin, currentY, consonantCellWidth, cellHeight, cellGap, font, isAnswerKey, 1)
+        currentY += cellHeight + cellGap
+        drawColoringRow(canvas, botCons, config, sectionMargin, currentY, consonantCellWidth, cellHeight, cellGap, font, isAnswerKey, 1)
+        currentY += cellHeight + cellGap + sectionGap
+
+        // ====== Секция 3: Знаки ======
+        val signs = RibbonData.signs
+        val signCount = signs.size
+        val signCellWidth = 50f
+        val signRowWidth = signCount * signCellWidth + (signCount - 1) * cellGap
+        val signStartX = (PAGE_WIDTH - signRowWidth) / 2f
+        // Коричневая полоса
+        val signBarPaint = Paint().apply { color = Color.parseColor("#8D6E63"); style = Paint.Style.FILL }
+        canvas.drawRect(sectionMargin, currentY, PAGE_WIDTH - sectionMargin, currentY + labelHeight, signBarPaint)
+        canvas.drawText("знаки", PAGE_WIDTH / 2f, currentY + 19f, barTextPaint)
+        currentY += labelHeight + 4f
+
+        // Клетки знаков горизонтально
+        signs.forEachIndexed { index, letter ->
+            val x = signStartX + index * (signCellWidth + cellGap)
+            drawColoringCell(canvas, letter, config, x, currentY, signCellWidth, cellHeight, font, isAnswerKey)
+        }
+
+        // Легенда
+        drawLegend(canvas, 40f, PAGE_HEIGHT - 110f)
+    }
+
+    // Отрисовка ряда клеток (row указывает сколько строк: 1 — горизонтально, 2 — для гласных 5+5)
+    private fun drawColoringRow(
+        canvas: Canvas, letters: List<RibbonLetter>, config: RibbonConfig,
+        startX: Float, startY: Float, cellWidth: Float, cellHeight: Float, gap: Float,
+        font: Typeface, isAnswerKey: Boolean, rows: Int
+    ) {
+        if (rows == 1) {
+            // Все в один ряд
+            letters.forEachIndexed { index, letter ->
+                val x = startX + index * (cellWidth + gap)
+                drawColoringCell(canvas, letter, config, x, startY, cellWidth, cellHeight, font, isAnswerKey)
+            }
+        } else {
+            // 2 ряда: первая половина сверху, вторая снизу
+            val half = (letters.size + 1) / 2
+            val topRow = letters.subList(0, half)
+            val botRow = letters.subList(half, letters.size)
+            topRow.forEachIndexed { index, letter ->
+                val x = startX + index * (cellWidth + gap)
+                drawColoringCell(canvas, letter, config, x, startY, cellWidth, cellHeight, font, isAnswerKey)
+            }
+            botRow.forEachIndexed { index, letter ->
+                val x = startX + index * (cellWidth + gap)
+                drawColoringCell(canvas, letter, config, x, startY + cellHeight + gap, cellWidth, cellHeight, font, isAnswerKey)
+            }
+        }
+    }
+
+    // Контурная клетка (или с цветом — если ответы)
+    private fun drawColoringCell(
+        canvas: Canvas, letter: RibbonLetter, config: RibbonConfig,
+        x: Float, y: Float, w: Float, h: Float, font: Typeface, isAnswerKey: Boolean
+    ) {
+        // Цвет клетки по типу буквы
+        val fillColor = when (letter.color) {
+            RibbonColor.RED -> Color.parseColor("#EF5350")
+            RibbonColor.BLUE -> Color.parseColor("#42A5F5")
+            RibbonColor.GREEN -> Color.parseColor("#66BB6A")
+            RibbonColor.WHITE -> Color.WHITE
+            RibbonColor.BOTH -> Color.WHITE
+        }
+        if (isAnswerKey) {
+            // Ответы — закрашиваем клетку соответствующим цветом
+            val fillPaint = Paint().apply { color = fillColor; style = Paint.Style.FILL }
+            canvas.drawRect(x, y, x + w, y + h, fillPaint)
+            // Для BOTH — два треугольника
+            if (letter.color == RibbonColor.BOTH) {
+                val p1 = android.graphics.Path().apply { moveTo(x, y); lineTo(x + w, y); lineTo(x, y + h); close() }
+                canvas.drawPath(p1, Paint().apply { color = Color.parseColor("#42A5F5"); style = Paint.Style.FILL })
+                val p2 = android.graphics.Path().apply { moveTo(x + w, y); lineTo(x + w, y + h); lineTo(x, y + h); close() }
+                canvas.drawPath(p2, Paint().apply { color = Color.parseColor("#66BB6A"); style = Paint.Style.FILL })
+            }
+        }
+        // Контур клетки (серый прямоугольник)
+        val borderPaint = Paint().apply {
+            color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f
+        }
+        canvas.drawRect(x, y, x + w, y + h, borderPaint)
+
+        // Буква внутри
+        val text = when (config.case) {
+            RibbonCase.BOTH -> letter.char
+            RibbonCase.UPPERCASE -> letter.char.substring(0, 1)
+            RibbonCase.LOWERCASE -> letter.char.substring(letter.char.length - 1)
+        }
+        val textPaint = Paint().apply {
+            isAntiAlias = true; textSize = h * 0.5f; typeface = font; textAlign = Paint.Align.CENTER
+            color = if (isAnswerKey) Color.WHITE else Color.DKGRAY
+        }
+        val baselineY = y + h / 2f - ((textPaint.descent() + textPaint.ascent()) / 2f)
+        canvas.drawText(text, x + w / 2f, baselineY, textPaint)
     }
 
     private fun drawHintBox(
