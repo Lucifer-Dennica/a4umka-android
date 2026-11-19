@@ -25,35 +25,20 @@ jobs:
           echo "$HOME/gradle-8.9/bin" >> $GITHUB_PATH
           gradle --version
 
-      # --- НОВЫЙ ШАГ: Сборка всего кода в один файл ---
-      - name: Combine all code into one file
-        run: |
-          echo "===== PROJECT SOURCE CODE =====" > all_code_combined.txt
-          # Ищем текстовые файлы, исключая билд, гитигнор, картинки и прочий мусор
-          find . -type f \( -name "*.kt" -o -name "*.xml" -o -name "*.gradle" -o -name "*.kts" -o -name "*.pro" \) \
-            -not -path "*/build/*" \
-            -not -path "*/.git/*" \
-            -not -path "*/res/drawable*" \
-            -not -path "*/res/mipmap*" \
-            | sort | while read file; do
-            echo -e "\n\n===== FILE: $file =====" >> all_code_combined.txt
-            cat "$file" >> all_code_combined.txt
-          done
+      # --- Шаг 1: Переименование a4umka → sovenok ---
+      - name: Rename a4umka → sovenok
+        run: bash rename_a4umka_to_sovenok.sh
+
+      # --- Шаг 2: Очистка кэша ---
+      - name: Clean
+        run: gradle clean --no-daemon
 
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      # --- НОВЫЙ ШАГ: Загрузка файла с кодом ---
-      - name: Upload Combined Code
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-project-code
-          path: all_code_combined.txt
-          if-no-files-found: error
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: a4umka-debug-apk
+          name: sovenok-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
