@@ -201,13 +201,6 @@ object AlphabetPdfDrawer {
             val finalWordX = if (config.showImage) wordX else centerX
             canvas.drawText(item.word.lowercase(), finalWordX, bottomCenterY + 100f, wordPaint)
         }
-
-        // Подвал
-        val footerPaint = Paint().apply {
-            isAntiAlias = true; textSize = 10f; color = Color.GRAY
-            textAlign = Paint.Align.CENTER
-        }
-        canvas.drawText("a4umka.ru — задания и игры для детей", centerX, PAGE_HEIGHT - 20f, footerPaint)
     }
 
     // ============ ПЛЕНАЯ СТРАНИЦА — ПЛЕНАЯ БУКВА (для PDF) ============
