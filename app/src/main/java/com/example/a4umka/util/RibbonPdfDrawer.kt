@@ -171,24 +171,27 @@ object RibbonPdfDrawer {
 
         if (config.mode == RibbonMode.MISSING && config.showHint && missingSet.isNotEmpty()) {
             val hintBoxTop = startY + 2 * rowHeight + 30f
-            val hintBoxBottom = hintBoxTop + 40f
-            val hintBoxPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
-            val hintBoxBorder = Paint().apply {
-                color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f
-                pathEffect = DashPathEffect(floatArrayOf(5f, 5f), 0f)
-            }
-            canvas.drawRect(startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom, hintBoxPaint)
-            canvas.drawRect(startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom, hintBoxBorder)
-
-            val hintTextPaint = Paint().apply {
-                isAntiAlias = true; textSize = 16f; color = Color.DKGRAY
-                typeface = Typeface.DEFAULT
-            }
-            val lostLettersStr = missingSet.joinToString(", ")
-            canvas.drawText("Эти буквы потерялись: $lostLettersStr", startX + 10f, hintBoxTop + 25f, hintTextPaint)
+            val hintBoxBottom = hintBoxTop + 60f
+            drawHintBox(
+                canvas,
+                startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom,
+                "Эти буквы потерялись",
+                missingSet.joinToString(", ")
+            )
         }
 
-        drawLegend(canvas, startX, PAGE_HEIGHT - 100f)
+        if (config.mode == RibbonMode.COLORING && !isAnswerKey) {
+            val hintBoxTop = startY + 2 * rowHeight + 30f
+            val hintBoxBottom = hintBoxTop + 60f
+            drawHintBox(
+                canvas,
+                startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom,
+                "Как раскрасить",
+                "красные — гласные • синие — Ж Ш Ц (твердые) • зеленые — Й Ч Щ (мягкие) • сине-зеленые — остальные • белые — Ь Ъ"
+            )
+        }
+
+        drawLegend(canvas, 40f, PAGE_HEIGHT - 110f)
     }
 
     // ============ ЛЕНТА НА ДОСКУ — 4 СТРАНИЦЫ С КРУПНЫМИ БУКВАМИ ============
@@ -370,22 +373,112 @@ object RibbonPdfDrawer {
         }
     }
 
-    private fun drawLegend(canvas: Canvas, x: Float, y: Float) {
-        val textPaint = Paint().apply {
+    private fun drawHintBox(
+        canvas: Canvas, left: Float, top: Float, right: Float, bottom: Float,
+        title: String, content: String
+    ) {
+        // Рамка с заливкой
+        val bgPaint = Paint().apply { color = Color.parseColor("#FFFBF0"); style = Paint.Style.FILL }
+        canvas.drawRoundRect(android.graphics.RectF(left, top, right, bottom), 8f, 8f, bgPaint)
+        val borderPaint = Paint().apply {
+            color = Color.parseColor("#FFB74D"); style = Paint.Style.STROKE; strokeWidth = 1.5f
+        }
+        canvas.drawRoundRect(android.graphics.RectF(left, top, right, bottom), 8f, 8f, borderPaint)
+
+        val titlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; color = Color.parseColor("#E65100")
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        canvas.drawText(title, left + 14f, top + 22f, titlePaint)
+
+        val contentPaint = Paint().apply {
             isAntiAlias = true; textSize = 14f; color = Color.DKGRAY
             typeface = Typeface.DEFAULT
         }
-        var currentY = y
+        // Перенос по длине
+        val maxWidth = right - left - 28f
+        val words = content.split(" ")
+        var line = ""
+        var y = top + 45f
+        for (word in words) {
+            val test = if (line.isEmpty()) word else "$line $word"
+            if (contentPaint.measureText(test) > maxWidth) {
+                canvas.drawText(line, left + 14f, y, contentPaint)
+                line = word
+                y += 18f
+            } else {
+                line = test
+            }
+        }
+        if (line.isNotEmpty()) canvas.drawText(line, left + 14f, y, contentPaint)
+    }
 
-        canvas.drawRect(x, currentY - 10f, x + 15f, currentY + 5f, Paint().apply { color = Color.parseColor("#EF5350") })
-        canvas.drawText("Гласные: А О У Ы Э — после твердых, Я Ё Ю И Е — после мягких", x + 25f, currentY, textPaint)
-        currentY += 22f
+    // ============ Легенда в красивой рамке (5 пунктов + звонкие/глухие) ============
+    private fun drawLegend(canvas: Canvas, x: Float, y: Float) {
+        // Рамка
+        val padding = 12f
+        val boxLeft = x
+        val boxTop = y
+        val boxRight = PAGE_WIDTH - 40f
+        val boxBottom = y + 95f
 
-        canvas.drawRect(x, currentY - 10f, x + 15f, currentY + 5f, Paint().apply { color = Color.parseColor("#42A5F5") })
-        canvas.drawText("Всегда твердые: Ж Ш Ц", x + 25f, currentY, textPaint)
-        currentY += 22f
+        val bgPaint = Paint().apply { color = Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
+        canvas.drawRoundRect(android.graphics.RectF(boxLeft, boxTop, boxRight, boxBottom), 8f, 8f, bgPaint)
+        val borderPaint = Paint().apply {
+            color = Color.parseColor("#BDBDBD"); style = Paint.Style.STROKE; strokeWidth = 1f
+        }
+        canvas.drawRoundRect(android.graphics.RectF(boxLeft, boxTop, boxRight, boxBottom), 8f, 8f, borderPaint)
 
-        canvas.drawRect(x, currentY - 10f, x + 15f, currentY + 5f, Paint().apply { color = Color.parseColor("#66BB6A") })
-        canvas.drawText("Всегда мягкие: Й Ч Щ", x + 25f, currentY, textPaint)
+        val textPaint = Paint().apply {
+            isAntiAlias = true; textSize = 13f; color = Color.DKGRAY
+            typeface = Typeface.DEFAULT
+        }
+        val titlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; color = Color.DKGRAY
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        canvas.drawText("Обозначения", boxLeft + padding, boxTop + 22f, titlePaint)
+
+        // Две колонки, чтобы влезло
+        val col1X = boxLeft + padding
+        val col2X = boxLeft + (boxRight - boxLeft) / 2f + 10f
+        var currentY = boxTop + 45f
+        val lineH = 18f
+
+        // Колонка 1
+        // Красный — гласные
+        canvas.drawRect(col1X, currentY - 9f, col1X + 14f, currentY + 5f, Paint().apply { color = Color.parseColor("#EF5350"); style = Paint.Style.FILL })
+        canvas.drawText("Гласные: А О У Ы Э, Я Ё Ю И Е", col1X + 22f, currentY, textPaint)
+        currentY += lineH
+
+        // Синий — всегда твёрдые
+        canvas.drawRect(col1X, currentY - 9f, col1X + 14f, currentY + 5f, Paint().apply { color = Color.parseColor("#42A5F5"); style = Paint.Style.FILL })
+        canvas.drawText("Всегда твёрдые: Ж Ш Ц", col1X + 22f, currentY, textPaint)
+        currentY += lineH
+
+        // Зелёный — всегда мягкие
+        canvas.drawRect(col1X, currentY - 9f, col1X + 14f, currentY + 5f, Paint().apply { color = Color.parseColor("#66BB6A"); style = Paint.Style.FILL })
+        canvas.drawText("Всегда мягкие: Й Ч Щ", col1X + 22f, currentY, textPaint)
+        currentY += lineH
+
+        // Колонка 2
+        currentY = boxTop + 45f
+        // Сине-зелёный — твёрдые или мягкие (два треугольника)
+        val p = android.graphics.Path().apply { moveTo(col2X, currentY); lineTo(col2X + 14f, currentY); lineTo(col2X, currentY + 14f); close() }
+        canvas.drawPath(p, Paint().apply { color = Color.parseColor("#42A5F5"); style = Paint.Style.FILL })
+        val p2 = android.graphics.Path().apply { moveTo(col2X + 14f, currentY); lineTo(col2X + 14f, currentY + 14f); lineTo(col2X, currentY + 14f); close() }
+        canvas.drawPath(p2, Paint().apply { color = Color.parseColor("#66BB6A"); style = Paint.Style.FILL })
+        canvas.drawText("Твёрдые или мягкие (остальные)", col2X + 22f, currentY, textPaint)
+        currentY += lineH
+
+        // Белый пустой — Ь, Ъ
+        canvas.drawRect(col2X, currentY - 9f, col2X + 14f, currentY + 5f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
+        canvas.drawRect(col2X, currentY - 9f, col2X + 14f, currentY + 5f, Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f })
+        canvas.drawText("Ь и Ъ — не обозначают звуков", col2X + 22f, currentY, textPaint)
+        currentY += lineH
+
+        // Звонкие / глухие
+        canvas.drawText("🔊 Верхний ряд — звонкие    🔈 Нижний ряд — глухие", col2X, currentY, textPaint)
     }
 }
