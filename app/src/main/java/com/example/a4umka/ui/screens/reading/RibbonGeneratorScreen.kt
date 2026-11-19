@@ -2,6 +2,7 @@ package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -19,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp // <-- ДОБАВЛЕН ИМПОРТ
+import androidx.compose.ui.unit.sp
 import com.example.a4umka.data.*
 import com.example.a4umka.ui.components.ZoomableImage
 import com.example.a4umka.util.PdfExporter
@@ -39,10 +40,16 @@ fun RibbonGeneratorScreen(
     var config by remember { mutableStateOf(RibbonConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА
+    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА — 4K (масштаб ×6 = 3570×5052 px)
+    val previewScale = 6
     val previewBitmap = remember(config) {
-        val bmp = Bitmap.createBitmap(RibbonPdfDrawer.PAGE_WIDTH.toInt(), RibbonPdfDrawer.PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+        val bmp = Bitmap.createBitmap(
+            (RibbonPdfDrawer.PAGE_WIDTH * previewScale).toInt(),
+            (RibbonPdfDrawer.PAGE_HEIGHT * previewScale).toInt(),
+            Bitmap.Config.ARGB_8888
+        )
         val canvas = AndroidCanvas(bmp)
+        canvas.scale(previewScale.toFloat(), previewScale.toFloat())
         RibbonPdfDrawer.drawRibbon(canvas, config, context, isAnswerKey = false)
         bmp
     }
@@ -79,37 +86,48 @@ fun RibbonGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                // Тут предполагаются настройки конфига, но для примера оставим заголовок
-                Text("Настройки ленты:", style = MaterialTheme.typography.labelLarge)
-                
-                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                
-                Text(
-                    text = "💡 Совет: используйте ленту для тренировки беглости чтения.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
-                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Настройки ленты", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "💡 Совет: используйте ленту для тренировки беглости чтения.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
             item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    ZoomableImage(
-                        bitmap = previewBitmap,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(RibbonPdfDrawer.PAGE_WIDTH / RibbonPdfDrawer.PAGE_HEIGHT)
-                    )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            ZoomableImage(
+                                bitmap = previewBitmap,
+                                modifier = Modifier.fillMaxWidth().aspectRatio(RibbonPdfDrawer.PAGE_WIDTH / RibbonPdfDrawer.PAGE_HEIGHT)
+                            )
+                        }
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
+            }
 
+            item {
                 ElevatedCard(
                     onClick = { showInfoSheet = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -142,8 +160,6 @@ fun RibbonGeneratorScreen(
                         }
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
