@@ -75,7 +75,12 @@ object RibbonPdfDrawer {
         val bg = if (config.bgColor == RibbonBgColor.PEACH) PEACH_COLOR else Color.WHITE
         canvas.drawColor(bg)
 
-        val font = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        // Выбор шрифта: обычный или письменный
+        val font = if (config.font == RibbonFont.CURSIVE) {
+            ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        } else {
+            Typeface.DEFAULT
+        }
 
         val titleText = when {
             isAnswerKey -> "Ответы"
@@ -142,15 +147,28 @@ object RibbonPdfDrawer {
             missingSet.addAll(allLetters.shuffled(random).take(countToHide))
         }
 
-        // Гласные
+        // Считаем стартовые X для каждой секции
         val vowelStartX = startX
+        val consonantStartX = vowelStartX + 5 * colWidth + 20f
+        val signStartX = consonantStartX + 11 * colWidth + 10f
+
+        // Метки секций над лентой
+        val sectionLabelPaint = Paint().apply {
+            isAntiAlias = true; textSize = 12f; color = Color.parseColor("#9E9E9E")
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC); textAlign = Paint.Align.CENTER
+        }
+        val labelY = startY - 8f
+        canvas.drawText("гласные", vowelStartX + 2.5f * colWidth, labelY, sectionLabelPaint)
+        canvas.drawText("согласные", consonantStartX + 5.5f * colWidth, labelY, sectionLabelPaint)
+        canvas.drawText("знаки", signStartX + 0.5f * colWidth, labelY, sectionLabelPaint)
+
+        // Гласные
         RibbonData.topVowels.forEachIndexed { index, letter ->
             drawCell(canvas, letter, config, vowelStartX + index * colWidth, startY, cellSize, missingSet, font, isAnswerKey)
             drawCell(canvas, RibbonData.bottomVowels[index], config, vowelStartX + index * colWidth, startY + rowHeight, cellSize, missingSet, font, isAnswerKey)
         }
 
         // Согласные
-        val consonantStartX = vowelStartX + 5 * colWidth + 20f
         RibbonData.topConsonants.forEachIndexed { index, letter ->
             drawCell(canvas, letter, config, consonantStartX + index * colWidth, startY, cellSize, missingSet, font, isAnswerKey)
         }
@@ -159,31 +177,14 @@ object RibbonPdfDrawer {
         }
 
         // Знаки (вертикально)
-        val signStartX = consonantStartX + 11 * colWidth + 10f
         RibbonData.signs.forEachIndexed { index, letter ->
             drawCell(canvas, letter, config, signStartX, startY + index * rowHeight, cellSize, missingSet, font, isAnswerKey)
         }
 
+        // Подсказка «Эти буквы потерялись» — буквы в отдельных квадратиках
         if (config.mode == RibbonMode.MISSING && config.showHint && missingSet.isNotEmpty()) {
             val hintBoxTop = startY + 2 * rowHeight + 30f
-            val hintBoxBottom = hintBoxTop + 60f
-            drawHintBox(
-                canvas,
-                startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom,
-                "Эти буквы потерялись",
-                missingSet.joinToString(", ")
-            )
-        }
-
-        if (config.mode == RibbonMode.COLORING && !isAnswerKey) {
-            val hintBoxTop = startY + 2 * rowHeight + 30f
-            val hintBoxBottom = hintBoxTop + 60f
-            drawHintBox(
-                canvas,
-                startX, hintBoxTop, PAGE_WIDTH - startX, hintBoxBottom,
-                "Как раскрасить",
-                "красные — гласные • синие — Ж Ш Ц (твердые) • зеленые — Й Ч Щ (мягкие) • сине-зеленые — остальные • белые — Ь Ъ"
-            )
+            drawLostLettersBox(canvas, startX, hintBoxTop, PAGE_WIDTH - startX, missingSet, font)
         }
 
         drawLegend(canvas, 40f, PAGE_HEIGHT - 110f)
@@ -253,7 +254,12 @@ object RibbonPdfDrawer {
         val bg = if (config.bgColor == RibbonBgColor.PEACH) PEACH_COLOR else Color.WHITE
         canvas.drawColor(bg)
 
-        val font = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        // Выбор шрифта: обычный или письменный
+        val font = if (config.font == RibbonFont.CURSIVE) {
+            ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        } else {
+            Typeface.DEFAULT
+        }
 
         // Заголовок
         val titlePaint = Paint().apply {
@@ -497,6 +503,69 @@ object RibbonPdfDrawer {
             }
         }
         if (line.isNotEmpty()) canvas.drawText(line, left + 14f, y, contentPaint)
+    }
+
+    // ============ Подсказка «Эти буквы потерялись» — буквы в отдельных квадратиках ============
+    private fun drawLostLettersBox(
+        canvas: Canvas, left: Float, top: Float, right: Float,
+        letters: Set<String>, font: Typeface
+    ) {
+        val padding = 14f
+        val boxWidth = right - left
+        val boxHeight = 100f
+        val bottom = top + boxHeight
+
+        // Рамка с заливкой (бледно-жёлтая)
+        val bgPaint = Paint().apply { color = Color.parseColor("#FFFBF0"); style = Paint.Style.FILL }
+        canvas.drawRoundRect(android.graphics.RectF(left, top, right, bottom), 8f, 8f, bgPaint)
+        val borderPaint = Paint().apply {
+            color = Color.parseColor("#FFB74D"); style = Paint.Style.STROKE; strokeWidth = 1.5f
+        }
+        canvas.drawRoundRect(android.graphics.RectF(left, top, right, bottom), 8f, 8f, borderPaint)
+
+        // Заголовок
+        val titlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; color = Color.parseColor("#E65100")
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        canvas.drawText("Эти буквы потерялись:", left + padding, top + 22f, titlePaint)
+
+        // Квадратики с буквами (как на сайте)
+        val letterSize = 28f
+        val letterGap = 6f
+        val lettersList = letters.toList()
+        val rowWidth = boxWidth - padding * 2
+        val maxPerRow = (rowWidth / (letterSize + letterGap)).toInt()
+
+        val letterPaint = Paint().apply {
+            isAntiAlias = true; textSize = letterSize * 0.55f; color = Color.DKGRAY
+            typeface = font; textAlign = Paint.Align.CENTER
+        }
+        val dashedPaint = Paint().apply {
+            color = Color.parseColor("#FFB74D"); style = Paint.Style.STROKE; strokeWidth = 1.5f
+            pathEffect = DashPathEffect(floatArrayOf(4f, 4f), 0f)
+        }
+
+        var index = 0
+        var row = 0
+        while (index < lettersList.size) {
+            val yRow = top + 38f + row * (letterSize + letterGap)
+            val inRow = minOf(maxPerRow, lettersList.size - index)
+            val rowStartX = left + padding + (rowWidth - inRow * (letterSize + letterGap) + letterGap) / 2f
+            for (i in 0 until inRow) {
+                val x = rowStartX + i * (letterSize + letterGap)
+                // Квадрат с пунктиром
+                canvas.drawRoundRect(
+                    android.graphics.RectF(x, yRow, x + letterSize, yRow + letterSize),
+                    4f, 4f, dashedPaint
+                )
+                // Буква
+                val baselineY = yRow + letterSize / 2f - ((letterPaint.descent() + letterPaint.ascent()) / 2f)
+                canvas.drawText(lettersList[index], x + letterSize / 2f, baselineY, letterPaint)
+                index++
+            }
+            row++
+        }
     }
 
     // ============ Легенда в красивой рамке (5 пунктов + звонкие/глухие) ============
