@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -79,57 +80,92 @@ fun SoundSchemeGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text("Число звуков в словах:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.length == SoundSchemeLength.THREE, onClick = { config = config.copy(length = SoundSchemeLength.THREE) })
-                        Text("Короткие — 3 звука (КОТ, ДОМ, КИТ)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.length == SoundSchemeLength.FOUR, onClick = { config = config.copy(length = SoundSchemeLength.FOUR) })
-                        Text("Средние — 4 звука (ЛУНА, ЛИСА, КРОТ)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.length == SoundSchemeLength.FIVE, onClick = { config = config.copy(length = SoundSchemeLength.FIVE) })
-                        Text("Длинные — 5 звуков (ЗАБОР, БАНАН, ТРАВА)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.length == SoundSchemeLength.MIX, onClick = { config = config.copy(length = SoundSchemeLength.MIX) })
-                        Text("Вперемешку — слова разной длины")
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Число звуков в словах", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.length == SoundSchemeLength.THREE, onClick = { config = config.copy(length = SoundSchemeLength.THREE) })
+                                Text("Короткие — 3 звука (КОТ, ДОМ, КИТ)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.length == SoundSchemeLength.FOUR, onClick = { config = config.copy(length = SoundSchemeLength.FOUR) })
+                                Text("Средние — 4 звука (ЛУНА, ЛИСА, КРОТ)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.length == SoundSchemeLength.FIVE, onClick = { config = config.copy(length = SoundSchemeLength.FIVE) })
+                                Text("Длинные — 5 звуков (ЗАБОР, БАНАН, ТРАВА)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.length == SoundSchemeLength.MIX, onClick = { config = config.copy(length = SoundSchemeLength.MIX) })
+                                Text("Вперемешку — слова разной длины")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сложность раскраски:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.colors == SoundSchemeColors.TWO, onClick = { config = config.copy(colors = SoundSchemeColors.TWO) })
-                        Text("2 цвета — гласный (красный) / согласный (синий)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.colors == SoundSchemeColors.THREE, onClick = { config = config.copy(colors = SoundSchemeColors.THREE) })
-                        Text("3 цвета — + мягкий согласный (зелёный)")
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сложность раскраски", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.colors == SoundSchemeColors.TWO, onClick = { config = config.copy(colors = SoundSchemeColors.TWO) })
+                                Text("2 цвета — гласный (красный) / согласный (синий)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.colors == SoundSchemeColors.THREE, onClick = { config = config.copy(colors = SoundSchemeColors.THREE) })
+                                Text("3 цвета — + мягкий согласный (зелёный)")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
-                    Text("Добавить вторым листом ответы (раскрашенные схемы)")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    if (previewPages.size > 1) {
-                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Лист с ответами", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
+                            Text("Добавить вторым листом ответы (раскрашенные схемы)")
+                        }
                     }
                 }
-                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                            if (previewPages.size > 1) {
+                                Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                            }
+                        }
+                        Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    }
+                }
             }
 
             item {
