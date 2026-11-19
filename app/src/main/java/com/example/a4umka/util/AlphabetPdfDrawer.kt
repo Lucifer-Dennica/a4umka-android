@@ -165,8 +165,7 @@ object AlphabetPdfDrawer {
                 isAntiAlias = true; textSize = 60f
                 color = if (isBW) Color.BLACK else textColor
                 typeface = font; textAlign = Paint.Align.CENTER
-                style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
-                strokeWidth = 2f
+                style = Paint.Style.FILL
             }
             canvas.drawText(item.lowercase, centerX - 110f, bottomCenterY + 20f, smallLetterPaint)
             sideOffset = 80f
@@ -349,8 +348,7 @@ object AlphabetPdfDrawer {
             this.color = if (isBW) Color.BLACK else textColor
             this.typeface = font
             this.textAlign = Paint.Align.CENTER
-            this.style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
-            this.strokeWidth = if (isBW) 3f else 0f
+            this.style = Paint.Style.FILL
         }
 
         val text = when (config.case) {
