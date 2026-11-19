@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -41,7 +42,7 @@ fun PrepositionGeneratorScreen(
 
     var config by remember { mutableStateOf(PrepositionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
-    
+
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -84,63 +85,104 @@ fun PrepositionGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Вид задания
             item {
-                Text("Вид задания:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.taskType == PrepositionTaskType.FIND_WORD, onClick = { config = config.copy(taskType = PrepositionTaskType.FIND_WORD) })
-                        Text("Где находится? — обведи верные слова")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.taskType == PrepositionTaskType.FIND_PICTURE, onClick = { config = config.copy(taskType = PrepositionTaskType.FIND_PICTURE) })
-                        Text("Найди картинку — выбери подходящую")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.taskType == PrepositionTaskType.DRAW_SELF, onClick = { config = config.copy(taskType = PrepositionTaskType.DRAW_SELF) })
-                        Text("Нарисуй сам — дорисуй предмет")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Какие предлоги:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.level == PrepositionLevel.SIMPLE, onClick = { config = config.copy(level = PrepositionLevel.SIMPLE) })
-                        Text("Простые — на, под, в")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.level == PrepositionLevel.BASIC, onClick = { config = config.copy(level = PrepositionLevel.BASIC) })
-                        Text("Основные — плюс над, за, перед")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.level == PrepositionLevel.ALL, onClick = { config = config.copy(level = PrepositionLevel.ALL) })
-                        Text("Все — плюс между, слева от, справа от")
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Вид задания", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.taskType == PrepositionTaskType.FIND_WORD, onClick = { config = config.copy(taskType = PrepositionTaskType.FIND_WORD) })
+                                Text("Где находится? — обведи верные слова")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.taskType == PrepositionTaskType.FIND_PICTURE, onClick = { config = config.copy(taskType = PrepositionTaskType.FIND_PICTURE) })
+                                Text("Найди картинку — выбери подходящую")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.taskType == PrepositionTaskType.DRAW_SELF, onClick = { config = config.copy(taskType = PrepositionTaskType.DRAW_SELF) })
+                                Text("Нарисуй сам — дорисуй предмет")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Заданий на листе:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(4, 6, 8, 9).forEach { count ->
-                        FilterChip(
-                            selected = config.tasksCount == count,
-                            onClick = { config = config.copy(tasksCount = count) },
-                            label = { Text("$count") }
-                        )
+            // БЛОК: Какие предлоги
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Какие предлоги", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.level == PrepositionLevel.SIMPLE, onClick = { config = config.copy(level = PrepositionLevel.SIMPLE) })
+                                Text("Простые — на, под, в")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.level == PrepositionLevel.BASIC, onClick = { config = config.copy(level = PrepositionLevel.BASIC) })
+                                Text("Основные — плюс над, за, перед")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.level == PrepositionLevel.ALL, onClick = { config = config.copy(level = PrepositionLevel.ALL) })
+                                Text("Все — плюс между, слева от, справа от")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
-                    Text("Добавить вторым листом ответы")
+            // БЛОК: Заданий на листе
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Заданий на листе", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(4, 6, 8, 9).forEach { count ->
+                                FilterChip(
+                                    selected = config.tasksCount == count,
+                                    onClick = { config = config.copy(tasksCount = count) },
+                                    label = { Text("$count") }
+                                )
+                            }
+                        }
+                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Кнопка запуска интерактива
+            // БЛОК: Ответы
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Ответы", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
+                            Text("Добавить вторым листом ответы")
+                        }
+                    }
+                }
+            }
+
+            // КНОПКА ИНТЕРАКТИВНОГО РЕЖИМА
+            item {
                 Button(
                     onClick = { onPlayInteractive(config) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -150,10 +192,12 @@ fun PrepositionGeneratorScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Решать на телефоне")
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // ПРЕДПРОСМОТР (4K)
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
