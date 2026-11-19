@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -83,115 +84,152 @@ fun FunnyStoryGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Тема и количество
             item {
-                var themeExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
-                    OutlinedTextField(
-                        value = when (config.theme) {
-                            FunnyStoryTheme.ALL -> "Все темы вперемешку"
-                            FunnyStoryTheme.FAIRY_TALE -> "Сказка наизнанку"
-                            FunnyStoryTheme.ABOUT_ME -> "Про меня"
-                            FunnyStoryTheme.ADVENTURE -> "Приключения"
-                            FunnyStoryTheme.ANIMALS -> "Животные и зоопарк"
-                        },
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Тема историй") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
-                        FunnyStoryTheme.entries.forEach { theme ->
-                            DropdownMenuItem(
-                                text = { Text(when (theme) { FunnyStoryTheme.ALL -> "Все темы"; FunnyStoryTheme.FAIRY_TALE -> "Сказка наизнанку"; FunnyStoryTheme.ABOUT_ME -> "Про меня"; FunnyStoryTheme.ADVENTURE -> "Приключения"; FunnyStoryTheme.ANIMALS -> "Животные" }) },
-                                onClick = {
-                                    config = config.copy(theme = theme, currentStories = FunnyStoryData.getStoriesForTheme(theme, config.count))
-                                    themeExpanded = false
-                                }
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Тема и количество", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+
+                        var themeExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
+                            OutlinedTextField(
+                                value = when (config.theme) {
+                                    FunnyStoryTheme.ALL -> "Все темы вперемешку"
+                                    FunnyStoryTheme.FAIRY_TALE -> "Сказка наизнанку"
+                                    FunnyStoryTheme.ABOUT_ME -> "Про меня"
+                                    FunnyStoryTheme.ADVENTURE -> "Приключения"
+                                    FunnyStoryTheme.ANIMALS -> "Животные и зоопарк"
+                                },
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Тема историй") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
                             )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                var countExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = countExpanded, onExpandedChange = { countExpanded = it }) {
-                    OutlinedTextField(
-                        value = "Историй: ${config.count}",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Количество") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = countExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = countExpanded, onDismissRequest = { countExpanded = false }) {
-                        (1..8).forEach { num ->
-                            DropdownMenuItem(
-                                text = { Text("$num") },
-                                onClick = {
-                                    config = config.copy(count = num, currentStories = FunnyStoryData.getStoriesForTheme(config.theme, num))
-                                    countExpanded = false
+                            ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
+                                FunnyStoryTheme.entries.forEach { theme ->
+                                    DropdownMenuItem(
+                                        text = { Text(when (theme) { FunnyStoryTheme.ALL -> "Все темы"; FunnyStoryTheme.FAIRY_TALE -> "Сказка наизнанку"; FunnyStoryTheme.ABOUT_ME -> "Про меня"; FunnyStoryTheme.ADVENTURE -> "Приключения"; FunnyStoryTheme.ANIMALS -> "Животные" }) },
+                                        onClick = {
+                                            config = config.copy(theme = theme, currentStories = FunnyStoryData.getStoriesForTheme(theme, config.count))
+                                            themeExpanded = false
+                                        }
+                                    )
                                 }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Кто вписывает слова:", style = MaterialTheme.typography.labelLarge)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = config.writer == FunnyStoryWriter.ADULT, onClick = { config = config.copy(writer = FunnyStoryWriter.ADULT) })
-                    Text("Взрослый")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = config.writer == FunnyStoryWriter.CHILD, onClick = { config = config.copy(writer = FunnyStoryWriter.CHILD) })
-                    Text("Ребёнок сам")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
-                    Text("Чёрно-белая печать")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = {
-                            if (config.currentStories.isNotEmpty()) {
-                                onPlayInteractive(config.currentStories.first())
                             }
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Играть")
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            config = config.copy(currentStories = FunnyStoryData.getStoriesForTheme(config.theme, config.count))
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Другие")
+                        }
+
+                        var countExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = countExpanded, onExpandedChange = { countExpanded = it }) {
+                            OutlinedTextField(
+                                value = "Историй: ${config.count}",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Количество") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = countExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = countExpanded, onDismissRequest = { countExpanded = false }) {
+                                (1..8).forEach { num ->
+                                    DropdownMenuItem(
+                                        text = { Text("$num") },
+                                        onClick = {
+                                            config = config.copy(count = num, currentStories = FunnyStoryData.getStoriesForTheme(config.theme, num))
+                                            countExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Что попадёт на листы:", style = MaterialTheme.typography.labelLarge)
-                config.currentStories.forEachIndexed { i, story ->
-                    Text("${i + 1}. ${story.title} — вопросов: ${story.questions.size}", fontSize = 14.sp)
+            // БЛОК: Кто вписывает слова
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Кто вписывает слова", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.writer == FunnyStoryWriter.ADULT, onClick = { config = config.copy(writer = FunnyStoryWriter.ADULT) })
+                            Text("Взрослый")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.writer == FunnyStoryWriter.CHILD, onClick = { config = config.copy(writer = FunnyStoryWriter.CHILD) })
+                            Text("Ребёнок сам")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
+                            Text("Чёрно-белая печать")
+                        }
+                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Действия
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Действия", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    if (config.currentStories.isNotEmpty()) {
+                                        onPlayInteractive(config.currentStories.first())
+                                    }
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                Spacer(Modifier.width(4.dp))
+                                Text("Играть")
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    config = config.copy(currentStories = FunnyStoryData.getStoriesForTheme(config.theme, config.count))
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Spacer(Modifier.width(4.dp))
+                                Text("Другие")
+                            }
+                        }
+                    }
+                }
+            }
+
+            // БЛОК: Что попадёт на листы
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Что попадёт на листы", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        config.currentStories.forEachIndexed { i, story ->
+                            Text("${i + 1}. ${story.title} — вопросов: ${story.questions.size}", fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр листов A4 (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
