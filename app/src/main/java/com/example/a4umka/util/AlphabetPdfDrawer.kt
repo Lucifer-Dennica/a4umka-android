@@ -21,24 +21,23 @@ object AlphabetPdfDrawer {
     const val PAGE_HEIGHT = 842f
     private const val PREVIEW_SCALE = 6  // 4K: 3570×5052 px
 
-    // ============ ПРЕДПРОСМОТР (многостраничный для FULL_PAGE_LETTER) ============
+    // ============ ПРЕДПРОСМОТР (только ОДНА страница для FULL_PAGE_LETTER, чтобы не вешать UI) ============
     fun getPreviewPages(config: AlphabetConfig, context: Context): List<Bitmap> {
         val letters = AlphabetData.getLettersByRange(config.startLetterIndex, config.endLetterIndex, config.filter)
         if (letters.isEmpty()) return emptyList()
 
-        // Для FULL_PAGE_LETTER — по одной странице на каждую букву
+        // Для FULL_PAGE_LETTER — только первый лист как образец (PDF всё равно соберёт все буквы)
         if (config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER) {
-            return letters.map { letter ->
-                val bmp = Bitmap.createBitmap(
-                    (PAGE_WIDTH * PREVIEW_SCALE).toInt(),
-                    (PAGE_HEIGHT * PREVIEW_SCALE).toInt(),
-                    Bitmap.Config.ARGB_8888
-                )
-                val canvas = Canvas(bmp)
-                canvas.scale(PREVIEW_SCALE.toFloat(), PREVIEW_SCALE.toFloat())
-                drawLayoutForLetter(canvas, config, letter, context)
-                bmp
-            }
+            val firstLetter = letters.first()
+            val bmp = Bitmap.createBitmap(
+                (PAGE_WIDTH * PREVIEW_SCALE).toInt(),
+                (PAGE_HEIGHT * PREVIEW_SCALE).toInt(),
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bmp)
+            canvas.scale(PREVIEW_SCALE.toFloat(), PREVIEW_SCALE.toFloat())
+            drawLayoutForLetter(canvas, config, firstLetter, context)
+            return listOf(bmp)
         }
 
         // Для остальных — одна страница
