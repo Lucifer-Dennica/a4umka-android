@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -78,76 +79,100 @@ fun FairyTaleGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Какие задания включить
             item {
-                Text("Какие задания включить:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.taskTypes.contains(FairyTaleTaskType.FIX_NAMES), onCheckedChange = {
-                            val newSet = config.taskTypes.toMutableSet()
-                            if (it) newSet.add(FairyTaleTaskType.FIX_NAMES) else newSet.remove(FairyTaleTaskType.FIX_NAMES)
-                            config = config.copy(taskTypes = newSet)
-                        })
-                        Text("Исправь названия (перепутанные сказки)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.taskTypes.contains(FairyTaleTaskType.CONNECT_HALVES), onCheckedChange = {
-                            val newSet = config.taskTypes.toMutableSet()
-                            if (it) newSet.add(FairyTaleTaskType.CONNECT_HALVES) else newSet.remove(FairyTaleTaskType.CONNECT_HALVES)
-                            config = config.copy(taskTypes = newSet)
-                        })
-                        Text("Соедини половинки названий")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.taskTypes.contains(FairyTaleTaskType.GUESS_PICTURES), onCheckedChange = {
-                            val newSet = config.taskTypes.toMutableSet()
-                            if (it) newSet.add(FairyTaleTaskType.GUESS_PICTURES) else newSet.remove(FairyTaleTaskType.GUESS_PICTURES)
-                            config = config.copy(taskTypes = newSet)
-                        })
-                        Text("Угадай сказку по картинкам")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Возраст:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.age == FairyTaleAge.AGE_5_6, onClick = { config = config.copy(age = FairyTaleAge.AGE_5_6) })
-                        Text("5–6 лет (знакомые сказки)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.age == FairyTaleAge.AGE_6_7, onClick = { config = config.copy(age = FairyTaleAge.AGE_6_7) })
-                        Text("6–7 лет (Андерсен, Гримм, Пушкин)")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сколько листов:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2, 3).forEach { count ->
-                        FilterChip(
-                            selected = config.pagesCount == count,
-                            onClick = { config = config.copy(pagesCount = count) },
-                            label = { Text("$count") }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { onPlayInteractive(config) },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Играть на экране")
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Какие задания включить", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.taskTypes.contains(FairyTaleTaskType.FIX_NAMES), onCheckedChange = {
+                                val newSet = config.taskTypes.toMutableSet()
+                                if (it) newSet.add(FairyTaleTaskType.FIX_NAMES) else newSet.remove(FairyTaleTaskType.FIX_NAMES)
+                                config = config.copy(taskTypes = newSet)
+                            })
+                            Text("Исправь названия (перепутанные сказки)")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.taskTypes.contains(FairyTaleTaskType.CONNECT_HALVES), onCheckedChange = {
+                                val newSet = config.taskTypes.toMutableSet()
+                                if (it) newSet.add(FairyTaleTaskType.CONNECT_HALVES) else newSet.remove(FairyTaleTaskType.CONNECT_HALVES)
+                                config = config.copy(taskTypes = newSet)
+                            })
+                            Text("Соедини половинки названий")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.taskTypes.contains(FairyTaleTaskType.GUESS_PICTURES), onCheckedChange = {
+                                val newSet = config.taskTypes.toMutableSet()
+                                if (it) newSet.add(FairyTaleTaskType.GUESS_PICTURES) else newSet.remove(FairyTaleTaskType.GUESS_PICTURES)
+                                config = config.copy(taskTypes = newSet)
+                            })
+                            Text("Угадай сказку по картинкам")
+                        }
+                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Возраст
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Возраст", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.age == FairyTaleAge.AGE_5_6, onClick = { config = config.copy(age = FairyTaleAge.AGE_5_6) })
+                            Text("5–6 лет (знакомые сказки)")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.age == FairyTaleAge.AGE_6_7, onClick = { config = config.copy(age = FairyTaleAge.AGE_6_7) })
+                            Text("6–7 лет (Андерсен, Гримм, Пушкин)")
+                        }
+                    }
+                }
+            }
+
+            // БЛОК: Сколько листов и интерактивный режим
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Сколько листов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2, 3).forEach { count ->
+                                FilterChip(
+                                    selected = config.pagesCount == count,
+                                    onClick = { config = config.copy(pagesCount = count) },
+                                    label = { Text("$count") }
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { onPlayInteractive(config) },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Играть на экране")
+                        }
+                    }
+                }
+            }
+
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
