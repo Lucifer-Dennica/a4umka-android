@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -78,64 +79,95 @@ fun ProverbGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Что расставлять по порядку
             item {
-                Text("Что расставлять по порядку:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.sortTypes.contains(ProverbSortType.NUMBERS), onCheckedChange = { 
-                            config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.NUMBERS))
-                        })
-                        Text("Числа — от меньшего к большему")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.sortTypes.contains(ProverbSortType.DAYS), onCheckedChange = { 
-                            config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.DAYS))
-                        })
-                        Text("Дни недели — с понедельника")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.sortTypes.contains(ProverbSortType.MONTHS), onCheckedChange = { 
-                            config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.MONTHS))
-                        })
-                        Text("Месяцы — с января по декабрь")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.sortTypes.contains(ProverbSortType.LETTERS), onCheckedChange = { 
-                            config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.LETTERS))
-                        })
-                        Text("Буквы — по алфавиту")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Возраст:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.age == ProverbAge.AGE_5_6, onClick = { config = config.copy(age = ProverbAge.AGE_5_6) })
-                        Text("5–6 лет (короткие фразы)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.age == ProverbAge.AGE_6_7, onClick = { config = config.copy(age = ProverbAge.AGE_6_7) })
-                        Text("6–7 лет (длинные фразы)")
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Что расставлять по порядку", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = config.sortTypes.contains(ProverbSortType.NUMBERS), onCheckedChange = {
+                                    config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.NUMBERS))
+                                })
+                                Text("Числа — от меньшего к большему")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = config.sortTypes.contains(ProverbSortType.DAYS), onCheckedChange = {
+                                    config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.DAYS))
+                                })
+                                Text("Дни недели — с понедельника")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = config.sortTypes.contains(ProverbSortType.MONTHS), onCheckedChange = {
+                                    config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.MONTHS))
+                                })
+                                Text("Месяцы — с января по декабрь")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = config.sortTypes.contains(ProverbSortType.LETTERS), onCheckedChange = {
+                                    config = config.copy(sortTypes = toggle(config.sortTypes, ProverbSortType.LETTERS))
+                                })
+                                Text("Буквы — по алфавиту")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сколько листов:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2, 3).forEach { count ->
-                        FilterChip(
-                            selected = config.pagesCount == count,
-                            onClick = { config = config.copy(pagesCount = count) },
-                            label = { Text("$count") }
-                        )
+            // БЛОК: Возраст
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Возраст", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.age == ProverbAge.AGE_5_6, onClick = { config = config.copy(age = ProverbAge.AGE_5_6) })
+                                Text("5–6 лет (короткие фразы)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.age == ProverbAge.AGE_6_7, onClick = { config = config.copy(age = ProverbAge.AGE_6_7) })
+                                Text("6–7 лет (длинные фразы)")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Сколько листов
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сколько листов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2, 3).forEach { count ->
+                                FilterChip(
+                                    selected = config.pagesCount == count,
+                                    onClick = { config = config.copy(pagesCount = count) },
+                                    label = { Text("$count") }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
+            // КНОПКА ИНТЕРАКТИВНОГО РЕЖИМА
+            item {
                 Button(
                     onClick = { onPlayInteractive(config) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -146,10 +178,12 @@ fun ProverbGeneratorScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Решать на экране")
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // ПРЕДПРОСМОТР (4K)
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
