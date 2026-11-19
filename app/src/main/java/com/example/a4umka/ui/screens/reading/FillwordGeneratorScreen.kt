@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -78,76 +79,117 @@ fun FillwordGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Ваши слова
             item {
-                Text("Ваши слова:", style = MaterialTheme.typography.labelLarge)
-                OutlinedTextField(
-                    value = config.wordsInput,
-                    onValueChange = { config = config.copy(wordsInput = it) },
-                    modifier = Modifier.fillMaxWidth().height(100.dp),
-                    placeholder = { Text("МЕДВЕДЬ, ЛИСА, ВОЛК...") }
-                )
-                Text("Слов: ${words.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Ваши слова", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = config.wordsInput,
+                            onValueChange = { config = config.copy(wordsInput = it) },
+                            modifier = Modifier.fillMaxWidth().height(100.dp),
+                            placeholder = { Text("МЕДВЕДЬ, ЛИСА, ВОЛК...") }
+                        )
+                        Text("Слов: ${words.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Размер сетки:", style = MaterialTheme.typography.labelLarge)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = config.sizeMode == FillwordSizeMode.AUTO, onClick = { config = config.copy(sizeMode = FillwordSizeMode.AUTO) })
-                    Text("Автоматически")
+            // БЛОК: Размер сетки
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Размер сетки", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.sizeMode == FillwordSizeMode.AUTO, onClick = { config = config.copy(sizeMode = FillwordSizeMode.AUTO) })
+                            Text("Автоматически")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.sizeMode == FillwordSizeMode.MANUAL, onClick = { config = config.copy(sizeMode = FillwordSizeMode.MANUAL) })
+                            Text("Вручную:")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            OutlinedTextField(
+                                value = config.manualSize.toString(),
+                                onValueChange = {
+                                    val num = it.toIntOrNull() ?: 11
+                                    config = config.copy(manualSize = num.coerceIn(7, 20))
+                                },
+                                modifier = Modifier.width(80.dp),
+                                singleLine = true
+                            )
+                            Text(" x ${config.manualSize}", modifier = Modifier.padding(start = 4.dp))
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.allowBackwards, onCheckedChange = { config = config.copy(allowBackwards = it) })
+                            Text("Разрешить ← и ↑ (сложнее)", fontSize = 14.sp)
+                        }
+                    }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = config.sizeMode == FillwordSizeMode.MANUAL, onClick = { config = config.copy(sizeMode = FillwordSizeMode.MANUAL) })
-                    Text("Вручную:")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = config.manualSize.toString(),
-                        onValueChange = {
-                            val num = it.toIntOrNull() ?: 11
-                            config = config.copy(manualSize = num.coerceIn(7, 20))
-                        },
-                        modifier = Modifier.width(80.dp),
-                        singleLine = true
-                    )
-                    Text(" x ${config.manualSize}", modifier = Modifier.padding(start = 4.dp))
-                }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.allowBackwards, onCheckedChange = { config = config.copy(allowBackwards = it) })
-                    Text("Разрешить ← и ↑ (сложнее)", fontSize = 14.sp)
+            // БЛОК: Настройки листа
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Настройки листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = config.title,
+                            onValueChange = { config = config.copy(title = it) },
+                            label = { Text("Заголовок листа") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showNameField, onCheckedChange = { config = config.copy(showNameField = it) })
+                            Text("Строка «Имя ____»")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showWordList, onCheckedChange = { config = config.copy(showWordList = it) })
+                            Text("Печатать список слов")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
+                            Text("Добавить лист ответов")
+                        }
+                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Настройки листа:", style = MaterialTheme.typography.labelLarge)
-                OutlinedTextField(
-                    value = config.title,
-                    onValueChange = { config = config.copy(title = it) },
-                    label = { Text("Заголовок листа") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showNameField, onCheckedChange = { config = config.copy(showNameField = it) })
-                    Text("Строка «Имя ____»")
+            // БЛОК: Сколько вариантов
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сколько вариантов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.variants == FillwordVariants.ONE, onClick = { config = config.copy(variants = FillwordVariants.ONE) }, label = { Text("1") })
+                            FilterChip(selected = config.variants == FillwordVariants.TWO, onClick = { config = config.copy(variants = FillwordVariants.TWO) }, label = { Text("2") })
+                            FilterChip(selected = config.variants == FillwordVariants.FOUR, onClick = { config = config.copy(variants = FillwordVariants.FOUR) }, label = { Text("4") })
+                        }
+                    }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showWordList, onCheckedChange = { config = config.copy(showWordList = it) })
-                    Text("Печатать список слов")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
-                    Text("Добавить лист ответов")
-                }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сколько вариантов:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.variants == FillwordVariants.ONE, onClick = { config = config.copy(variants = FillwordVariants.ONE) }, label = { Text("1") })
-                    FilterChip(selected = config.variants == FillwordVariants.TWO, onClick = { config = config.copy(variants = FillwordVariants.TWO) }, label = { Text("2") })
-                    FilterChip(selected = config.variants == FillwordVariants.FOUR, onClick = { config = config.copy(variants = FillwordVariants.FOUR) }, label = { Text("4") })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+            // КНОПКА ИНТЕРАКТИВНОГО РЕЖИМА
+            item {
                 Button(
                     onClick = { onPlayInteractive(config) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -157,11 +199,15 @@ fun FillwordGeneratorScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Решать на экране")
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge)
-                if (previewPages.size > 1) {
-                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+            // ПРЕДПРОСМОТР
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
                 }
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
