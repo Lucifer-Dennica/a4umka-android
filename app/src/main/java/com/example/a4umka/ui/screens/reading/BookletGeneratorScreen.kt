@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -20,7 +21,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -87,97 +87,120 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Что внутри
             item {
-                Text("Что внутри:", style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(
-                        BookletType.STORY to "Своя сказка",
-                        BookletType.ABOUT_ME to "Про меня",
-                        BookletType.FAMILY to "Моя семья",
-                        BookletType.GRANDMA to "Бабушке",
-                        BookletType.RIDDLES to "Загадки",
-                        BookletType.BLANK to "Чистая"
-                    ).forEach { (type, name) ->
-                        FilterChip(
-                            selected = config.type == type,
-                            onClick = { config = config.copy(type = type) },
-                            label = { Text(name) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = config.title,
-                        onValueChange = { config = config.copy(title = it) },
-                        label = { Text("Название на обложке") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = config.author,
-                        onValueChange = { config = config.copy(author = it) },
-                        label = { Text("Автор") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                var charExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = charExpanded, onExpandedChange = { charExpanded = it }) {
-                    OutlinedTextField(
-                        value = when(config.character) {
-                            BookletCharacter.NONE -> "Без героя"
-                            BookletCharacter.BOY -> "Мальчик"
-                            BookletCharacter.GIRL -> "Девочка"
-                        }, onValueChange = {}, readOnly = true,
-                        label = { Text("Герой обложки") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = charExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = charExpanded, onDismissRequest = { charExpanded = false }) {
-                        listOf(
-                            BookletCharacter.NONE to "Без героя",
-                            BookletCharacter.BOY to "Мальчик",
-                            BookletCharacter.GIRL to "Девочка"
-                        ).forEach { (c, name) ->
-                            DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(character = c); charExpanded = false })
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Что внутри", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(
+                                BookletType.STORY to "Своя сказка",
+                                BookletType.ABOUT_ME to "Про меня",
+                                BookletType.FAMILY to "Моя семья",
+                                BookletType.GRANDMA to "Бабушке",
+                                BookletType.RIDDLES to "Загадки",
+                                BookletType.BLANK to "Чистая"
+                            ).forEach { (type, name) ->
+                                FilterChip(
+                                    selected = config.type == type,
+                                    onClick = { config = config.copy(type = type) },
+                                    label = { Text(name) }
+                                )
+                            }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Разлиновка страниц:", style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.ruling == BookletRuling.LINE_8MM, onClick = { config = config.copy(ruling = BookletRuling.LINE_8MM) }, label = { Text("Линия 8 мм") })
-                    FilterChip(selected = config.ruling == BookletRuling.WIDE_10MM, onClick = { config = config.copy(ruling = BookletRuling.WIDE_10MM) }, label = { Text("Широкая 10 мм") })
-                    FilterChip(selected = config.ruling == BookletRuling.GRID_5MM, onClick = { config = config.copy(ruling = BookletRuling.GRID_5MM) }, label = { Text("Клетка 5 мм") })
-                    FilterChip(selected = config.ruling == BookletRuling.NONE, onClick = { config = config.copy(ruling = BookletRuling.NONE) }, label = { Text("Без линий") })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showFoldLines, onCheckedChange = { config = config.copy(showFoldLines = it) })
-                    Column {
-                        Text("Линии сгиба и надреза", fontWeight = FontWeight.Bold)
-                        Text("Подсказывают, где складывать и резать", fontSize = 12.sp)
+            // БЛОК: Обложка
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Обложка", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = config.title,
+                                onValueChange = { config = config.copy(title = it) },
+                                label = { Text("Название на обложке") },
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = config.author,
+                                onValueChange = { config = config.copy(author = it) },
+                                label = { Text("Автор") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        var charExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = charExpanded, onExpandedChange = { charExpanded = it }) {
+                            OutlinedTextField(
+                                value = when(config.character) {
+                                    BookletCharacter.NONE -> "Без героя"
+                                    BookletCharacter.BOY -> "Мальчик"
+                                    BookletCharacter.GIRL -> "Девочка"
+                                }, onValueChange = {}, readOnly = true,
+                                label = { Text("Герой обложки") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = charExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = charExpanded, onDismissRequest = { charExpanded = false }) {
+                                listOf(
+                                    BookletCharacter.NONE to "Без героя",
+                                    BookletCharacter.BOY to "Мальчик",
+                                    BookletCharacter.GIRL to "Девочка"
+                                ).forEach { (c, name) ->
+                                    DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(character = c); charExpanded = false })
+                                }
+                            }
+                        }
                     }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
-                    Column {
-                        Text("Чёрно-белый режим", fontWeight = FontWeight.Bold)
-                        Text("Экономит картридж", fontSize = 12.sp)
+            }
+
+            // БЛОК: Разлиновка и опции
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Разлиновка страниц", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.ruling == BookletRuling.LINE_8MM, onClick = { config = config.copy(ruling = BookletRuling.LINE_8MM) }, label = { Text("Линия 8 мм") })
+                            FilterChip(selected = config.ruling == BookletRuling.WIDE_10MM, onClick = { config = config.copy(ruling = BookletRuling.WIDE_10MM) }, label = { Text("Широкая 10 мм") })
+                            FilterChip(selected = config.ruling == BookletRuling.GRID_5MM, onClick = { config = config.copy(ruling = BookletRuling.GRID_5MM) }, label = { Text("Клетка 5 мм") })
+                            FilterChip(selected = config.ruling == BookletRuling.NONE, onClick = { config = config.copy(ruling = BookletRuling.NONE) }, label = { Text("Без линий") })
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showFoldLines, onCheckedChange = { config = config.copy(showFoldLines = it) })
+                            Column {
+                                Text("Линии сгиба и надреза", fontWeight = FontWeight.Bold)
+                                Text("Подсказывают, где складывать и резать", fontSize = 12.sp)
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
+                            Column {
+                                Text("Чёрно-белый режим", fontWeight = FontWeight.Bold)
+                                Text("Экономит картридж", fontSize = 12.sp)
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // КНОПКА ИНСТРУКЦИИ
+            item {
                 OutlinedButton(
                     onClick = { showFoldInstructions = true },
                     modifier = Modifier.fillMaxWidth()
@@ -186,10 +209,12 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Как сложить книжку?")
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр листа A4 (альбомный):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр листа A4 (альбомный, 4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
@@ -263,7 +288,7 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
-                        "💡 Совет: страницы нижнего ряда напечатаны перевёрнутыми — так и задумано! После складывания они встанут правильной стороной.",
+                        "Совет: страницы нижнего ряда напечатаны перевёрнутыми — так и задумано! После складывания они встанут правильной стороной.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
