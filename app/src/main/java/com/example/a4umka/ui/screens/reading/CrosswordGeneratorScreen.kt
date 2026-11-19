@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -32,7 +33,7 @@ fun CrosswordGeneratorScreen(onBack: () -> Unit) {
 
     var config by remember { mutableStateOf(CrosswordConfig()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-    
+
     LaunchedEffect(config) {
         delay(300)
         previewPages = CrosswordPdfDrawer.generatePreview(config, context)
@@ -66,56 +67,91 @@ fun CrosswordGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text("Сложность:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == CrosswordDifficulty.EASY, onClick = { config = config.copy(difficulty = CrosswordDifficulty.EASY) })
-                        Text("Легко — 4 слова (3-4 буквы)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == CrosswordDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = CrosswordDifficulty.MEDIUM) })
-                        Text("Средне — 5 слов (до 5 букв)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == CrosswordDifficulty.HARD, onClick = { config = config.copy(difficulty = CrosswordDifficulty.HARD) })
-                        Text("Сложно — до 7 слов (плотная сетка)")
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сложность", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == CrosswordDifficulty.EASY, onClick = { config = config.copy(difficulty = CrosswordDifficulty.EASY) })
+                                Text("Легко — 4 слова (3-4 буквы)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == CrosswordDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = CrosswordDifficulty.MEDIUM) })
+                                Text("Средне — 5 слов (до 5 букв)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == CrosswordDifficulty.HARD, onClick = { config = config.copy(difficulty = CrosswordDifficulty.HARD) })
+                                Text("Сложно — до 7 слов (плотная сетка)")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showWordsInClues, onCheckedChange = { config = config.copy(showWordsInClues = it) })
-                    Text("Показать слова рядом с картинками")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
-                    Text("Добавить лист с ответами")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Кроссвордов на лист:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2).forEach { count ->
-                        FilterChip(
-                            selected = config.perPage == count,
-                            onClick = { config = config.copy(perPage = count) },
-                            label = { Text("$count") }
-                        )
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Опции", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showWordsInClues, onCheckedChange = { config = config.copy(showWordsInClues = it) })
+                            Text("Показать слова рядом с картинками")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
+                            Text("Добавить лист с ответами")
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    if (previewPages.size > 1) {
-                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Кроссвордов на лист", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2).forEach { count ->
+                                FilterChip(
+                                    selected = config.perPage == count,
+                                    onClick = { config = config.copy(perPage = count) },
+                                    label = { Text("$count") }
+                                )
+                            }
+                        }
                     }
                 }
-                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                            if (previewPages.size > 1) {
+                                Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                            }
+                        }
+                        Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    }
+                }
             }
 
             item {
@@ -131,7 +167,6 @@ fun CrosswordGeneratorScreen(onBack: () -> Unit) {
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
