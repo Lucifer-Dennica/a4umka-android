@@ -178,7 +178,7 @@ fun RibbonGeneratorScreen(
                 }
             }
 
-            // БЛОК: Фон листа
+            // БЛОК: Фон листа и шрифт
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -190,6 +190,14 @@ fun RibbonGeneratorScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = config.bgColor == RibbonBgColor.WHITE, onClick = { config = config.copy(bgColor = RibbonBgColor.WHITE) }, label = { Text("Белый") })
                             FilterChip(selected = config.bgColor == RibbonBgColor.PEACH, onClick = { config = config.copy(bgColor = RibbonBgColor.PEACH) }, label = { Text("Цветной") })
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Шрифт букв", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.font == RibbonFont.REGULAR, onClick = { config = config.copy(font = RibbonFont.REGULAR) }, label = { Text("Обычный") })
+                            FilterChip(selected = config.font == RibbonFont.CURSIVE, onClick = { config = config.copy(font = RibbonFont.CURSIVE) }, label = { Text("Письменный") })
                         }
                     }
                 }
@@ -292,22 +300,58 @@ fun RibbonGeneratorScreen(
                         .padding(16.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text("Лента букв", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("Лента букв — распечатать для начальной школы", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Лента букв помогает запомнить, какие буквы обозначают гласные и согласные звуки, а также звонкие и глухие согласные.\n\n" +
-                        "• Красные клетки — гласные: А О У Ы Э (после твёрдых), Я Ё Ю И Е (после мягких).\n" +
-                        "• Синие клетки — всегда твёрдые согласные: Ж Ш Ц.\n" +
-                        "• Зелёные клетки — всегда мягкие согласные: Й Ч Щ.\n" +
-                        "• Сине-зелёные клетки — согласные, которые могут быть и твёрдыми, и мягкими.\n" +
-                        "• Ъ и Ь не обозначают звуков — они вынесены в конец.\n\n" +
-                        "Виды листов:\n" +
-                        "• Лента на парту — вся лента на одном листе, чтобы положить перед собой.\n" +
-                        "• Лента на доску — 4 листа с крупными буквами, чтобы повесить в ряд.\n" +
-                        "• Раскрась ленту — ребёнок сам раскрашивает клетки по правилам.\n" +
-                        "• Впиши пропущенные буквы — клетки пустые, нужно вписать буквы по подсказке цвета и соседей.",
+                        "Генератор печатает ленту букв и звуков, как в букваре для 1 класса: все 33 буквы в одной таблице, разложенные по звукам. Гласные — на красном, согласные — звонкие сверху, глухие снизу, всегда твёрдые синим, всегда мягкие зелёным.",
                         style = MaterialTheme.typography.bodyLarge
                     )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Как устроена лента", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Гласные — на красном поле. Верхний ряд — А, О, У, Ы, Э: после них согласные звучат твёрдо. Нижний ряд — Я, Ё, Ю, И, Е: после них согласные звучат мягко.\n\n" +
+                        "Звонкие и глухие согласные. Над согласными стоит колокольчик 🔔 — это звонкие, внизу наушники 🎧 — глухие. Пары стоят друг над другом: Б и П, В и Ф, Г и К, Д и Т, Ж и Ш, З и С.\n\n" +
+                        "Непарные согласные: звонкие Л, М, Н, Р, Й — только в верхнем ряду, глухие Х, Ц, Ч, Щ — только в нижнем.\n\n" +
+                        "Твёрдые и мягкие. Ж, Ш, Ц — всегда твёрдые, клетка синяя. Й, Ч, Щ — всегда мягкие, клетка зелёная. Остальные согласные бывают и твёрдыми, и мягкими — клетка сине-зелёная.\n\n" +
+                        "Ь и Ъ звуков не обозначают — белая клетка.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Виды листов", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "• Лента на парту — вся лента на одном альбомном листе A4 с подсказками: что значит каждый цвет и значок. Удобно положить на стол или вклеить в тетрадь.\n\n" +
+                        "• Лента на доску — крупные буквы на четырёх листах: гласные, звонкие непарные, пары звонкий — глухой, глухие непарные с Ь и Ъ. Листы вешаются в ряд и складываются в длинную ленту для класса.\n\n" +
+                        "• Раскрась ленту букв — контур ленты. Ребёнок сам раскрашивает клетки по правилам и так запоминает, какая буква к какой группе относится. На втором листе — ответ.\n\n" +
+                        "• Впиши пропущенные буквы — цветная лента, где спрятаны 8, 16 или все 33 буквы. Цвет клетки и соседи подсказывают, какая буква должна стоять. Можно показать потерявшиеся буквы под лентой. Ответы — на втором листе.\n\n" +
+                        "Буквы можно печатать парой «Аа», только заглавными или только строчными.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Для какого возраста", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "5–6 лет — лента на стене у стола. Ребёнок привыкает, что гласные «красные», и сам начинает показывать их в словах.\n\n" +
+                        "1 класс — главный помощник при звуковом анализе: ученик ищет букву на ленте и сразу видит, звонкий звук или глухой, твёрдый или мягкий.\n\n" +
+                        "2–3 класс — задания «Раскрась» и «Впиши» для повторения парных согласных и правил о твёрдости и мягкости.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Советы родителям и учителям", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "• Повесьте ленту там, где ребёнок делает уроки, — к ней будут обращаться чаще, чем к учебнику.\n\n" +
+                        "• Начните с гласных: найдите на ленте все красные клетки и вместе их «спойте».\n\n" +
+                        "• Звонкие и глухие проверяйте ладонью на горле: на звонких горло дрожит, на глухих — нет.\n\n" +
+                        "• «Впиши пропущенные буквы» начинайте с 8 букв и подсказкой, потом переходите к 16 и ко всей ленте.",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
