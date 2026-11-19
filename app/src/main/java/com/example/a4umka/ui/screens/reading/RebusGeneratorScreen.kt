@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -78,77 +79,116 @@ fun RebusGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                OutlinedTextField(
-                    value = config.title,
-                    onValueChange = { config = config.copy(title = it) },
-                    label = { Text("Заголовок листа") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Заголовок листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = config.title,
+                            onValueChange = { config = config.copy(title = it) },
+                            label = { Text("Заголовок листа") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Ваши слова или короткие фразы:", style = MaterialTheme.typography.labelLarge)
-                OutlinedTextField(
-                    value = config.wordsInput,
-                    onValueChange = { config = config.copy(wordsInput = it) },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    placeholder = { Text("ШКОЛА\nДРУЖБА") }
-                )
-                Text("Слов: ${words.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Слова или короткие фразы", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = config.wordsInput,
+                            onValueChange = { config = config.copy(wordsInput = it) },
+                            modifier = Modifier.fillMaxWidth().height(120.dp),
+                            placeholder = { Text("ШКОЛА\nДРУЖБА") }
+                        )
+                        Text("Слов: ${words.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                var layoutExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = layoutExpanded, onExpandedChange = { layoutExpanded = it }) {
-                    OutlinedTextField(
-                        value = when(config.cardsPerRow) { 6 -> "6 в ряд — компактно"; 5 -> "5 в ряд — просторнее"; 4 -> "4 в ряд — крупные"; else -> "6 в ряд" },
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Картинок в ряду") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = layoutExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = layoutExpanded, onDismissRequest = { layoutExpanded = false }) {
-                        listOf(6 to "6 в ряд — компактно", 5 to "5 в ряд — просторнее", 4 to "4 в ряд — крупные").forEach { (num, text) ->
-                            DropdownMenuItem(text = { Text(text) }, onClick = { config = config.copy(cardsPerRow = num); layoutExpanded = false })
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Компоновка страницы", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        var layoutExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = layoutExpanded, onExpandedChange = { layoutExpanded = it }) {
+                            OutlinedTextField(
+                                value = when(config.cardsPerRow) { 6 -> "6 в ряд — компактно"; 5 -> "5 в ряд — просторнее"; 4 -> "4 в ряд — крупные"; else -> "6 в ряд" },
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Картинок в ряду") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = layoutExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = layoutExpanded, onDismissRequest = { layoutExpanded = false }) {
+                                listOf(6 to "6 в ряд — компактно", 5 to "5 в ряд — просторнее", 4 to "4 в ряд — крупные").forEach { (num, text) ->
+                                    DropdownMenuItem(text = { Text(text) }, onClick = { config = config.copy(cardsPerRow = num); layoutExpanded = false })
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        var perPageExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = perPageExpanded, onExpandedChange = { perPageExpanded = it }) {
+                            OutlinedTextField(
+                                value = "Ребусов на лист: ${config.wordsPerPage}",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Экономия бумаги (таблицей)") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = perPageExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = perPageExpanded, onDismissRequest = { perPageExpanded = false }) {
+                                listOf(1, 2, 4).forEach { num ->
+                                    DropdownMenuItem(text = { Text("$num на лист") }, onClick = { config = config.copy(wordsPerPage = num); perPageExpanded = false })
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
-                var perPageExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = perPageExpanded, onExpandedChange = { perPageExpanded = it }) {
-                    OutlinedTextField(
-                        value = "Ребусов на лист: ${config.wordsPerPage}",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Экономия бумаги (таблицей)") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = perPageExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = perPageExpanded, onDismissRequest = { perPageExpanded = false }) {
-                        listOf(1, 2, 4).forEach { num ->
-                            DropdownMenuItem(text = { Text("$num на лист") }, onClick = { config = config.copy(wordsPerPage = num); perPageExpanded = false })
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Параметры печати", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showHints, onCheckedChange = { config = config.copy(showHints = it) })
+                            Text("Подписать названия картинок", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
+                            Text("Добавить листы ответов", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
+                            Text("Чёрно-белая печать", fontSize = 14.sp)
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showHints, onCheckedChange = { config = config.copy(showHints = it) })
-                    Text("Подписать названия картинок", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.addAnswers, onCheckedChange = { config = config.copy(addAnswers = it) })
-                    Text("Добавить листы ответов", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
-                    Text("Чёрно-белая печать", fontSize = 14.sp)
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+            item {
                 if (words.isNotEmpty()) {
                     Button(
                         onClick = { onPlayInteractive(words) },
@@ -159,33 +199,38 @@ fun RebusGeneratorScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Решать на экране")
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    if (previewPages.size > 1) {
-                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
-                    }
-                }
-                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
             item {
-                if (previewPages.isNotEmpty()) {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(RebusPdfDrawer.PAGE_WIDTH / RebusPdfDrawer.PAGE_HEIGHT)
-                    ) { page ->
-                        if (page < previewPages.size) {
-                            ZoomableImage(
-                                bitmap = previewPages[page],
-                                modifier = Modifier.fillMaxSize()
-                            )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                            if (previewPages.size > 1) {
+                                Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                            }
+                        }
+                        Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (previewPages.isNotEmpty()) {
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier.fillMaxWidth().aspectRatio(RebusPdfDrawer.PAGE_WIDTH / RebusPdfDrawer.PAGE_HEIGHT)
+                            ) { page ->
+                                if (page < previewPages.size) {
+                                    ZoomableImage(
+                                        bitmap = previewPages[page],
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(32.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
