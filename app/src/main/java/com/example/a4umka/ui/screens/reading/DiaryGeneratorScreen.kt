@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -72,176 +73,207 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Вид страницы и данные ученика
             item {
-                Text("Вид страницы книги:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.pageType == DiaryPageType.SCHOOL, onClick = { config = config.copy(pageType = DiaryPageType.SCHOOL) }, label = { Text("Школьная") })
-                    FilterChip(selected = config.pageType == DiaryPageType.PICTURES, onClick = { config = config.copy(pageType = DiaryPageType.PICTURES) }, label = { Text("В картинках") })
-                }
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Вид страницы книги", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.pageType == DiaryPageType.SCHOOL, onClick = { config = config.copy(pageType = DiaryPageType.SCHOOL) }, label = { Text("Школьная") })
+                            FilterChip(selected = config.pageType == DiaryPageType.PICTURES, onClick = { config = config.copy(pageType = DiaryPageType.PICTURES) }, label = { Text("В картинках") })
+                        }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = config.childName,
-                        onValueChange = { config = config.copy(childName = it) },
-                        label = { Text("Имя") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = config.childGrade,
-                        onValueChange = { config = config.copy(childGrade = it) },
-                        label = { Text("Класс") },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = config.academicYear,
-                    onValueChange = { config = config.copy(academicYear = it) },
-                    label = { Text("Учебный год") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    var pagesExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = pagesExpanded, onExpandedChange = { pagesExpanded = it }, modifier = Modifier.weight(1f)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = config.childName,
+                                onValueChange = { config = config.copy(childName = it) },
+                                label = { Text("Имя") },
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = config.childGrade,
+                                onValueChange = { config = config.copy(childGrade = it) },
+                                label = { Text("Класс") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                         OutlinedTextField(
-                            value = "Стр: ${config.bookPagesCount}", onValueChange = {}, readOnly = true,
-                            label = { Text("Страниц для книг", fontSize = 12.sp) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = pagesExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            value = config.academicYear,
+                            onValueChange = { config = config.copy(academicYear = it) },
+                            label = { Text("Учебный год") },
+                            modifier = Modifier.fillMaxWidth()
                         )
-                        ExposedDropdownMenu(expanded = pagesExpanded, onDismissRequest = { pagesExpanded = false }) {
-                            listOf(4, 8, 12, 16).forEach { count ->
-                                DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(bookPagesCount = count); pagesExpanded = false })
-                            }
-                        }
-                    }
-
-                    var rulingExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = rulingExpanded, onExpandedChange = { rulingExpanded = it }, modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = when(config.ruling) {
-                                DiaryRuling.STANDARD -> "Обычная линейка"
-                                DiaryRuling.WIDE -> "Широкая линейка"
-                                DiaryRuling.GRID -> "Клетка"
-                                DiaryRuling.NONE -> "Без линий"
-                            }, onValueChange = {}, readOnly = true,
-                            label = { Text("Разлиновка", fontSize = 12.sp) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = rulingExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(expanded = rulingExpanded, onDismissRequest = { rulingExpanded = false }) {
-                            listOf(
-                                DiaryRuling.STANDARD to "Обычная",
-                                DiaryRuling.WIDE to "Широкая (1 класс)",
-                                DiaryRuling.GRID to "Клетка",
-                                DiaryRuling.NONE to "Без линий"
-                            ).forEach { (type, name) ->
-                                DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(ruling = type); rulingExpanded = false })
-                            }
-                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            // БЛОК: Страницы и оформление
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Страницы и оформление", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
 
-                var colorExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = colorExpanded, onExpandedChange = { colorExpanded = it }) {
-                    OutlinedTextField(
-                        value = when(config.color) {
-                            DiaryColor.PINK -> "Розовый"
-                            DiaryColor.GREEN -> "Зеленый"
-                            DiaryColor.BLUE -> "Синий"
-                            DiaryColor.ORANGE -> "Оранжевый"
-                            DiaryColor.BLACK_WHITE -> "Черно-белый"
-                        }, onValueChange = {}, readOnly = true,
-                        label = { Text("Цвет листа") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = colorExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = colorExpanded, onDismissRequest = { colorExpanded = false }) {
-                        listOf(
-                            DiaryColor.PINK to "Розовый",
-                            DiaryColor.GREEN to "Зеленый",
-                            DiaryColor.BLUE to "Синий",
-                            DiaryColor.ORANGE to "Оранжевый",
-                            DiaryColor.BLACK_WHITE to "Черно-белый"
-                        ).forEach { (type, name) ->
-                            DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(color = type); colorExpanded = false })
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Что ещё вложить в дневник:", style = MaterialTheme.typography.labelLarge)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.includeTitlePage, onCheckedChange = { config = config.copy(includeTitlePage = it) })
-                    Text("Титульный лист", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.includeBookList, onCheckedChange = { config = config.copy(includeBookList = it) })
-                    Text("Список прочитанного", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.includeSpeedTest, onCheckedChange = { config = config.copy(includeSpeedTest = it) })
-                    Text("Лист техники чтения", fontSize = 14.sp)
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                if (config.pageType == DiaryPageType.SCHOOL) {
-                    Text("Что печатать на странице книги:", style = MaterialTheme.typography.labelLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val fields = listOf(
-                            "Автор" to config.showAuthor,
-                            "Название" to config.showTitle,
-                            "Жанр" to config.showGenre,
-                            "Сколько страниц" to config.showPages,
-                            "Начал/закончил" to config.showDates,
-                            "Главные герои" to config.showCharacters,
-                            "О чём книга" to config.showPlot,
-                            "Что запомнилось" to config.showMemorable,
-                            "Чему научила" to config.showLesson,
-                            "Новые слова" to config.showNewWords,
-                            "Рисунок" to config.showDrawing,
-                            "Оценка" to config.showRating
-                        )
-                        fields.forEachIndexed { index, (name, checked) ->
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.widthIn(max = 160.dp)) {
-                                Checkbox(checked = checked, onCheckedChange = {
-                                    config = when(index) {
-                                        0 -> config.copy(showAuthor = it)
-                                        1 -> config.copy(showTitle = it)
-                                        2 -> config.copy(showGenre = it)
-                                        3 -> config.copy(showPages = it)
-                                        4 -> config.copy(showDates = it)
-                                        5 -> config.copy(showCharacters = it)
-                                        6 -> config.copy(showPlot = it)
-                                        7 -> config.copy(showMemorable = it)
-                                        8 -> config.copy(showLesson = it)
-                                        9 -> config.copy(showNewWords = it)
-                                        10 -> config.copy(showDrawing = it)
-                                        11 -> config.copy(showRating = it)
-                                        else -> config
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            var pagesExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(expanded = pagesExpanded, onExpandedChange = { pagesExpanded = it }, modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = "Стр: ${config.bookPagesCount}", onValueChange = {}, readOnly = true,
+                                    label = { Text("Страниц для книг", fontSize = 12.sp) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = pagesExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(expanded = pagesExpanded, onDismissRequest = { pagesExpanded = false }) {
+                                    listOf(4, 8, 12, 16).forEach { count ->
+                                        DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(bookPagesCount = count); pagesExpanded = false })
                                     }
-                                })
-                                Text(name, fontSize = 14.sp)
+                                }
+                            }
+
+                            var rulingExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(expanded = rulingExpanded, onExpandedChange = { rulingExpanded = it }, modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = when(config.ruling) {
+                                        DiaryRuling.STANDARD -> "Обычная линейка"
+                                        DiaryRuling.WIDE -> "Широкая линейка"
+                                        DiaryRuling.GRID -> "Клетка"
+                                        DiaryRuling.NONE -> "Без линий"
+                                    }, onValueChange = {}, readOnly = true,
+                                    label = { Text("Разлиновка", fontSize = 12.sp) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = rulingExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(expanded = rulingExpanded, onDismissRequest = { rulingExpanded = false }) {
+                                    listOf(
+                                        DiaryRuling.STANDARD to "Обычная",
+                                        DiaryRuling.WIDE to "Широкая (1 класс)",
+                                        DiaryRuling.GRID to "Клетка",
+                                        DiaryRuling.NONE to "Без линий"
+                                    ).forEach { (type, name) ->
+                                        DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(ruling = type); rulingExpanded = false })
+                                    }
+                                }
+                            }
+                        }
+
+                        var colorExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = colorExpanded, onExpandedChange = { colorExpanded = it }) {
+                            OutlinedTextField(
+                                value = when(config.color) {
+                                    DiaryColor.PINK -> "Розовый"
+                                    DiaryColor.GREEN -> "Зеленый"
+                                    DiaryColor.BLUE -> "Синий"
+                                    DiaryColor.ORANGE -> "Оранжевый"
+                                    DiaryColor.BLACK_WHITE -> "Черно-белый"
+                                }, onValueChange = {}, readOnly = true,
+                                label = { Text("Цвет листа") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = colorExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(expanded = colorExpanded, onDismissRequest = { colorExpanded = false }) {
+                                listOf(
+                                    DiaryColor.PINK to "Розовый",
+                                    DiaryColor.GREEN to "Зеленый",
+                                    DiaryColor.BLUE to "Синий",
+                                    DiaryColor.ORANGE to "Оранжевый",
+                                    DiaryColor.BLACK_WHITE to "Черно-белый"
+                                ).forEach { (type, name) ->
+                                    DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(color = type); colorExpanded = false })
+                                }
                             }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Что ещё вложить в дневник
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Что ещё вложить в дневник", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.includeTitlePage, onCheckedChange = { config = config.copy(includeTitlePage = it) })
+                            Text("Титульный лист", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.includeBookList, onCheckedChange = { config = config.copy(includeBookList = it) })
+                            Text("Список прочитанного", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.includeSpeedTest, onCheckedChange = { config = config.copy(includeSpeedTest = it) })
+                            Text("Лист техники чтения", fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+
+            // БЛОК: Что печатать на странице книги (только для школьного типа)
+            if (config.pageType == DiaryPageType.SCHOOL) {
+                item {
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Что печатать на странице книги", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val fields = listOf(
+                                    "Автор" to config.showAuthor,
+                                    "Название" to config.showTitle,
+                                    "Жанр" to config.showGenre,
+                                    "Сколько страниц" to config.showPages,
+                                    "Начал/закончил" to config.showDates,
+                                    "Главные герои" to config.showCharacters,
+                                    "О чём книга" to config.showPlot,
+                                    "Что запомнилось" to config.showMemorable,
+                                    "Чему научила" to config.showLesson,
+                                    "Новые слова" to config.showNewWords,
+                                    "Рисунок" to config.showDrawing,
+                                    "Оценка" to config.showRating
+                                )
+                                fields.forEachIndexed { index, (name, checked) ->
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.widthIn(max = 160.dp)) {
+                                        Checkbox(checked = checked, onCheckedChange = {
+                                            config = when(index) {
+                                                0 -> config.copy(showAuthor = it)
+                                                1 -> config.copy(showTitle = it)
+                                                2 -> config.copy(showGenre = it)
+                                                3 -> config.copy(showPages = it)
+                                                4 -> config.copy(showDates = it)
+                                                5 -> config.copy(showCharacters = it)
+                                                6 -> config.copy(showPlot = it)
+                                                7 -> config.copy(showMemorable = it)
+                                                8 -> config.copy(showLesson = it)
+                                                9 -> config.copy(showNewWords = it)
+                                                10 -> config.copy(showDrawing = it)
+                                                11 -> config.copy(showRating = it)
+                                                else -> config
+                                            }
+                                        })
+                                        Text(name, fontSize = 14.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
