@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -78,64 +79,88 @@ fun LetterMathGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Сложность
             item {
-                Text("Сложность:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == LetterMathDifficulty.EASY, onClick = { config = config.copy(difficulty = LetterMathDifficulty.EASY) })
-                        Text("Лёгкие (3–4 буквы, 1 лишняя)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == LetterMathDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = LetterMathDifficulty.MEDIUM) })
-                        Text("Средние (4–5 букв, 2 лишние)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == LetterMathDifficulty.HARD, onClick = { config = config.copy(difficulty = LetterMathDifficulty.HARD) })
-                        Text("Трудные (5–7 букв, 3 лишние)")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Картинка-подсказка:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.hint == LetterMathHint.NONE, onClick = { config = config.copy(hint = LetterMathHint.NONE) })
-                        Text("Без картинки (сложнее)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.hint == LetterMathHint.PICTURE, onClick = { config = config.copy(hint = LetterMathHint.PICTURE) })
-                        Text("С картинкой (подсказка)")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сколько листов:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2, 3).forEach { count ->
-                        FilterChip(
-                            selected = config.pagesCount == count,
-                            onClick = { config = config.copy(pagesCount = count) },
-                            label = { Text("$count") }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { onPlayInteractive(config) },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Решать на экране")
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Сложность", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.difficulty == LetterMathDifficulty.EASY, onClick = { config = config.copy(difficulty = LetterMathDifficulty.EASY) })
+                            Text("Лёгкие (3–4 буквы, 1 лишняя)")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.difficulty == LetterMathDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = LetterMathDifficulty.MEDIUM) })
+                            Text("Средние (4–5 букв, 2 лишние)")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.difficulty == LetterMathDifficulty.HARD, onClick = { config = config.copy(difficulty = LetterMathDifficulty.HARD) })
+                            Text("Трудные (5–7 букв, 3 лишние)")
+                        }
+                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Картинка-подсказка
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Картинка-подсказка", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.hint == LetterMathHint.NONE, onClick = { config = config.copy(hint = LetterMathHint.NONE) })
+                            Text("Без картинки (сложнее)")
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = config.hint == LetterMathHint.PICTURE, onClick = { config = config.copy(hint = LetterMathHint.PICTURE) })
+                            Text("С картинкой (подсказка)")
+                        }
+                    }
+                }
+            }
+
+            // БЛОК: Сколько листов и интерактивный режим
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Сколько листов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2, 3).forEach { count ->
+                                FilterChip(
+                                    selected = config.pagesCount == count,
+                                    onClick = { config = config.copy(pagesCount = count) },
+                                    label = { Text("$count") }
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { onPlayInteractive(config) },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Решать на экране")
+                        }
+                    }
+                }
+            }
+
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
