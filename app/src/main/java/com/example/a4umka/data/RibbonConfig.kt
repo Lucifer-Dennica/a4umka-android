@@ -1,8 +1,9 @@
 package com.example.a4umka.data
 
-enum class RibbonMode { DESK, MISSING, COLORING }
+enum class RibbonMode { DESK, BOARD, MISSING, COLORING }
 enum class RibbonCase { BOTH, UPPERCASE, LOWERCASE }
 enum class MissingCount { EIGHT, SIXTEEN, ALL }
+enum class RibbonBgColor { WHITE, PEACH }
 
 data class RibbonConfig(
     val mode: RibbonMode = RibbonMode.DESK,
@@ -10,5 +11,6 @@ data class RibbonConfig(
     val missingCount: MissingCount = MissingCount.EIGHT,
     val showHint: Boolean = true,
     val showAnswers: Boolean = false,
-    val seed: Long = System.currentTimeMillis() // <-- ДОБАВЛЕНО: для генерации вариантов
+    val bgColor: RibbonBgColor = RibbonBgColor.WHITE,
+    val seed: Long = System.currentTimeMillis()
 )
