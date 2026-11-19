@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -86,121 +87,140 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Источник текста
             item {
-                Text("Источник текста:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.source == SyllableSource.READY, onClick = { config = config.copy(source = SyllableSource.READY) }, label = { Text("Готовый текст") })
-                    FilterChip(selected = config.source == SyllableSource.CUSTOM, onClick = { config = config.copy(source = SyllableSource.CUSTOM) }, label = { Text("Свой текст") })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (config.source == SyllableSource.READY) {
-                    Text("← Листайте вкладки →", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(SyllableData.categories) { category ->
-                            FilterChip(
-                                selected = selectedCategory == category,
-                                onClick = { selectedCategory = category },
-                                label = { Text(category.name) }
-                            )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Источник текста", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.source == SyllableSource.READY, onClick = { config = config.copy(source = SyllableSource.READY) }, label = { Text("Готовый текст") })
+                            FilterChip(selected = config.source == SyllableSource.CUSTOM, onClick = { config = config.copy(source = SyllableSource.CUSTOM) }, label = { Text("Свой текст") })
                         }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        selectedCategory.texts.forEach { textObj ->
-                            val isSelected = config.selectedTexts.contains(textObj)
-                            // ИСПРАВЛЕНИЕ: ElevatedCard не поддерживает параметр border.
-                            // Используем Modifier.border для условной рамки.
-                            ElevatedCard(
-                                onClick = {
-                                    if (config.isMultiSelectMode) {
-                                        val newList = config.selectedTexts.toMutableList()
-                                        if (isSelected) newList.remove(textObj) else newList.add(textObj)
-                                        config = config.copy(selectedTexts = newList)
-                                    } else {
-                                        config = config.copy(selectedTexts = listOf(textObj))
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .then(
-                                        if (isSelected) Modifier.border(
-                                            2.dp,
-                                            MaterialTheme.colorScheme.primary,
-                                            CardDefaults.elevatedShape
-                                        ) else Modifier
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (config.source == SyllableSource.READY) {
+                            Text("← Листайте вкладки →", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(SyllableData.categories) { category ->
+                                    FilterChip(
+                                        selected = selectedCategory == category,
+                                        onClick = { selectedCategory = category },
+                                        label = { Text(category.name) }
                                     )
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(textObj.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                        if (textObj.questions.isNotEmpty()) {
-                                            Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(4.dp)) {
-                                                Text("? вопросы", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
-                                            }
-                                        }
-                                    }
-                                    Text(textObj.text.take(40).replace("\n", " ") + "...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                                 }
                             }
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                selectedCategory.texts.forEach { textObj ->
+                                    val isSelected = config.selectedTexts.contains(textObj)
+                                    // ИСПРАВЛЕНИЕ: ElevatedCard не поддерживает параметр border.
+                                    // Используем Modifier.border для условной рамки.
+                                    ElevatedCard(
+                                        onClick = {
+                                            if (config.isMultiSelectMode) {
+                                                val newList = config.selectedTexts.toMutableList()
+                                                if (isSelected) newList.remove(textObj) else newList.add(textObj)
+                                                config = config.copy(selectedTexts = newList)
+                                            } else {
+                                                config = config.copy(selectedTexts = listOf(textObj))
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .then(
+                                                if (isSelected) Modifier.border(
+                                                    2.dp,
+                                                    MaterialTheme.colorScheme.primary,
+                                                    CardDefaults.elevatedShape
+                                                ) else Modifier
+                                            )
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(textObj.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                                if (textObj.questions.isNotEmpty()) {
+                                                    Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(4.dp)) {
+                                                        Text("? вопросы", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                                                    }
+                                                }
+                                            }
+                                            Text(textObj.text.take(40).replace("\n", " ") + "...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            OutlinedTextField(value = config.customTitle, onValueChange = { config = config.copy(customTitle = it) }, label = { Text("Название рассказа") }, modifier = Modifier.fillMaxWidth())
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(value = config.customText, onValueChange = { config = config.copy(customText = it) }, label = { Text("Текст рассказа") }, modifier = Modifier.fillMaxWidth().height(150.dp), maxLines = 8)
                         }
                     }
-                } else {
-                    OutlinedTextField(value = config.customTitle, onValueChange = { config = config.copy(customTitle = it) }, label = { Text("Название рассказа") }, modifier = Modifier.fillMaxWidth())
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(value = config.customText, onValueChange = { config = config.copy(customText = it) }, label = { Text("Текст рассказа") }, modifier = Modifier.fillMaxWidth().height(150.dp), maxLines = 8)
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
-                if (config.source == SyllableSource.READY) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Выбрать несколько вариантов")
-                            Text("Печать нескольких текстов подряд", fontSize = 12.sp, color = Color.Gray)
+            // БЛОК: Настройки печати
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Настройки печати", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (config.source == SyllableSource.READY) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Выбрать несколько вариантов")
+                                    Text("Печать нескольких текстов подряд", fontSize = 12.sp, color = Color.Gray)
+                                }
+                                Switch(checked = config.isMultiSelectMode, onCheckedChange = { isChecked ->
+                                    config = config.copy(isMultiSelectMode = isChecked, selectedTexts = if (!isChecked && config.selectedTexts.size > 1) listOf(config.selectedTexts.first()) else config.selectedTexts)
+                                })
+                            }
                         }
-                        Switch(checked = config.isMultiSelectMode, onCheckedChange = { isChecked ->
-                            config = config.copy(isMultiSelectMode = isChecked, selectedTexts = if (!isChecked && config.selectedTexts.size > 1) listOf(config.selectedTexts.first()) else config.selectedTexts)
-                        })
+
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
+                            Slider(
+                                value = config.fontSize,
+                                onValueChange = { config = config.copy(fontSize = it) },
+                                valueRange = 16f..40f,
+                                steps = 6
+                            )
+                        }
+
+                        if (config.isMultiSelectMode && config.selectedTexts.size > 1) {
+                            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                Text("Отступ между текстами: ${config.textSpacing.toInt()}", fontSize = 14.sp)
+                                Slider(
+                                    value = config.textSpacing,
+                                    onValueChange = { config = config.copy(textSpacing = it) },
+                                    valueRange = 20f..150f
+                                )
+                            }
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Вопросы по тексту", modifier = Modifier.weight(1f))
+                            Switch(checked = config.showQuestions, onCheckedChange = { config = config.copy(showQuestions = it) })
+                        }
                     }
                 }
+            }
 
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
-                    Slider(
-                        value = config.fontSize,
-                        onValueChange = { config = config.copy(fontSize = it) },
-                        valueRange = 16f..40f,
-                        steps = 6
-                    )
-                }
-
-                if (config.isMultiSelectMode && config.selectedTexts.size > 1) {
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text("Отступ между текстами: ${config.textSpacing.toInt()}", fontSize = 14.sp)
-                        Slider(
-                            value = config.textSpacing,
-                            onValueChange = { config = config.copy(textSpacing = it) },
-                            valueRange = 20f..150f
-                        )
-                    }
-                }
-
+            // ПРЕДПРОСМОТР (4K)
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Вопросы по тексту", modifier = Modifier.weight(1f))
-                    Switch(checked = config.showQuestions, onCheckedChange = { config = config.copy(showQuestions = it) })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
