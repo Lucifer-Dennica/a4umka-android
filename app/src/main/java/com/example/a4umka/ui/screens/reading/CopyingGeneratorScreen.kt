@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -102,66 +103,69 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Класс и фильтры
             item {
-                Text("Класс:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2, 3, 4).forEach { grade ->
-                        FilterChip(
-                            selected = config.grade == grade,
-                            onClick = { config = config.copy(grade = grade, selectedStories = emptyList()) },
-                            label = { Text(grade.toString()) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    var volExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = volExpanded, onExpandedChange = { volExpanded = it }, modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = volumeFilter, onValueChange = {}, readOnly = true,
-                            label = { Text("Объём", fontSize = 12.sp) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = volExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(expanded = volExpanded, onDismissRequest = { volExpanded = false }) {
-                            listOf("Любой объём", "До 50 слов", "Больше 50 слов").forEach { opt ->
-                                DropdownMenuItem(text = { Text(opt) }, onClick = { volumeFilter = opt; volExpanded = false })
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Класс", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2, 3, 4).forEach { grade ->
+                                FilterChip(
+                                    selected = config.grade == grade,
+                                    onClick = { config = config.copy(grade = grade, selectedStories = emptyList()) },
+                                    label = { Text(grade.toString()) }
+                                )
                             }
                         }
-                    }
-                    var themeExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }, modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = themeFilter, onValueChange = {}, readOnly = true,
-                            label = { Text("Тема", fontSize = 12.sp) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
-                            listOf("Все темы", "Природа", "Дом").forEach { opt ->
-                                DropdownMenuItem(text = { Text(opt) }, onClick = { themeFilter = opt; themeExpanded = false })
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            var volExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(expanded = volExpanded, onExpandedChange = { volExpanded = it }, modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = volumeFilter, onValueChange = {}, readOnly = true,
+                                    label = { Text("Объём", fontSize = 12.sp) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = volExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(expanded = volExpanded, onDismissRequest = { volExpanded = false }) {
+                                    listOf("Любой объём", "До 50 слов", "Больше 50 слов").forEach { opt ->
+                                        DropdownMenuItem(text = { Text(opt) }, onClick = { volumeFilter = opt; volExpanded = false })
+                                    }
+                                }
+                            }
+                            var themeExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }, modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = themeFilter, onValueChange = {}, readOnly = true,
+                                    label = { Text("Тема", fontSize = 12.sp) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(expanded = themeExpanded, onDismissRequest = { themeExpanded = false }) {
+                                    listOf("Все темы", "Природа", "Дом").forEach { opt ->
+                                        DropdownMenuItem(text = { Text(opt) }, onClick = { themeFilter = opt; themeExpanded = false })
+                                    }
+                                }
                             }
                         }
+
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            label = { Text("Поиск по названию или тексту") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text("Подходит: ${filteredStories.size}. Выбрано: ${config.selectedStories.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text("Поиск по названию или тексту") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Подходит: ${filteredStories.size}. Выбрано: ${config.selectedStories.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
             items(filteredStories, key = { it.id }) { story ->
@@ -172,7 +176,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                         if (isSelected) newList.remove(story) else newList.add(story)
                         config = config.copy(selectedStories = newList)
                     },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
                     )
@@ -188,95 +192,96 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
+            // БЛОК: Как работаем и настройки листа
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Как работаем", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.mode == CopyingMode.COPYING, onClick = { config = config.copy(mode = CopyingMode.COPYING) }, label = { Text("Списываем") })
+                            FilterChip(selected = config.mode == CopyingMode.DICTATION, onClick = { config = config.copy(mode = CopyingMode.DICTATION) }, label = { Text("Диктант") })
+                        }
 
-                Text("Как работаем:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = config.mode == CopyingMode.COPYING, onClick = { config = config.copy(mode = CopyingMode.COPYING) }, label = { Text("Списываем") })
-                    FilterChip(selected = config.mode == CopyingMode.DICTATION, onClick = { config = config.copy(mode = CopyingMode.DICTATION) }, label = { Text("Диктант") })
-                }
+                        Text("Настройки листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Настройки листа:", style = MaterialTheme.typography.labelLarge)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Печатать несколько текстов на одном листе")
+                                Text("Для экономии бумаги (тексты идут подряд)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                            }
+                            Switch(checked = config.combineOnOnePage, onCheckedChange = { config = config.copy(combineOnOnePage = it) })
+                        }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Печатать несколько текстов на одном листе")
-                        Text("Для экономии бумаги (тексты идут подряд)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                    }
-                    Switch(checked = config.combineOnOnePage, onCheckedChange = { config = config.copy(combineOnOnePage = it) })
-                }
-
-                if (!config.combineOnOnePage) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        var childrenExpanded by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(expanded = childrenExpanded, onExpandedChange = { childrenExpanded = it }, modifier = Modifier.weight(1f)) {
-                            OutlinedTextField(
-                                value = "Детей: ${config.childrenCount}", onValueChange = {}, readOnly = true,
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childrenExpanded) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth()
-                            )
-                            ExposedDropdownMenu(expanded = childrenExpanded, onDismissRequest = { childrenExpanded = false }) {
-                                listOf(1, 2, 3, 4, 5).forEach { count ->
-                                    DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(childrenCount = count); childrenExpanded = false })
+                        if (!config.combineOnOnePage) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                var childrenExpanded by remember { mutableStateOf(false) }
+                                ExposedDropdownMenuBox(expanded = childrenExpanded, onExpandedChange = { childrenExpanded = it }, modifier = Modifier.weight(1f)) {
+                                    OutlinedTextField(
+                                        value = "Детей: ${config.childrenCount}", onValueChange = {}, readOnly = true,
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = childrenExpanded) },
+                                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                                    )
+                                    ExposedDropdownMenu(expanded = childrenExpanded, onDismissRequest = { childrenExpanded = false }) {
+                                        listOf(1, 2, 3, 4, 5).forEach { count ->
+                                            DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(childrenCount = count); childrenExpanded = false })
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    var stepExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(expanded = stepExpanded, onExpandedChange = { stepExpanded = it }, modifier = Modifier.weight(1f)) {
-                        OutlinedTextField(
-                            value = "Шаг: ${config.lineStep} мм", onValueChange = {}, readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = stepExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(expanded = stepExpanded, onDismissRequest = { stepExpanded = false }) {
-                            listOf(8, 10, 12, 15).forEach { step ->
-                                DropdownMenuItem(text = { Text("$step мм") }, onClick = { config = config.copy(lineStep = step); stepExpanded = false })
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            var stepExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(expanded = stepExpanded, onExpandedChange = { stepExpanded = it }, modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = "Шаг: ${config.lineStep} мм", onValueChange = {}, readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = stepExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(expanded = stepExpanded, onDismissRequest = { stepExpanded = false }) {
+                                    listOf(8, 10, 12, 15).forEach { step ->
+                                        DropdownMenuItem(text = { Text("$step мм") }, onClick = { config = config.copy(lineStep = step); stepExpanded = false })
+                                    }
+                                }
                             }
+                        }
+
+                        OutlinedTextField(
+                            value = config.signature,
+                            onValueChange = { config = config.copy(signature = it) },
+                            label = { Text("Подпись на листе (необязательно)") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Добавить чистый лист для письма", modifier = Modifier.weight(1f))
+                            Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Чёрно-белый вариант", modifier = Modifier.weight(1f))
+                            Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
+                        }
+
+                        Column {
+                            Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
+                            Slider(
+                                value = config.fontSize,
+                                onValueChange = { config = config.copy(fontSize = it) },
+                                valueRange = 12f..24f,
+                                steps = 6
+                            )
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = config.signature,
-                    onValueChange = { config = config.copy(signature = it) },
-                    label = { Text("Подпись на листе (необязательно)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
+            // ПРЕДПРОСМОТР
+            item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Добавить чистый лист для письма", modifier = Modifier.weight(1f))
-                    Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Чёрно-белый вариант", modifier = Modifier.weight(1f))
-                    Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
-                }
-
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
-                    Slider(
-                        value = config.fontSize,
-                        onValueChange = { config = config.copy(fontSize = it) },
-                        valueRange = 12f..24f,
-                        steps = 6
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр листов A4 (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
