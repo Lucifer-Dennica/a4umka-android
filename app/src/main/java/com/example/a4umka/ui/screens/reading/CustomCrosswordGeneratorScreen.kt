@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -44,7 +45,7 @@ fun CustomCrosswordGeneratorScreen(
     var themeExpanded by remember { mutableStateOf(false) }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-    
+
     val pairs = remember(config.wordsInput) { CustomCrosswordData.parseInput(config.wordsInput) }
     val grid = remember(config.seed, pairs) { CustomCrosswordData.generateGrid(pairs, config.seed) }
     val failedWords = grid.failedWords
@@ -85,126 +86,170 @@ fun CustomCrosswordGeneratorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { 
-                            val newTitle = if (config.title == "Мой сканворд") "Мой кроссворд" else config.title
-                            config = config.copy(mode = CrosswordMode.STANDARD, title = newTitle) 
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) { Text("Кроссворд") }
-                    
-                    Button(
-                        onClick = { 
-                            val newTitle = if (config.title == "Мой кроссворд") "Мой сканворд" else config.title
-                            config = config.copy(mode = CrosswordMode.SCANWORD, title = newTitle) 
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) { Text("Сканворд") }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Заголовок листа:", style = MaterialTheme.typography.labelLarge)
-                OutlinedTextField(
-                    value = config.title,
-                    onValueChange = { config = config.copy(title = it) },
+                OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Слова и вопросы (СЛОВО — Вопрос):", style = MaterialTheme.typography.labelLarge)
-                OutlinedTextField(
-                    value = config.wordsInput,
-                    onValueChange = { config = config.copy(wordsInput = it) },
-                    modifier = Modifier.fillMaxWidth().height(150.dp),
-                    placeholder = { Text("ЛИСА — Рыжая плутовка\nКОСМОС — Где летают ракеты") }
-                )
-
-                if (failedWords.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "⚠️ Не удалось вставить слова (нет общих букв): ${failedWords.joinToString(", ")}",
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
-                    OutlinedTextField(
-                        value = "Взять готовую тему (10+ слов)...",
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    // Ограничиваем высоту меню, чтобы оно было скроллируемым
-                    ExposedDropdownMenu(
-                        expanded = themeExpanded, 
-                        onDismissRequest = { themeExpanded = false },
-                        modifier = Modifier.heightIn(max = 300.dp)
-                    ) {
-                        CustomCrosswordData.themes.forEach { (name, text) ->
-                            DropdownMenuItem(
-                                text = { Text(name) },
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Тип кроссворда", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
                                 onClick = {
-                                    config = config.copy(wordsInput = text)
-                                    themeExpanded = false
-                                }
-                            )
+                                    val newTitle = if (config.title == "Мой сканворд") "Мой кроссворд" else config.title
+                                    config = config.copy(mode = CrosswordMode.STANDARD, title = newTitle)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (config.mode == CrosswordMode.STANDARD) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) { Text("Кроссворд") }
+
+                            Button(
+                                onClick = {
+                                    val newTitle = if (config.title == "Мой кроссворд") "Мой сканворд" else config.title
+                                    config = config.copy(mode = CrosswordMode.SCANWORD, title = newTitle)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (config.mode == CrosswordMode.SCANWORD) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) { Text("Сканворд") }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
-                    Text("Добавить лист с ответами")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = { config = config.copy(seed = System.currentTimeMillis()) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Shuffle, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Перемешать сетку")
-                    }
-                    Button(
-                        onClick = { onPlayInteractive(config) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                        enabled = pairs.isNotEmpty()
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Решать на телефоне")
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Заголовок листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = config.title,
+                            onValueChange = { config = config.copy(title = it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    if (previewPages.size > 1) {
-                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Слова и вопросы (СЛОВО — Вопрос)", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = config.wordsInput,
+                            onValueChange = { config = config.copy(wordsInput = it) },
+                            modifier = Modifier.fillMaxWidth().height(150.dp),
+                            placeholder = { Text("ЛИСА — Рыжая плутовка\nКОСМОС — Где летают ракеты") }
+                        )
+
+                        if (failedWords.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "⚠️ Не удалось вставить слова (нет общих букв): ${failedWords.joinToString(", ")}",
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ExposedDropdownMenuBox(expanded = themeExpanded, onExpandedChange = { themeExpanded = it }) {
+                            OutlinedTextField(
+                                value = "Взять готовую тему (10+ слов)...",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            // Ограничиваем высоту меню, чтобы оно было скроллируемым
+                            ExposedDropdownMenu(
+                                expanded = themeExpanded,
+                                onDismissRequest = { themeExpanded = false },
+                                modifier = Modifier.heightIn(max = 300.dp)
+                            ) {
+                                CustomCrosswordData.themes.forEach { (name, text) ->
+                                    DropdownMenuItem(
+                                        text = { Text(name) },
+                                        onClick = {
+                                            config = config.copy(wordsInput = text)
+                                            themeExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
-                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Опции", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showAnswers, onCheckedChange = { config = config.copy(showAnswers = it) })
+                            Text("Добавить лист с ответами")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { config = config.copy(seed = System.currentTimeMillis()) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Shuffle, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Перемешать сетку")
+                            }
+                            Button(
+                                onClick = { onPlayInteractive(config) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                enabled = pairs.isNotEmpty()
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Решать на телефоне")
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                            if (previewPages.size > 1) {
+                                Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                            }
+                        }
+                        Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    }
+                }
             }
 
             item {
@@ -220,7 +265,6 @@ fun CustomCrosswordGeneratorScreen(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
                 } else {
                     Text("Введите слова и вопросы, чтобы увидеть предпросмотр", color = MaterialTheme.colorScheme.error)
                 }
