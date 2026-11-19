@@ -1,10 +1,11 @@
 package com.example.a4umka.ui.screens.reading
 
 import android.graphics.Bitmap
-import android.graphics.Canvas as AndroidCanvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -36,19 +37,13 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(AlphabetConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
 
-    // БИТМАП ДЛЯ ПРЕДПРОСМОТРА — 4K (масштаб ×6 = 3570×5052 px)
-    val previewScale = 6
-    val previewBitmap = remember(config) {
-        val bmp = Bitmap.createBitmap(
-            (AlphabetPdfDrawer.PAGE_WIDTH * previewScale).toInt(),
-            (AlphabetPdfDrawer.PAGE_HEIGHT * previewScale).toInt(),
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = AndroidCanvas(bmp)
-        canvas.scale(previewScale.toFloat(), previewScale.toFloat())
-        AlphabetPdfDrawer.drawLayout(canvas, config, context)
-        bmp
+    // ПРЕДПРОСМОТР — список страниц (для FULL_PAGE_LETTER — несколько, для остальных — одна)
+    var previewPages by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
+    LaunchedEffect(config) {
+        previewPages = AlphabetPdfDrawer.getPreviewPages(config, context)
     }
+
+    val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
         topBar = {
@@ -95,6 +90,7 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                             FilterChip(selected = config.layoutType == AlphabetLayoutType.POSTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.POSTER) }, label = { Text("Плакат") })
                             FilterChip(selected = config.layoutType == AlphabetLayoutType.FLASHCARDS, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FLASHCARDS) }, label = { Text("Карточки") })
                             FilterChip(selected = config.layoutType == AlphabetLayoutType.COLORING, onClick = { config = config.copy(layoutType = AlphabetLayoutType.COLORING) }, label = { Text("Раскраска") })
+                            FilterChip(selected = config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FULL_PAGE_LETTER) }, label = { Text("Буква на лист") })
                         }
 
                         if (config.layoutType == AlphabetLayoutType.FLASHCARDS) {
@@ -105,6 +101,15 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                                     FilterChip(selected = config.cardsPerPage == count, onClick = { config = config.copy(cardsPerPage = count) }, label = { Text("$count") })
                                 }
                             }
+                        }
+
+                        if (config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Каждая буква печатается на отдельном листе — контуром, чтобы обвести, раскрасить или вырезать.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -209,55 +214,67 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
 
             // ПРЕДПРОСМОТР
             item {
-                Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    if (previewPages.size > 1) {
+                        Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                    }
+                }
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    ZoomableImage(
-                        bitmap = previewBitmap,
+                if (previewPages.isNotEmpty()) {
+                    HorizontalPager(
+                        state = pagerState,
                         modifier = Modifier.fillMaxWidth().aspectRatio(AlphabetPdfDrawer.PAGE_WIDTH / AlphabetPdfDrawer.PAGE_HEIGHT)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ElevatedCard(
-                    onClick = { showInfoSheet = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Lightbulb,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Как заниматься по этим листам",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Text(
-                                text = "Советы для родителей и педагогов",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                    ) { page ->
+                        if (page < previewPages.size) {
+                            ZoomableImage(
+                                bitmap = previewPages[page],
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ElevatedCard(
+                        onClick = { showInfoSheet = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lightbulb,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Как заниматься по этим листам",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = "Советы для родителей и педагогов",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
         }
 
@@ -294,7 +311,8 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     Text(
                         "• Плакат: Все выбранные буквы на одном листе. Сетка подстраивается автоматически.\n\n" +
                         "• Карточки: По 1, 2, 4 или 6 карточек на лист с пунктиром под разрез. Из них получаются лото, мемори, «найди букву».\n\n" +
-                        "• Раскраска: Буквы контуром плюс пустое окошко с заданием нарисовать то, что на неё начинается.",
+                        "• Раскраска: Буквы контуром плюс пустое окошко с заданием нарисовать то, что на неё начинается.\n\n" +
+                        "• Буква на лист: каждая буква печатается на отдельном листе — огромным контуром, чтобы обвести, раскрасить или вырезать.",
                         style = MaterialTheme.typography.bodyLarge
                     )
 
