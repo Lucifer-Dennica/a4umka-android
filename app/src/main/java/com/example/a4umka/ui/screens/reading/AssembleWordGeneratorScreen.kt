@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -72,68 +73,101 @@ fun AssembleWordGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Тип задания
             item {
-                Text("Тип задания:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.taskType == AssembleTaskType.CONNECT, onClick = { config = config.copy(taskType = AssembleTaskType.CONNECT) })
-                        Text("Соедини слоги (проводим линии)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.taskType == AssembleTaskType.PICTURE, onClick = { config = config.copy(taskType = AssembleTaskType.PICTURE) })
-                        Text("Собери по картинке (эмодзи + клеточки)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.taskType == AssembleTaskType.CARDS, onClick = { config = config.copy(taskType = AssembleTaskType.CARDS) })
-                        Text("Карточки-резалки")
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Тип задания", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.taskType == AssembleTaskType.CONNECT, onClick = { config = config.copy(taskType = AssembleTaskType.CONNECT) })
+                                Text("Соедини слоги (проводим линии)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.taskType == AssembleTaskType.PICTURE, onClick = { config = config.copy(taskType = AssembleTaskType.PICTURE) })
+                                Text("Собери по картинке (эмодзи + клеточки)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.taskType == AssembleTaskType.CARDS, onClick = { config = config.copy(taskType = AssembleTaskType.CARDS) })
+                                Text("Карточки-резалки")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Сложность:", style = MaterialTheme.typography.labelLarge)
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == AssembleDifficulty.EASY, onClick = { config = config.copy(difficulty = AssembleDifficulty.EASY) })
-                        Text("Легко (2 слога)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == AssembleDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = AssembleDifficulty.MEDIUM) })
-                        Text("Средне (3 слога)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == AssembleDifficulty.HARD, onClick = { config = config.copy(difficulty = AssembleDifficulty.HARD) })
-                        Text("Сложно (2 и 3 вперемешку)")
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = config.difficulty == AssembleDifficulty.SUPER_HARD, onClick = { config = config.copy(difficulty = AssembleDifficulty.SUPER_HARD) })
-                        Text("Суперсложно (4 слога)")
+            // БЛОК: Сложность
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Сложность", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == AssembleDifficulty.EASY, onClick = { config = config.copy(difficulty = AssembleDifficulty.EASY) })
+                                Text("Легко (2 слога)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == AssembleDifficulty.MEDIUM, onClick = { config = config.copy(difficulty = AssembleDifficulty.MEDIUM) })
+                                Text("Средне (3 слога)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == AssembleDifficulty.HARD, onClick = { config = config.copy(difficulty = AssembleDifficulty.HARD) })
+                                Text("Сложно (2 и 3 вперемешку)")
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = config.difficulty == AssembleDifficulty.SUPER_HARD, onClick = { config = config.copy(difficulty = AssembleDifficulty.SUPER_HARD) })
+                                Text("Суперсложно (4 слога)")
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.colorSyllables, onCheckedChange = { config = config.copy(colorSyllables = it) })
-                    Text("Раскраска слогов (гласные красные)", fontSize = 14.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.firstStepVowelsOnly, onCheckedChange = { config = config.copy(firstStepVowelsOnly = it) })
-                    Text("Только гласные первой ступени", fontSize = 14.sp)
-                }
-                if (config.taskType == AssembleTaskType.CONNECT) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = config.emojiHints, onCheckedChange = { config = config.copy(emojiHints = it) })
-                        Text("Эмодзи-подсказки (в центре)", fontSize = 14.sp)
+            // БЛОК: Опции
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Опции", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.colorSyllables, onCheckedChange = { config = config.copy(colorSyllables = it) })
+                            Text("Раскраска слогов (гласные красные)", fontSize = 14.sp)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.firstStepVowelsOnly, onCheckedChange = { config = config.copy(firstStepVowelsOnly = it) })
+                            Text("Только гласные первой ступени", fontSize = 14.sp)
+                        }
+                        if (config.taskType == AssembleTaskType.CONNECT) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = config.emojiHints, onCheckedChange = { config = config.copy(emojiHints = it) })
+                                Text("Эмодзи-подсказки (в центре)", fontSize = 14.sp)
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.addAnswerSheet, onCheckedChange = { config = config.copy(addAnswerSheet = it) })
+                            Text("Добавить лист с ответами", fontSize = 14.sp)
+                        }
                     }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = config.addAnswerSheet, onCheckedChange = { config = config.copy(addAnswerSheet = it) })
-                    Text("Добавить лист с ответами", fontSize = 14.sp)
-                }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+            // ПРЕДПРОСМОТР
+            item {
+                Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 if (previewPages.size > 1) {
                     Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                 }
