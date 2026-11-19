@@ -1,5 +1,6 @@
 package com.example.a4umka.ui.screens.reading
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -82,97 +83,115 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Класс и рассказ
             item {
-                Text("Класс:", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(1, 2, 3, 4).forEach { grade ->
-                        FilterChip(
-                            selected = config.grade == grade,
-                            onClick = {
-                                config = config.copy(grade = grade, selectedStory = ReadingComprehensionData.getRandomStory(grade))
-                                dropdownExpanded = false
-                            },
-                            label = { Text(grade.toString()) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Рассказ:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
-                        config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
-                    }) {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Случайный")
-                    }
-                }
-
-                val stories = ReadingComprehensionData.getStoriesByGrade(config.grade)
-
-                ExposedDropdownMenuBox(expanded = dropdownExpanded, onExpandedChange = { dropdownExpanded = it }) {
-                    OutlinedTextField(
-                        value = config.selectedStory?.title ?: "Выберите рассказ",
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
-                        label = {
-                            if (config.selectedStory != null) {
-                                Text("${config.selectedStory!!.text.split(" ").size} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Класс", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(1, 2, 3, 4).forEach { grade ->
+                                FilterChip(
+                                    selected = config.grade == grade,
+                                    onClick = {
+                                        config = config.copy(grade = grade, selectedStory = ReadingComprehensionData.getRandomStory(grade))
+                                        dropdownExpanded = false
+                                    },
+                                    label = { Text(grade.toString()) }
+                                )
                             }
                         }
-                    )
-                    ExposedDropdownMenu(
-                        expanded = dropdownExpanded,
-                        onDismissRequest = { dropdownExpanded = false },
-                        modifier = Modifier.heightIn(max = 350.dp)
-                    ) {
-                        stories.forEach { story ->
-                            DropdownMenuItem(
-                                text = {
-                                    Column {
-                                        Text(story.title, fontWeight = FontWeight.Bold)
-                                        Text("${story.text.split(" ").size} слов", fontSize = 12.sp, color = Color.Gray)
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Рассказ", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                            TextButton(onClick = {
+                                config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
+                            }) {
+                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Spacer(Modifier.width(4.dp))
+                                Text("Случайный")
+                            }
+                        }
+
+                        val stories = ReadingComprehensionData.getStoriesByGrade(config.grade)
+
+                        ExposedDropdownMenuBox(expanded = dropdownExpanded, onExpandedChange = { dropdownExpanded = it }) {
+                            OutlinedTextField(
+                                value = config.selectedStory?.title ?: "Выберите рассказ",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                label = {
+                                    if (config.selectedStory != null) {
+                                        Text("${config.selectedStory!!.text.split(" ").size} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
                                     }
-                                },
-                                onClick = {
-                                    config = config.copy(selectedStory = story)
-                                    dropdownExpanded = false
                                 }
                             )
+                            ExposedDropdownMenu(
+                                expanded = dropdownExpanded,
+                                onDismissRequest = { dropdownExpanded = false },
+                                modifier = Modifier.heightIn(max = 350.dp)
+                            ) {
+                                stories.forEach { story ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(story.title, fontWeight = FontWeight.Bold)
+                                                Text("${story.text.split(" ").size} слов", fontSize = 12.sp, color = Color.Gray)
+                                            }
+                                        },
+                                        onClick = {
+                                            config = config.copy(selectedStory = story)
+                                            dropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+            // БЛОК: Настройки печати
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Настройки печати", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Количество слов справа", modifier = Modifier.weight(1f))
+                            Switch(checked = config.showWordCount, onCheckedChange = { config = config.copy(showWordCount = it) })
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Подсказки для взрослого", modifier = Modifier.weight(1f))
+                            Switch(checked = config.showAdultHints, onCheckedChange = { config = config.copy(showAdultHints = it) })
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Отдельный лист ответов", modifier = Modifier.weight(1f))
+                            Switch(checked = config.showAnswerSheet, onCheckedChange = { config = config.copy(showAnswerSheet = it) })
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Чёрно-белая печать", modifier = Modifier.weight(1f))
+                            Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
+                        }
+                    }
+                }
+            }
 
-                Text("Настройки печати:", style = MaterialTheme.typography.labelLarge)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Количество слов справа", modifier = Modifier.weight(1f))
-                    Switch(checked = config.showWordCount, onCheckedChange = { config = config.copy(showWordCount = it) })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Подсказки для взрослого", modifier = Modifier.weight(1f))
-                    Switch(checked = config.showAdultHints, onCheckedChange = { config = config.copy(showAdultHints = it) })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Отдельный лист ответов", modifier = Modifier.weight(1f))
-                    Switch(checked = config.showAnswerSheet, onCheckedChange = { config = config.copy(showAnswerSheet = it) })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Чёрно-белая печать", modifier = Modifier.weight(1f))
-                    Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge)
+            // ПРЕДПРОСМОТР
+            item {
+                Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 if (previewPages.size > 1) {
                     Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                 }
