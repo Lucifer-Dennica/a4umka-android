@@ -29,13 +29,8 @@ object RibbonPdfDrawer {
 
         // Для BOARD — 4 страницы
         if (config.mode == RibbonMode.BOARD) {
-            val boardPages = listOf(
-                Triple("Гласные", "лента на доску — лист 1 из 4", RibbonData.topVowels + RibbonData.bottomVowels),
-                Triple("Звонкие согласные", "лента на доску — лист 2 из 4", RibbonData.topConsonants),
-                Triple("Глухие согласные", "лента на доску — лист 3 из 4", RibbonData.bottomConsonants),
-                Triple("Ъ и Ь знаки", "лента на доску — лист 4 из 4", RibbonData.signs)
-            )
-            for ((title, sub, letters) in boardPages) {
+            val boardPages = getBoardPages()
+            for ((index, page) in boardPages.withIndex()) {
                 val bmp = Bitmap.createBitmap(
                     (PAGE_WIDTH * PREVIEW_SCALE).toInt(),
                     (PAGE_HEIGHT * PREVIEW_SCALE).toInt(),
@@ -43,7 +38,7 @@ object RibbonPdfDrawer {
                 )
                 val canvas = Canvas(bmp)
                 canvas.scale(PREVIEW_SCALE.toFloat(), PREVIEW_SCALE.toFloat())
-                drawBoardPage(canvas, config, title, sub, letters, context)
+                drawBoardPage(canvas, config, page, index + 1, boardPages.size, context)
                 pages.add(bmp)
             }
             return pages
@@ -194,61 +189,157 @@ object RibbonPdfDrawer {
         drawLegend(canvas, 40f, PAGE_HEIGHT - 110f)
     }
 
-    // ============ ЛЕНТА НА ДОСКУ — 4 СТРАНИЦЫ С КРУПНЫМИ БУКВАМИ ============
+    // Структура страницы «Лента на доску»
+    data class BoardPage(
+        val title: String,
+        val subtitle: String,
+        val category: String,  // «гласные» / «согласные» / «знаки»
+        val rows: List<List<RibbonLetter>>,  // ряды букв (1 или 2 ряда)
+        val showBell: Boolean,  // 🔔 верхний ряд — звонкие
+        val showHeadphones: Boolean  // 🎧 нижний ряд — глухие
+    )
+
+    // ============ 4 страницы BOARD согласно сайту ============
+    private fun getBoardPages(): List<BoardPage> {
+        // Стр. 1: Гласные (5+5 в 2 ряда)
+        val page1 = BoardPage(
+            title = "Гласные",
+            subtitle = "вверху — после твёрдых, внизу — после мягких",
+            category = "гласные",
+            rows = listOf(RibbonData.topVowels, RibbonData.bottomVowels),
+            showBell = false,
+            showHeadphones = false
+        )
+        // Стр. 2: Звонкие непарные (Л М Н Р Й) — 1 ряд
+        val sonorants = RibbonData.topConsonants.subList(0, 5)  // Л М Н Р Й
+        val page2 = BoardPage(
+            title = "Звонкие непарные",
+            subtitle = "нет пары среди глухих",
+            category = "согласные",
+            rows = listOf(sonorants),
+            showBell = true,
+            showHeadphones = false
+        )
+        // Стр. 3: Звонкие и глухие пары (6+6 в 2 ряда)
+        val pairedVoiced = RibbonData.topConsonants.subList(5, 11)  // Б В Г Д Ж З
+        val pairedVoiceless = RibbonData.bottomConsonants.subList(0, 6)  // П Ф К Т Ш С
+        val page3 = BoardPage(
+            title = "Звонкие и глухие пары",
+            subtitle = "звонкие вверху, глухие под ними",
+            category = "согласные",
+            rows = listOf(pairedVoiced, pairedVoiceless),
+            showBell = true,
+            showHeadphones = true
+        )
+        // Стр. 4: Глухие непарные + Ь, Ъ (4 в 1 ряд + 2 знака)
+        val unpairedVoiceless = RibbonData.bottomConsonants.subList(6, 10)  // Х Ц Ч Щ
+        val combinedRow = unpairedVoiceless + RibbonData.signs
+        val page4 = BoardPage(
+            title = "Глухие непарные, Ь и Ъ",
+            subtitle = "Х Ц Ч Щ — нет пары, Ь и Ъ не обозначают звуков",
+            category = "согласные и знаки",
+            rows = listOf(combinedRow),
+            showBell = false,
+            showHeadphones = true
+        )
+        return listOf(page1, page2, page3, page4)
+    }
+
+    // ============ ЛЕНТА НА ДОСКУ — ОДНА СТРАНИЦА ============
     fun drawBoardPage(
         canvas: Canvas, config: RibbonConfig,
-        title: String, subtitle: String,
-        letters: List<RibbonLetter>, context: Context
+        page: BoardPage, pageNum: Int, totalPages: Int, context: Context
     ) {
         val bg = if (config.bgColor == RibbonBgColor.PEACH) PEACH_COLOR else Color.WHITE
         canvas.drawColor(bg)
 
         val font = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
 
+        // Заголовок
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 40f; color = Color.DKGRAY
             typeface = font; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText(title, PAGE_WIDTH / 2f, 60f, titlePaint)
+        canvas.drawText(page.title, PAGE_WIDTH / 2f, 55f, titlePaint)
 
+        // Подзаголовок
         val subPaint = Paint().apply {
-            isAntiAlias = true; textSize = 16f; color = Color.GRAY
+            isAntiAlias = true; textSize = 14f; color = Color.GRAY
             typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText(subtitle, PAGE_WIDTH / 2f, 85f, subPaint)
+        canvas.drawText(page.subtitle, PAGE_WIDTH / 2f, 78f, subPaint)
 
-        // Крупные клетки в 2 ряда (или 1, если букв мало)
-        val count = letters.size
-        val rows = when {
-            count <= 2 -> 1  // знаки — 1 ряд
-            count <= 6 -> 1  // если меньше 6 — в 1 ряд
-            else -> 2
+        // Категория (мелкая надпись справа сверху)
+        val catPaint = Paint().apply {
+            isAntiAlias = true; textSize = 12f; color = Color.parseColor("#9E9E9E")
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC); textAlign = Paint.Align.RIGHT
         }
-        val cols = ceil(count.toFloat() / rows).toInt()
+        canvas.drawText(page.category, PAGE_WIDTH - 40f, 55f, catPaint)
 
-        // Адаптивный размер клетки: чем меньше букв, тем больше клетка
-        val maxCellByCols = (PAGE_WIDTH - 80f) / cols - 4f
-        val maxCellByRows = (PAGE_HEIGHT - 200f) / rows - 4f
-        val cellSize = minOf(maxCellByCols, maxCellByRows, 110f)  // максимум 110pt
+        // Клетки: 1 или 2 ряда
+        val rows = page.rows
+        val maxCols = rows.maxOf { it.size }
+        val rowCount = rows.size
+
+        // Адаптивный размер клетки
+        val maxCellByCols = (PAGE_WIDTH - 80f) / maxCols - 4f
+        val maxCellByRows = (PAGE_HEIGHT - 270f) / rowCount - 4f
+        val cellSize = minOf(maxCellByCols, maxCellByRows, 110f)
         val gap = 4f
         val colWidth = cellSize + gap
         val rowHeight = cellSize + gap
 
-        val totalWidth = cols * colWidth - gap
-        val totalHeight = rows * rowHeight - gap
-        val startX = (PAGE_WIDTH - totalWidth) / 2f
-        val startY = 130f + (PAGE_HEIGHT - 130f - 80f - totalHeight) / 2f  // центр по вертикали
+        // Центрируем по горизонтали (каждый ряд отдельно, если их длина разная)
+        // Общая ширина определяется самым длинным рядом
+        val totalWidth = maxCols * colWidth - gap
+        val totalHeight = rowCount * rowHeight - gap
+        val baseX = (PAGE_WIDTH - totalWidth) / 2f
+        val startY = 120f + (PAGE_HEIGHT - 120f - 100f - totalHeight) / 2f
 
         val emptyMissing = emptySet<String>()
-        letters.forEachIndexed { index, letter ->
-            val col = index % cols
-            val row = index / cols
-            val x = startX + col * colWidth
-            val y = startY + row * rowHeight
-            drawCell(canvas, letter, config, x, y, cellSize, emptyMissing, font, false)
+        rows.forEachIndexed { rowIndex, rowLetters ->
+            // Центрируем каждый ряд внутри общей ширины
+            val rowWidth = rowLetters.size * colWidth - gap
+            val rowStartX = baseX + (totalWidth - rowWidth) / 2f
+            val rowY = startY + rowIndex * rowHeight
+
+            // Иконка 🔔 слева от верхнего ряда (звонкие)
+            if (page.showBell && rowIndex == 0) {
+                val iconPaint = Paint().apply {
+                    isAntiAlias = true; textSize = 24f; textAlign = Paint.Align.CENTER
+                }
+                canvas.drawText("🔔", rowStartX - 25f, rowY + cellSize / 2f + 8f, iconPaint)
+            }
+            // Иконка 🎧 слева от нижнего ряда (глухие)
+            if (page.showHeadphones && rowIndex == rows.size - 1 && rowCount > 1) {
+                val iconPaint = Paint().apply {
+                    isAntiAlias = true; textSize = 24f; textAlign = Paint.Align.CENTER
+                }
+                canvas.drawText("🎧", rowStartX - 25f, rowY + cellSize / 2f + 8f, iconPaint)
+            }
+            // Для одного ряда — тоже показываем иконку, если надо
+            if (page.showHeadphones && rowCount == 1) {
+                val iconPaint = Paint().apply {
+                    isAntiAlias = true; textSize = 24f; textAlign = Paint.Align.CENTER
+                }
+                canvas.drawText("🎧", rowStartX - 25f, rowY + cellSize / 2f + 8f, iconPaint)
+            }
+
+            rowLetters.forEachIndexed { colIndex, letter ->
+                val x = rowStartX + colIndex * colWidth
+                drawCell(canvas, letter, config, x, rowY, cellSize, emptyMissing, font, false)
+            }
         }
 
-        drawLegend(canvas, 40f, PAGE_HEIGHT - 80f)
+        // Нижняя заметка
+        val notePaint = Paint().apply {
+            isAntiAlias = true; textSize = 13f; color = Color.GRAY
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC); textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText(
+            "Лист $pageNum из $totalPages. Повесьте листы в ряд по порядку — получится лента букв во всю доску",
+            PAGE_WIDTH / 2f, PAGE_HEIGHT - 30f, notePaint
+        )
     }
 
     // ============ ОТРИСОВКА ДОКУМЕНТА (PDF) ============
@@ -256,17 +347,12 @@ object RibbonPdfDrawer {
         var pageNum = 1
 
         if (config.mode == RibbonMode.BOARD) {
-            val boardPages = listOf(
-                Triple("Гласные", "лента на доску — лист 1 из 4", RibbonData.topVowels + RibbonData.bottomVowels),
-                Triple("Звонкие согласные", "лента на доску — лист 2 из 4", RibbonData.topConsonants),
-                Triple("Глухие согласные", "лента на доску — лист 3 из 4", RibbonData.bottomConsonants),
-                Triple("Ъ и Ь знаки", "лента на доску — лист 4 из 4", RibbonData.signs)
-            )
-            for ((title, sub, letters) in boardPages) {
+            val boardPages = getBoardPages()
+            boardPages.forEachIndexed { index, page ->
                 val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
-                val page = document.startPage(pageInfo)
-                drawBoardPage(page.canvas, config, title, sub, letters, context)
-                document.finishPage(page)
+                val docPage = document.startPage(pageInfo)
+                drawBoardPage(docPage.canvas, config, page, index + 1, boardPages.size, context)
+                document.finishPage(docPage)
             }
             return
         }
