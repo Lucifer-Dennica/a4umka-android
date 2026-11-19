@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.a4umka"
+    namespace = "com.example.sovenok"
     compileSdk = 35
 
     defaultConfig {
