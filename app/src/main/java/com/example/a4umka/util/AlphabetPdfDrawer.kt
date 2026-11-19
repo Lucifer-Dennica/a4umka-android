@@ -9,6 +9,7 @@ import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
 import androidx.core.content.res.ResourcesCompat
 import com.example.a4umka.R
 import com.example.a4umka.data.*
@@ -18,7 +19,41 @@ import kotlin.math.sqrt
 object AlphabetPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
+    private const val PREVIEW_SCALE = 6  // 4K: 3570×5052 px
 
+    // ============ ПРЕДПРОСМОТР (многостраничный для FULL_PAGE_LETTER) ============
+    fun getPreviewPages(config: AlphabetConfig, context: Context): List<Bitmap> {
+        val letters = AlphabetData.getLettersByRange(config.startLetterIndex, config.endLetterIndex, config.filter)
+        if (letters.isEmpty()) return emptyList()
+
+        // Для FULL_PAGE_LETTER — по одной странице на каждую букву
+        if (config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER) {
+            return letters.map { letter ->
+                val bmp = Bitmap.createBitmap(
+                    (PAGE_WIDTH * PREVIEW_SCALE).toInt(),
+                    (PAGE_HEIGHT * PREVIEW_SCALE).toInt(),
+                    Bitmap.Config.ARGB_8888
+                )
+                val canvas = Canvas(bmp)
+                canvas.scale(PREVIEW_SCALE.toFloat(), PREVIEW_SCALE.toFloat())
+                drawLayoutForLetter(canvas, config, letter, context)
+                bmp
+            }
+        }
+
+        // Для остальных — одна страница
+        val bmp = Bitmap.createBitmap(
+            (PAGE_WIDTH * PREVIEW_SCALE).toInt(),
+            (PAGE_HEIGHT * PREVIEW_SCALE).toInt(),
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bmp)
+        canvas.scale(PREVIEW_SCALE.toFloat(), PREVIEW_SCALE.toFloat())
+        drawLayout(canvas, config, context)
+        return listOf(bmp)
+    }
+
+    // ============ ОБЩАЯ ОТРИСОВКА ОДНОЙ СТРАНИЦЫ ============
     fun drawLayout(canvas: Canvas, config: AlphabetConfig, context: Context) {
         val bgColor = when (config.color) {
             PosterColor.WHITE -> Color.WHITE
@@ -46,6 +81,156 @@ object AlphabetPdfDrawer {
             AlphabetLayoutType.POSTER -> drawPoster(canvas, config, letters, font, mainTextColor, isBW, context)
             AlphabetLayoutType.FLASHCARDS -> drawFlashcards(canvas, config, letters, font, mainTextColor, isBW, context)
             AlphabetLayoutType.COLORING -> drawColoring(canvas, config, letters, font, mainTextColor, isBW)
+            AlphabetLayoutType.FULL_PAGE_LETTER -> {
+                // На одну страницу — только первая буква (для предпросмотра одной страницей)
+                drawFullPageLetter(canvas, config, letters.first(), font, mainTextColor, isBW, context)
+            }
+        }
+    }
+
+    // ============ ОТРИСОВКА ОДНОЙ КОНКРЕТНОЙ БУКВЫ (для FULL_PAGE_LETTER) ============
+    fun drawLayoutForLetter(canvas: Canvas, config: AlphabetConfig, letter: AlphabetLetter, context: Context) {
+        val bgColor = when (config.color) {
+            PosterColor.WHITE -> Color.WHITE
+            PosterColor.GREEN -> Color.parseColor("#E8F5E9")
+            PosterColor.BLUE -> Color.parseColor("#E3F2FD")
+            PosterColor.PINK -> Color.parseColor("#FCE4EC")
+            PosterColor.ORANGE -> Color.parseColor("#FFF3E0")
+            PosterColor.BLACK_WHITE -> Color.WHITE
+        }
+        canvas.drawColor(bgColor)
+
+        val isBW = config.color == PosterColor.BLACK_WHITE
+        val mainTextColor = if (isBW) Color.BLACK else Color.parseColor("#FF7043")
+        val font = if (config.isCursive) {
+            ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        } else {
+            Typeface.DEFAULT
+        }
+
+        drawFullPageLetter(canvas, config, letter, font, mainTextColor, isBW, context)
+    }
+
+    // ============ ПЛЕНАЯ БУКВА НА ВЕСЬ ЛИСТ (контурная) ============
+    private fun drawFullPageLetter(
+        canvas: Canvas, config: AlphabetConfig, item: AlphabetLetter,
+        font: Typeface, textColor: Int, isBW: Boolean, context: Context
+    ) {
+        val centerX = PAGE_WIDTH / 2f
+
+        // Заголовок
+        val titlePaint = Paint().apply {
+            isAntiAlias = true; textSize = 28f; color = if (isBW) Color.BLACK else Color.DKGRAY
+            typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("Буква на весь лист", centerX, 60f, titlePaint)
+
+        // Подзаголовок
+        val subPaint = Paint().apply {
+            isAntiAlias = true; textSize = 14f; color = Color.GRAY
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC); textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("обведи, раскрась или вырежи", centerX, 82f, subPaint)
+
+        // ОГРОМНАЯ КОНТУРНАЯ БУКВА
+        // Учитываем выбранный регистр: UPPERCASE → заглавная, LOWERCASE → строчная, BOTH → заглавная (контурная)
+        val bigLetter = when (config.case) {
+            AlphabetCase.UPPERCASE -> item.uppercase
+            AlphabetCase.LOWERCASE -> item.lowercase
+            AlphabetCase.BOTH -> item.uppercase
+        }
+
+        val letterPaint = Paint().apply {
+            isAntiAlias = true
+            textSize = 460f
+            color = if (isBW) Color.BLACK else textColor
+            typeface = font
+            textAlign = Paint.Align.CENTER
+            style = Paint.Style.STROKE
+            strokeWidth = 4f
+        }
+        // Центр контурной буквы (учитываем её высоту)
+        val fontMetrics = letterPaint.fontMetrics
+        val letterCenterY = 380f
+        val baselineY = letterCenterY - (fontMetrics.ascent + fontMetrics.descent) / 2f
+        canvas.drawText(bigLetter, centerX, baselineY, letterPaint)
+
+        // НИЖНЯЯ ЗОНА: маленькая строчная буква (если BOTH), картинка и слово
+        val bottomCenterY = 720f
+
+        // Строчная буква (только в режиме BOTH)
+        var sideOffset = 0f
+        if (config.case == AlphabetCase.BOTH) {
+            val smallLetterPaint = Paint().apply {
+                isAntiAlias = true; textSize = 60f
+                color = if (isBW) Color.BLACK else textColor
+                typeface = font; textAlign = Paint.Align.CENTER
+                style = if (isBW) Paint.Style.STROKE else Paint.Style.FILL
+                strokeWidth = 2f
+            }
+            canvas.drawText(item.lowercase, centerX - 110f, bottomCenterY + 20f, smallLetterPaint)
+            sideOffset = 80f
+        }
+
+        // Картинка
+        var imageWidth = 0f
+        if (config.showImage) {
+            val picSize = 120f
+            val bitmap = loadImageFromAssets(context, item.uppercase.lowercase())
+            val picCenterX = if (config.case == AlphabetCase.BOTH) centerX + sideOffset - 20f else centerX - 60f
+            if (bitmap != null) {
+                val rect = RectF(
+                    picCenterX - picSize / 2f, bottomCenterY - picSize / 2f,
+                    picCenterX + picSize / 2f, bottomCenterY + picSize / 2f
+                )
+                canvas.drawBitmap(bitmap, null, rect, null)
+            } else {
+                val picPaint = Paint().apply { color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") }
+                canvas.drawCircle(picCenterX, bottomCenterY, picSize / 2f, picPaint)
+            }
+            imageWidth = picSize
+        }
+
+        // Слово под картинкой
+        if (config.showWord) {
+            val wordPaint = Paint().apply {
+                isAntiAlias = true; textSize = 24f
+                color = if (isBW) Color.BLACK else Color.DKGRAY
+                typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+            }
+            val wordX = if (config.case == AlphabetCase.BOTH) centerX + sideOffset - 20f else centerX - 60f
+            // Если нет картинки — слово по центру
+            val finalWordX = if (config.showImage) wordX else centerX
+            canvas.drawText(item.word.lowercase(), finalWordX, bottomCenterY + 100f, wordPaint)
+        }
+
+        // Подвал
+        val footerPaint = Paint().apply {
+            isAntiAlias = true; textSize = 10f; color = Color.GRAY
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("a4umka.ru — задания и игры для детей", centerX, PAGE_HEIGHT - 20f, footerPaint)
+    }
+
+    // ============ ПЛЕНАЯ СТРАНИЦА — ПЛЕНАЯ БУКВА (для PDF) ============
+    fun drawFullPageLetterDocument(document: PdfDocument, config: AlphabetConfig, context: Context) {
+        val letters = AlphabetData.getLettersByRange(config.startLetterIndex, config.endLetterIndex, config.filter)
+        if (letters.isEmpty()) return
+
+        val isBW = config.color == PosterColor.BLACK_WHITE
+        val mainTextColor = if (isBW) Color.BLACK else Color.parseColor("#FF7043")
+        val font = if (config.isCursive) {
+            ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
+        } else {
+            Typeface.DEFAULT
+        }
+
+        var pageNum = 1
+        for (letter in letters) {
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum++).create()
+            val page = document.startPage(pageInfo)
+            drawFullPageLetter(page.canvas, config, letter, font, mainTextColor, isBW, context)
+            document.finishPage(page)
         }
     }
 
@@ -62,10 +247,10 @@ object AlphabetPdfDrawer {
 
         drawTitle(canvas, "Алфавит", font)
 
-        val linePaint = Paint().apply { 
+        val linePaint = Paint().apply {
             this.color = if (isBW) Color.BLACK else Color.LTGRAY
             this.strokeWidth = 1f
-            this.style = Paint.Style.STROKE 
+            this.style = Paint.Style.STROKE
         }
 
         letters.forEachIndexed { index, item ->
@@ -87,8 +272,8 @@ object AlphabetPdfDrawer {
         val margin = 20f
         val cellWidth = (PAGE_WIDTH - margin * 2) / cols
         val cellHeight = (PAGE_HEIGHT - margin * 2) / rows
-        
-        val cutPaint = Paint().apply { 
+
+        val cutPaint = Paint().apply {
             this.color = Color.GRAY
             this.strokeWidth = 2f
             this.style = Paint.Style.STROKE
@@ -109,7 +294,7 @@ object AlphabetPdfDrawer {
     private fun drawColoring(canvas: Canvas, config: AlphabetConfig, letters: List<AlphabetLetter>, font: Typeface, textColor: Int, isBW: Boolean) {
         val item = letters.firstOrNull() ?: return
         val margin = 40f
-        
+
         drawTitle(canvas, "Раскраска", font)
 
         val letterPaint = Paint().apply {
@@ -129,8 +314,8 @@ object AlphabetPdfDrawer {
         val boxBottom = 750f
         val boxLeft = 100f
         val boxRight = PAGE_WIDTH - 100f
-        
-        val boxPaint = Paint().apply { 
+
+        val boxPaint = Paint().apply {
             this.color = if (isBW) Color.BLACK else Color.GRAY
             this.style = Paint.Style.STROKE
             this.strokeWidth = 2f
@@ -149,15 +334,15 @@ object AlphabetPdfDrawer {
     }
 
     private fun drawCellContent(
-        canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig, 
-        left: Float, top: Float, cellWidth: Float, cellHeight: Float, 
+        canvas: Canvas, item: AlphabetLetter, config: AlphabetConfig,
+        left: Float, top: Float, cellWidth: Float, cellHeight: Float,
         font: Typeface, textColor: Int, isBW: Boolean, context: Context
     ) {
         val centerX = left + cellWidth / 2f
-        
-        // АДАПТИВНЫЙ РАЗМЕР БУКВ (если нет картинок и слов, буква становится огромной)
-        val letterSizeMultiplier = if (!config.showImage && !config.showWord) 0.6f else 0.35f
-        
+
+        // АДАПТИВНЫЙ РАЗМЕР БУКВ
+        val letterSizeMultiplier = if (!config.showImage && !config.showWord) 0.6f else 0.4f
+
         val letterPaint = Paint().apply {
             this.isAntiAlias = true
             this.textSize = minOf(cellWidth, cellHeight) * letterSizeMultiplier
@@ -173,48 +358,52 @@ object AlphabetPdfDrawer {
             AlphabetCase.LOWERCASE -> item.lowercase
             AlphabetCase.BOTH -> "${item.uppercase} ${item.lowercase}"
         }
-        
-        // Если нет ни картинки, ни слова — центрируем букву ровно посередине
+
         val letterCenterY = if (!config.showImage && !config.showWord) {
             top + cellHeight / 2f
         } else {
-            top + cellHeight * 0.35f
+            top + cellHeight * 0.32f
         }
 
         val fontMetrics = letterPaint.fontMetrics
         val baselineY = letterCenterY - (fontMetrics.ascent + fontMetrics.descent) / 2f
         canvas.drawText(text, centerX, baselineY, letterPaint)
 
-        // ЛОГИКА ОТРИСОВКИ КАРТИНКИ И СЛОВА
+        // КАРТИНКА И СЛОВО — с увеличенной картинкой и уменьшенным словом
         if (config.showImage || config.showWord) {
+            // УМЕНЬШЕННОЕ СЛОВО: было 0.15f/0.25f → стало 0.09f/0.13f
             val wordPaint = Paint().apply {
                 this.isAntiAlias = true
-                // Если картинки нет, слово можно сделать чуть больше
-                this.textSize = minOf(cellWidth, cellHeight) * (if (!config.showImage) 0.25f else 0.15f)
+                this.textSize = minOf(cellWidth, cellHeight) * (if (!config.showImage) 0.13f else 0.09f)
                 this.color = Color.DKGRAY
                 this.typeface = Typeface.DEFAULT
                 this.textAlign = Paint.Align.CENTER
             }
 
-            var currentY = top + cellHeight * 0.65f
-
+            // УВЕЛИЧЕННАЯ КАРТИНКА: было 0.25f → стало 0.42f (≈ размер заглавной буквы)
             if (config.showImage) {
-                val picSize = minOf(cellWidth, cellHeight) * 0.25f
+                val picSize = minOf(cellWidth, cellHeight) * 0.42f
+                val picCenterY = top + cellHeight * 0.62f
                 val bitmap = loadImageFromAssets(context, item.uppercase.lowercase())
-                
+
                 if (bitmap != null) {
-                    val rect = RectF(centerX - picSize / 2f, currentY - picSize / 2f, centerX + picSize / 2f, currentY + picSize / 2f)
+                    val rect = RectF(centerX - picSize / 2f, picCenterY - picSize / 2f, centerX + picSize / 2f, picCenterY + picSize / 2f)
                     canvas.drawBitmap(bitmap, null, rect, null)
                 } else {
                     val picPaint = Paint().apply { this.color = if (isBW) Color.LTGRAY else Color.parseColor("#FFD4C2") }
-                    canvas.drawCircle(centerX, currentY, picSize / 2f, picPaint)
+                    canvas.drawCircle(centerX, picCenterY, picSize / 2f, picPaint)
                 }
-                currentY += cellHeight * 0.2f // Смещаем координату для слова вниз
             }
 
+            // Слово внизу
             if (config.showWord) {
-                // Если картинки нет, слово рисуем чуть ниже центра
-                val wordY = if (!config.showImage) top + cellHeight * 0.75f else currentY
+                val wordY = top + cellHeight * 0.92f
+                // Для длинных слов проверяем ширину, при необходимости ещё уменьшаем
+                val wordWidth = wordPaint.measureText(item.word)
+                val maxWidth = cellWidth * 0.85f
+                if (wordWidth > maxWidth) {
+                    wordPaint.textSize = wordPaint.textSize * (maxWidth / wordWidth)
+                }
                 canvas.drawText(item.word, centerX, wordY, wordPaint)
             }
         }
