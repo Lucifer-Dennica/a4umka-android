@@ -3,7 +3,7 @@ package com.example.a4umka.data
 enum class AlphabetCase { UPPERCASE, LOWERCASE, BOTH }
 enum class AlphabetFilter { ALL, VOWELS, CONSONANTS }
 enum class PosterColor { WHITE, GREEN, BLUE, PINK, ORANGE, BLACK_WHITE }
-enum class AlphabetLayoutType { POSTER, FLASHCARDS, COLORING }
+enum class AlphabetLayoutType { POSTER, FLASHCARDS, COLORING, FULL_PAGE_LETTER }
 
 data class AlphabetConfig(
     val layoutType: AlphabetLayoutType = AlphabetLayoutType.POSTER,
