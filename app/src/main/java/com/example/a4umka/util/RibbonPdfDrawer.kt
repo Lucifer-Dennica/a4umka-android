@@ -338,9 +338,9 @@ object RibbonPdfDrawer {
             }
 
             // Размер шрифта пропорционален размеру клетки
-            val textSize = size * 0.6f
+            val fontScale = size * 0.6f
             val textPaint = Paint().apply {
-                isAntiAlias = true; textSize = textSize; typeface = font; textAlign = Paint.Align.CENTER
+                isAntiAlias = true; textSize = fontScale; typeface = font; textAlign = Paint.Align.CENTER
             }
 
             if (letter.char in missing && !isAnswerKey) {
