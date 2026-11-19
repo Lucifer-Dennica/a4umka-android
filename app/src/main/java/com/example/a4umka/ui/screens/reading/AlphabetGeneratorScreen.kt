@@ -27,7 +27,7 @@ import com.example.a4umka.util.AlphabetPdfDrawer
 import com.example.a4umka.util.PdfExporter
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AlphabetGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -86,11 +86,11 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text("Вид листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = config.layoutType == AlphabetLayoutType.POSTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.POSTER) }, label = { Text("Плакат") })
                             FilterChip(selected = config.layoutType == AlphabetLayoutType.FLASHCARDS, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FLASHCARDS) }, label = { Text("Карточки") })
                             FilterChip(selected = config.layoutType == AlphabetLayoutType.COLORING, onClick = { config = config.copy(layoutType = AlphabetLayoutType.COLORING) }, label = { Text("Раскраска") })
-                            FilterChip(selected = config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FULL_PAGE_LETTER) }, label = { Text("Буква на лист") })
+                            FilterChip(selected = config.layoutType == AlphabetLayoutType.FULL_PAGE_LETTER, onClick = { config = config.copy(layoutType = AlphabetLayoutType.FULL_PAGE_LETTER) }, label = { Text("Буква") })
                         }
 
                         if (config.layoutType == AlphabetLayoutType.FLASHCARDS) {
@@ -109,6 +109,12 @@ fun AlphabetGeneratorScreen(onBack: () -> Unit) {
                                 "Каждая буква печатается на отдельном листе — контуром, чтобы обвести, раскрасить или вырезать.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "В предпросмотре показан только первый лист (образец). В PDF сохранятся все выбранные буквы, по одной на лист.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
                     }
