@@ -536,8 +536,8 @@ object RibbonPdfDrawer {
         }
         canvas.drawText(
             if (isAnswerKey) "лента букв целиком"
-            else "раскрась клетки по правилам",
-            PAGE_WIDTH / 2f, 70f, subtitlePaint
+            else "Гласные — красным, всегда твёрдые — синим, всегда мягкие — зелёным, твёрдые или мягкие — пополам",
+            PAGE_WIDTH / 2f, 72f, subtitlePaint
         )
 
         // Поля «Имя» и «Дата»
@@ -551,90 +551,147 @@ object RibbonPdfDrawer {
         canvas.drawText("Дата:", PAGE_WIDTH - 160f, 110f, fieldPaint)
         canvas.drawLine(PAGE_WIDTH - 115f, 112f, PAGE_WIDTH - 40f, 112f, linePaint)
 
-        // === Параметры как на сайте ===
-        // Квадратные клетки крупного размера, секции идут плотно друг за другом
-        val sectionMargin = 40f
-        val labelHeight = 26f
-        val gapBetweenBarAndCells = 0f  // полоса и клетки идут вплотную
-        val gapBetweenSections = 6f    // минимальный разрыв между секциями
+        // === ЛЕНТА КАК ОДИН БЛОК В 2 РЯДА ===
+        // Гласные | Согласные | Знаки — все на одной горизонтали
+        val margin = 30f
         val cellGap = 2f
+        val labelHeight = 22f
+        val labelGap = 0f  // полоса-заголовок сразу переходит в клетки
 
-        // Размер клетки: рассчитываем по самой широкой секции (согласные — 11 букв в ряду)
-        val maxCellsInRow = 11
-        val cellSize = (PAGE_WIDTH - sectionMargin * 2 - (maxCellsInRow - 1) * cellGap) / maxCellsInRow
-        // 11 клеток: 762 - 80 - 20 = 662, /11 = ~60.18px — крупная квадратная клетка
+        // Размер клетки — квадратный, по самой широкой секции (согласные = 11)
+        // Доступная ширина для 11 клеток согласных = PAGE_WIDTH - margin*2 - ширина гласных (5) - ширина знаков (1) - 2 промежутка между секциями (по 15px)
+        val sectionGap = 15f
+        val totalCols = 5 + 11 + 1  // 17
+        val totalGaps = (totalCols - 1) * cellGap + 2 * sectionGap
+        val availableWidth = PAGE_WIDTH - margin * 2 - totalGaps
+        val cellSize = availableWidth / totalCols
+
+        // X-координаты начала каждой секции
+        val vowelStartX = margin
+        val consonantStartX = vowelStartX + 5 * (cellSize + cellGap) + sectionGap
+        val signStartX = consonantStartX + 11 * (cellSize + cellGap) + sectionGap
 
         var currentY = 140f
 
-        // ====== Секция 1: Гласные ======
-        // 5 гласных в ряду (красная полоса + 2 ряда по 5 клеток)
-        val vowelsPerRow = 5
-        val vowelCellSize = (PAGE_WIDTH - sectionMargin * 2 - (vowelsPerRow - 1) * cellGap) / vowelsPerRow
-        // Полоса «гласные»
+        // === Цветные полосы-заголовки над каждой секцией ===
+        // Гласные — красная
         val vowelBarPaint = Paint().apply { color = Color.parseColor("#EF5350"); style = Paint.Style.FILL }
-        canvas.drawRect(sectionMargin, currentY, PAGE_WIDTH - sectionMargin, currentY + labelHeight, vowelBarPaint)
+        val vowelBarWidth = 5 * cellSize + 4 * cellGap
+        canvas.drawRect(vowelStartX, currentY, vowelStartX + vowelBarWidth, currentY + labelHeight, vowelBarPaint)
         val barTextPaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = Color.WHITE
+            isAntiAlias = true; textSize = 13f; color = Color.WHITE
             typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("гласные", PAGE_WIDTH / 2f, currentY + 18f, barTextPaint)
-        currentY += labelHeight + gapBetweenBarAndCells
+        canvas.drawText("гласные", vowelStartX + vowelBarWidth / 2f, currentY + 16f, barTextPaint)
 
-        // Клетки гласных — 2 ряда по 5 (сверху Аа Оо Уу Ыы Ээ, снизу Яя Ёё Юю Ии Ее)
-        RibbonData.topVowels.forEachIndexed { index, letter ->
-            val x = sectionMargin + index * (vowelCellSize + cellGap)
-            drawColoringCell(canvas, letter, config, x, currentY, vowelCellSize, vowelCellSize, font, isAnswerKey)
-        }
-        currentY += vowelCellSize + cellGap
-        RibbonData.bottomVowels.forEachIndexed { index, letter ->
-            val x = sectionMargin + index * (vowelCellSize + cellGap)
-            drawColoringCell(canvas, letter, config, x, currentY, vowelCellSize, vowelCellSize, font, isAnswerKey)
-        }
-        currentY += vowelCellSize + gapBetweenSections
-
-        // ====== Секция 2: Согласные ======
-        // Синяя полоса
+        // Согласные — синяя с иконками 🔔 и 🎧
         val consBarPaint = Paint().apply { color = Color.parseColor("#42A5F5"); style = Paint.Style.FILL }
-        canvas.drawRect(sectionMargin, currentY, PAGE_WIDTH - sectionMargin, currentY + labelHeight, consBarPaint)
+        val consBarWidth = 11 * cellSize + 10 * cellGap
+        canvas.drawRect(consonantStartX, currentY, consonantStartX + consBarWidth, currentY + labelHeight, consBarPaint)
         val iconPaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 13f; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("🔔", sectionMargin + 25f, currentY + 19f, iconPaint)
-        canvas.drawText("🎧", sectionMargin + 50f, currentY + 19f, iconPaint)
-        canvas.drawText("согласные", PAGE_WIDTH / 2f, currentY + 18f, barTextPaint)
-        currentY += labelHeight + gapBetweenBarAndCells
+        canvas.drawText("🔔", consonantStartX + 15f, currentY + 17f, iconPaint)
+        canvas.drawText("🎧", consonantStartX + 35f, currentY + 17f, iconPaint)
+        canvas.drawText("согласные", consonantStartX + consBarWidth / 2f, currentY + 16f, barTextPaint)
 
-        // 2 ряда согласных по 11 в каждом (как на сайте)
-        RibbonData.topConsonants.forEachIndexed { index, letter ->
-            val x = sectionMargin + index * (cellSize + cellGap)
-            drawColoringCell(canvas, letter, config, x, currentY, cellSize, cellSize, font, isAnswerKey)
-        }
-        currentY += cellSize + cellGap
-        RibbonData.bottomConsonants.forEachIndexed { index, letter ->
-            val x = sectionMargin + index * (cellSize + cellGap)
-            drawColoringCell(canvas, letter, config, x, currentY, cellSize, cellSize, font, isAnswerKey)
-        }
-        currentY += cellSize + gapBetweenSections
-
-        // ====== Секция 3: Знаки ======
-        // Коричневая полоса
+        // Знаки — коричневая
         val signBarPaint = Paint().apply { color = Color.parseColor("#8D6E63"); style = Paint.Style.FILL }
-        canvas.drawRect(sectionMargin, currentY, PAGE_WIDTH - sectionMargin, currentY + labelHeight, signBarPaint)
-        canvas.drawText("знаки", PAGE_WIDTH / 2f, currentY + 18f, barTextPaint)
-        currentY += labelHeight + gapBetweenBarAndCells
+        canvas.drawRect(signStartX, currentY, signStartX + cellSize, currentY + labelHeight, signBarPaint)
+        canvas.drawText("знаки", signStartX + cellSize / 2f, currentY + 16f, barTextPaint)
 
-        // Знаки — 2 клетки в один ряд, по центру (как на сайте)
-        val signs = RibbonData.signs
-        val signCellSize = cellSize  // такой же как у согласных
-        val signRowWidth = signs.size * signCellSize + (signs.size - 1) * cellGap
-        val signStartX = (PAGE_WIDTH - signRowWidth) / 2f
-        signs.forEachIndexed { index, letter ->
-            val x = signStartX + index * (signCellSize + cellGap)
-            drawColoringCell(canvas, letter, config, x, currentY, signCellSize, signCellSize, font, isAnswerKey)
+        currentY += labelHeight + labelGap
+
+        // === Клетки ленты (2 ряда) ===
+        val emptyMissing = emptySet<String>()
+
+        // Гласные — 2 ряда по 5
+        RibbonData.topVowels.forEachIndexed { index, letter ->
+            val x = vowelStartX + index * (cellSize + cellGap)
+            drawColoringCell(canvas, letter, config, x, currentY, cellSize, cellSize, font, isAnswerKey)
+        }
+        RibbonData.bottomVowels.forEachIndexed { index, letter ->
+            val x = vowelStartX + index * (cellSize + cellGap)
+            drawColoringCell(canvas, letter, config, x, currentY + cellSize + cellGap, cellSize, cellSize, font, isAnswerKey)
         }
 
-        // Легенда внизу
-        drawLegend(canvas, 40f, PAGE_HEIGHT - 110f)
+        // Согласные — 2 ряда по 11
+        RibbonData.topConsonants.forEachIndexed { index, letter ->
+            val x = consonantStartX + index * (cellSize + cellGap)
+            drawColoringCell(canvas, letter, config, x, currentY, cellSize, cellSize, font, isAnswerKey)
+        }
+        RibbonData.bottomConsonants.forEachIndexed { index, letter ->
+            val x = consonantStartX + index * (cellSize + cellGap)
+            drawColoringCell(canvas, letter, config, x, currentY + cellSize + cellGap, cellSize, cellSize, font, isAnswerKey)
+        }
+
+        // Знаки — 2 клетки вертикально
+        RibbonData.signs.forEachIndexed { index, letter ->
+            val y = currentY + index * (cellSize + cellGap)
+            drawColoringCell(canvas, letter, config, signStartX, y, cellSize, cellSize, font, isAnswerKey)
+        }
+
+        // === НИЖНЯЯ ЛЕГЕНДА-СПИСОК (как на сайте) ===
+        drawColoringLegend(canvas, margin, currentY + 2 * (cellSize + cellGap) + 30f)
+    }
+
+    // ============ Легенда-список для COLORING (как на сайте) ============
+    private fun drawColoringLegend(canvas: Canvas, x: Float, y: Float) {
+        val textPaint = Paint().apply {
+            isAntiAlias = true; textSize = 13f; color = Color.DKGRAY
+            typeface = Typeface.DEFAULT
+        }
+        val iconPaint = Paint().apply { style = Paint.Style.FILL }
+        val iconSize = 14f
+        val iconGap = 8f
+        val lineH = 22f
+
+        var currentY = y
+
+        // Красный квадрат — гласные
+        iconPaint.color = Color.parseColor("#EF5350")
+        canvas.drawRect(x, currentY - 10f, x + iconSize, currentY + 4f, iconPaint)
+        canvas.drawText("гласные — А О У Ы Э — после твёрдых, Я Ё Ю И Е — после мягких", x + iconSize + iconGap, currentY, textPaint)
+        currentY += lineH
+
+        // Синий квадрат — всегда твёрдые
+        iconPaint.color = Color.parseColor("#42A5F5")
+        canvas.drawRect(x, currentY - 10f, x + iconSize, currentY + 4f, iconPaint)
+        canvas.drawText("всегда твёрдые — Ж Ш Ц", x + iconSize + iconGap, currentY, textPaint)
+        currentY += lineH
+
+        // Зелёный квадрат — всегда мягкие
+        iconPaint.color = Color.parseColor("#66BB6A")
+        canvas.drawRect(x, currentY - 10f, x + iconSize, currentY + 4f, iconPaint)
+        canvas.drawText("всегда мягкие — Й Ч Щ", x + iconSize + iconGap, currentY, textPaint)
+        currentY += lineH
+
+        // Сине-зелёный квадрат (2 треугольника) — твёрдые или мягкие
+        val p1 = android.graphics.Path().apply { moveTo(x, currentY - 10f); lineTo(x + iconSize, currentY - 10f); lineTo(x, currentY + 4f); close() }
+        canvas.drawPath(p1, Paint().apply { color = Color.parseColor("#42A5F5"); style = Paint.Style.FILL })
+        val p2 = android.graphics.Path().apply { moveTo(x + iconSize, currentY - 10f); lineTo(x + iconSize, currentY + 4f); lineTo(x, currentY + 4f); close() }
+        canvas.drawPath(p2, Paint().apply { color = Color.parseColor("#66BB6A"); style = Paint.Style.FILL })
+        canvas.drawText("твёрдые или мягкие — остальные согласные", x + iconSize + iconGap, currentY, textPaint)
+        currentY += lineH
+
+        // Белый квадрат с контуром — Ь и Ъ
+        iconPaint.color = Color.WHITE
+        canvas.drawRect(x, currentY - 10f, x + iconSize, currentY + 4f, iconPaint)
+        val borderPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
+        canvas.drawRect(x, currentY - 10f, x + iconSize, currentY + 4f, borderPaint)
+        canvas.drawText("звука не обозначают — Ь и Ъ", x + iconSize + iconGap, currentY, textPaint)
+        currentY += lineH
+
+        // Звонкие / глухие — две строки с иконками
+        val emojiPaint = Paint().apply {
+            isAntiAlias = true; textSize = 13f; textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("🔔", x + iconSize / 2f, currentY + 4f, emojiPaint)
+        canvas.drawText("верхний ряд согласных — звонкие", x + iconSize + iconGap, currentY, textPaint)
+        currentY += lineH
+
+        canvas.drawText("🎧", x + iconSize / 2f, currentY + 4f, emojiPaint)
+        canvas.drawText("нижний ряд согласных — глухие", x + iconSize + iconGap, currentY, textPaint)
     }
 
     // Отрисовка ряда клеток (row указывает сколько строк: 1 — горизонтально, 2 — для гласных 5+5)
