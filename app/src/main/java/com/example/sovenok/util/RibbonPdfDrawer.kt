@@ -315,7 +315,8 @@ object RibbonPdfDrawer {
             val maxCellByRightRows = (PAGE_HEIGHT - 270f) / rightRowCount - 4f
             // Подбираем размер так, чтобы обе колонки смотрелись
             cellSize = minOf(cellSize, maxCellByRightRows, 110f)
-        }        val gap = 4f
+        }
+        val gap = 4f
         val colWidth = cellSize + gap
         val rowHeight = cellSize + gap
 
