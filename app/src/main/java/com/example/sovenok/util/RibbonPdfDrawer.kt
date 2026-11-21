@@ -551,10 +551,12 @@ object RibbonPdfDrawer {
         canvas.drawLine(PAGE_WIDTH - 115f, 112f, PAGE_WIDTH - 40f, 112f, linePaint)
 
         // === ЛЕНТА (как в DESK: 2 ряда, центрирована) ===
-        val cellSize = 36f
+        // Прямоугольные клетки: высота > ширины (вертикальный прямоугольник ▯)
+        val cellW = 30f   // ширина клетки
+        val cellH = 42f   // высота клетки (больше ширины)
         val gap = 2f
-        val colWidth = cellSize + gap
-        val rowHeight = cellSize + gap
+        val colWidth = cellW + gap
+        val rowHeight = cellH + gap
 
         // Резервируем место слева под иконки 🔔 и 🎧 у согласных
         val iconsLeft = 40f
@@ -563,7 +565,7 @@ object RibbonPdfDrawer {
         // Считаем общую ширину ленты для центрирования
         val totalWidth = 5 * colWidth + 20f + 11 * colWidth + 10f + colWidth
         val startX = (PAGE_WIDTH - totalWidth) / 2f
-        val startY = 145f
+        val startY = 175f  // ниже, т.к. над лентой теперь линии-заголовки
 
         // Координаты X для каждой секции
         val vowelStartX = startX
@@ -572,65 +574,65 @@ object RibbonPdfDrawer {
 
         val emptyMissing = emptySet<String>()
 
+        // === Цветные линии-заголовки НАД лентой ===
+        val overLineY = startY - 12f
+        val overLinePaint = Paint().apply { strokeWidth = 3f; style = Paint.Style.STROKE }
+        val overLineTextPaint = Paint().apply {
+            isAntiAlias = true; textSize = 11f; color = Color.DKGRAY
+            typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+        }
+
+        // Красная линия над гласными
+        val vowelLineWidth = 5 * colWidth - gap
+        overLinePaint.color = Color.parseColor("#EF5350")
+        canvas.drawLine(vowelStartX, overLineY, vowelStartX + vowelLineWidth, overLineY, overLinePaint)
+        canvas.drawText("гласные", vowelStartX + vowelLineWidth / 2f, overLineY - 4f, overLineTextPaint)
+
+        // Синяя линия над согласными
+        val consLineWidth = 11 * colWidth - gap
+        overLinePaint.color = Color.parseColor("#42A5F5")
+        canvas.drawLine(consonantStartX, overLineY, consonantStartX + consLineWidth, overLineY, overLinePaint)
+        canvas.drawText("согласные", consonantStartX + consLineWidth / 2f, overLineY - 4f, overLineTextPaint)
+
+        // Коричневая линия над знаками
+        overLinePaint.color = Color.parseColor("#8D6E63")
+        canvas.drawLine(signStartX, overLineY, signStartX + cellW, overLineY, overLinePaint)
+        canvas.drawText("знаки", signStartX + cellW / 2f, overLineY - 4f, overLineTextPaint)
+
         // === Иконки 🔔 и 🎧 слева от согласных ===
         val iconPaint = Paint().apply {
-            isAntiAlias = true; textSize = 18f; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 16f; textAlign = Paint.Align.CENTER
         }
         // 🔔 над верхним рядом согласных
-        canvas.drawText("🔔", consonantStartX - 18f, startY + cellSize / 2f + 6f, iconPaint)
+        canvas.drawText("🔔", consonantStartX - 15f, startY + cellH / 2f + 6f, iconPaint)
         // 🎧 над нижним рядом согласных
-        canvas.drawText("🎧", consonantStartX - 18f, startY + rowHeight + cellSize / 2f + 6f, iconPaint)
+        canvas.drawText("🎧", consonantStartX - 15f, startY + rowHeight + cellH / 2f + 6f, iconPaint)
 
-        // === Клетки ленты (2 ряда) ===
+        // === Прямоугольные клетки ленты (2 ряда) ===
         // Гласные — 2 ряда по 5
         RibbonData.topVowels.forEachIndexed { index, letter ->
             val x = vowelStartX + index * colWidth
-            drawColoringCell(canvas, letter, config, x, startY, cellSize, cellSize, font, isAnswerKey)
-            drawColoringCell(canvas, RibbonData.bottomVowels[index], config, x, startY + rowHeight, cellSize, cellSize, font, isAnswerKey)
+            drawColoringCell(canvas, letter, config, x, startY, cellW, cellH, font, isAnswerKey)
+            drawColoringCell(canvas, RibbonData.bottomVowels[index], config, x, startY + rowHeight, cellW, cellH, font, isAnswerKey)
         }
 
         // Согласные — 2 ряда по 11
         RibbonData.topConsonants.forEachIndexed { index, letter ->
             val x = consonantStartX + index * colWidth
-            drawColoringCell(canvas, letter, config, x, startY, cellSize, cellSize, font, isAnswerKey)
+            drawColoringCell(canvas, letter, config, x, startY, cellW, cellH, font, isAnswerKey)
         }
         RibbonData.bottomConsonants.forEachIndexed { index, letter ->
             val x = consonantStartX + index * colWidth
-            drawColoringCell(canvas, letter, config, x, startY + rowHeight, cellSize, cellSize, font, isAnswerKey)
+            drawColoringCell(canvas, letter, config, x, startY + rowHeight, cellW, cellH, font, isAnswerKey)
         }
 
         // Знаки — 2 клетки вертикально
         RibbonData.signs.forEachIndexed { index, letter ->
-            drawColoringCell(canvas, letter, config, signStartX, startY + index * rowHeight, cellSize, cellSize, font, isAnswerKey)
+            drawColoringCell(canvas, letter, config, signStartX, startY + index * rowHeight, cellW, cellH, font, isAnswerKey)
         }
-
-        // === Цветные подчёркивания ПОД лентой (как на сайте) ===
-        val underLineY = startY + 2 * rowHeight + 10f
-        val underLinePaint = Paint().apply { strokeWidth = 3f; style = Paint.Style.STROKE }
-        val underLineTextPaint = Paint().apply {
-            isAntiAlias = true; textSize = 11f; color = Color.DKGRAY
-            typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
-        }
-
-        // Красная линия под гласными
-        val vowelLineWidth = 5 * colWidth - gap
-        underLinePaint.color = Color.parseColor("#EF5350")
-        canvas.drawLine(vowelStartX, underLineY, vowelStartX + vowelLineWidth, underLineY, underLinePaint)
-        canvas.drawText("гласные", vowelStartX + vowelLineWidth / 2f, underLineY + 14f, underLineTextPaint)
-
-        // Синяя линия под согласными
-        val consLineWidth = 11 * colWidth - gap
-        underLinePaint.color = Color.parseColor("#42A5F5")
-        canvas.drawLine(consonantStartX, underLineY, consonantStartX + consLineWidth, underLineY, underLinePaint)
-        canvas.drawText("согласные", consonantStartX + consLineWidth / 2f, underLineY + 14f, underLineTextPaint)
-
-        // Коричневая линия под знаками
-        underLinePaint.color = Color.parseColor("#8D6E63")
-        canvas.drawLine(signStartX, underLineY, signStartX + cellSize, underLineY, underLinePaint)
-        canvas.drawText("знаки", signStartX + cellSize / 2f, underLineY + 14f, underLineTextPaint)
 
         // === НИЖНЯЯ ЛЕГЕНДА-ЧЕКЛИСТ ===
-        drawColoringLegend(canvas, 40f, underLineY + 40f)
+        drawColoringLegend(canvas, 40f, startY + 2 * rowHeight + 30f)
     }
 
     // ============ Легенда-список для COLORING (как на сайте) ============
