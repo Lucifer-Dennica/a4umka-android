@@ -15,15 +15,15 @@ import android.graphics.pdf.PdfDocument
 import androidx.core.content.res.ResourcesCompat
 import com.example.sovenok.R
 import com.example.sovenok.data.*
+import kotlin.math.min
 import kotlin.random.Random
 
 object RibbonPdfDrawer {
 
     const val PAGE_WIDTH = 842f
     const val PAGE_HEIGHT = 595f
-    private const val PREVIEW_SCALE = 3 // было 6 — 4 страницы BOARD = ~290 МБ битмапов, риск OOM
+    private const val PREVIEW_SCALE = 3
 
-    // ===== Палитра (как на сайте) =====
     private val COL_RED = Color.parseColor("#E05A4E")
     private val COL_BLUE = Color.parseColor("#4A80D0")
     private val COL_GREEN = Color.parseColor("#43A047")
@@ -34,7 +34,6 @@ object RibbonPdfDrawer {
     private val PEACH_TOP = Color.parseColor("#FFF6E8")
     private val PEACH_BOTTOM = Color.parseColor("#EAF2E0")
 
-    // ============ ПРЕДПРОСМОТР ============
     fun getPreview(config: RibbonConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
 
@@ -72,7 +71,6 @@ object RibbonPdfDrawer {
         Bitmap.Config.ARGB_8888
     )
 
-    // ============ PDF ============
     fun drawDocument(document: PdfDocument, config: RibbonConfig, context: Context) {
         var pageNum = 1
 
@@ -100,15 +98,11 @@ object RibbonPdfDrawer {
         }
     }
 
-    // ============ ТОЧКА ВХОДА ДЛЯ ЛЕНТЫ (DESK / MISSING / COLORING) ============
     fun drawRibbon(canvas: Canvas, config: RibbonConfig, context: Context, isAnswerKey: Boolean = false) {
         drawBackground(canvas, config)
 
-        val font = if (config.font == RibbonFont.CURSIVE) {
-            ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
-        } else Typeface.DEFAULT
-
-        val titleFont = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: font
+        val font = Typeface.DEFAULT
+        val titleFont = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
 
         if (config.mode == RibbonMode.COLORING) {
             drawColoringPage(canvas, config, font, titleFont, isAnswerKey)
@@ -127,11 +121,9 @@ object RibbonPdfDrawer {
         }
     }
 
-    // ============ DESK / MISSING ============
     private fun drawRibbonColored(canvas: Canvas, config: RibbonConfig, font: Typeface, titleFont: Typeface, isAnswerKey: Boolean) {
         val isMissing = config.mode == RibbonMode.MISSING
 
-        // Шапка
         if (isMissing) {
             drawHeaderBox(canvas, "Имя:", 40f, 26f, 175f, 56f)
             drawHeaderBox(canvas, "Дата:", PAGE_WIDTH - 175f, 26f, PAGE_WIDTH - 40f, 56f)
@@ -150,7 +142,6 @@ object RibbonPdfDrawer {
         }
         drawTitle(canvas, title, subtitle, titleFont)
 
-        // Пропущенные буквы
         val missingSet = mutableSetOf<String>()
         if (isMissing && !isAnswerKey) {
             val allLetters = (RibbonData.topVowels + RibbonData.bottomVowels +
@@ -164,12 +155,10 @@ object RibbonPdfDrawer {
             missingSet.addAll(allLetters.shuffled(random).take(countToHide))
         }
 
-        // Лента
         val cellW = 34f; val cellH = 44f; val gap = 3f
         val colW = cellW + gap; val rowH = cellH + gap
-        val startX = 40f
-        val vowelStartX = startX
-        val consonantStartX = startX + 5 * colW + 26f
+        val vowelStartX = 40f
+        val consonantStartX = vowelStartX + 5 * colW + 26f
         val signX = PAGE_WIDTH - 40f - cellW
         val startY = 214f
 
@@ -195,11 +184,10 @@ object RibbonPdfDrawer {
             drawColoredCell(canvas, letter, config, signX, startY + i * rowH, cellW, cellH, font, missing = false)
         }
 
-        // Блок потерянных букв + легенда
         var cardTop = 352f
         if (isMissing && !isAnswerKey && config.showHint && missingSet.isNotEmpty()) {
-            drawLostLettersBox(canvas, 318f, missingSet, font)
-            cardTop = 374f
+            drawLostLettersBox(canvas, 352f, missingSet, font)
+            cardTop = 394f
         }
         drawLegendCard(canvas, cardTop, colored = true)
 
@@ -208,7 +196,6 @@ object RibbonPdfDrawer {
         }
     }
 
-    // ============ COLORING (задание + ответы) ============
     private fun drawColoringPage(canvas: Canvas, config: RibbonConfig, font: Typeface, titleFont: Typeface, isAnswerKey: Boolean) {
         drawHeaderBox(canvas, "Имя:", 40f, 26f, 175f, 56f)
         drawHeaderBox(canvas, "Дата:", PAGE_WIDTH - 175f, 26f, PAGE_WIDTH - 40f, 56f)
@@ -251,7 +238,6 @@ object RibbonPdfDrawer {
         drawLegendCard(canvas, 352f, colored = isAnswerKey)
     }
 
-    // ============ КЛЕТКА ЛЕНТЫ ============
     private fun drawColoredCell(
         canvas: Canvas, letter: RibbonLetter, config: RibbonConfig,
         x: Float, y: Float, w: Float, h: Float, font: Typeface,
@@ -267,7 +253,6 @@ object RibbonPdfDrawer {
         }
 
         if (missing) {
-            // Пустая клетка: белый фон + пунктир в цвете буквы + тире
             canvas.drawRoundRect(rect, radius, radius, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
             canvas.drawRoundRect(rect, radius, radius, Paint().apply {
                 color = if (letter.color == RibbonColor.BOTH) COL_BLUE else fillColor
@@ -316,7 +301,6 @@ object RibbonPdfDrawer {
         canvas.drawText(text, x + w / 2f, y + h / 2f - ((textPaint.descent() + textPaint.ascent()) / 2f), textPaint)
     }
 
-    // ============ ЭЛЕМЕНТЫ ШАПКИ ============
     private fun drawTitle(canvas: Canvas, title: String, subtitle: String, titleFont: Typeface) {
         canvas.drawText(title, PAGE_WIDTH / 2f, 112f, Paint().apply {
             isAntiAlias = true; textSize = 40f; color = COL_TITLE; typeface = titleFont; textAlign = Paint.Align.CENTER
@@ -362,7 +346,6 @@ object RibbonPdfDrawer {
             })
     }
 
-    // ============ БЛОК «ЭТИ БУКВЫ ПОТЕРЯЛИСЬ» ============
     private fun drawLostLettersBox(canvas: Canvas, top: Float, letters: Set<String>, font: Typeface) {
         val left = 40f; val right = PAGE_WIDTH - 40f; val bottom = top + 46f
         val rect = RectF(left, top, right, bottom)
@@ -392,7 +375,6 @@ object RibbonPdfDrawer {
         }
     }
 
-    // ============ ЛЕГЕНДА (карточка) ============
     private fun drawLegendCard(canvas: Canvas, top: Float, colored: Boolean) {
         val left = 40f; val right = PAGE_WIDTH - 40f; val bottom = 560f
         val card = RectF(left, top, right, bottom)
@@ -466,7 +448,6 @@ object RibbonPdfDrawer {
         canvas.drawRoundRect(r, 4f, 4f, Paint().apply { color = COL_BORDER; style = Paint.Style.STROKE; strokeWidth = 1.5f })
     }
 
-    // ============ BOARD: СТРУКТУРА ЛИСТОВ ============
     data class BoardPage(
         val title: String,
         val subtitle: String,
@@ -524,7 +505,7 @@ object RibbonPdfDrawer {
         drawBackground(canvas, config)
 
         val titleFont = ResourcesCompat.getFont(context, R.font.caveat_regular) ?: Typeface.DEFAULT
-        val font = if (config.font == RibbonFont.CURSIVE) titleFont else Typeface.DEFAULT
+        val font = Typeface.DEFAULT
 
         canvas.drawText(page.title, PAGE_WIDTH / 2f, 62f, Paint().apply {
             isAntiAlias = true; textSize = 34f; color = COL_TITLE; typeface = titleFont; textAlign = Paint.Align.CENTER
@@ -540,7 +521,7 @@ object RibbonPdfDrawer {
         val reservedRight = if (page.rightRows != null) 190f else 0f
         val availableWidth = PAGE_WIDTH - 100f - reservedRight
         val gridTop = 115f; val gridBottom = 395f
-        var cell = minOf(availableWidth / maxColsLeft - gap, (gridBottom - gridTop) / rowCount - gap, 125f)
+        var cell = min(availableWidth / maxColsLeft - gap, (gridBottom - gridTop) / rowCount - gap, 125f)
         val colW = cell + gap; val rowH = cell + gap
 
         val totalWidth = maxColsLeft * colW - gap
@@ -549,7 +530,6 @@ object RibbonPdfDrawer {
         val rowY = if (rowCount == 2) gridTop
         else if (page.rowAtBottom) gridBottom - cell else gridTop
 
-        // Подпись категории + линия над рядом
         val rowWidth = page.rows[0].size * colW - gap
         val rowStartX = baseX + (totalWidth - rowWidth) / 2f
         drawSectionLabel(canvas, page.category, rowStartX, rowWidth, rowY - 22f, rowY - 12f, page.categoryColor)
@@ -566,7 +546,6 @@ object RibbonPdfDrawer {
             }
         }
 
-        // Правая колонка знаков
         if (page.rightRows != null && page.rightTitle != null) {
             val rightX = PAGE_WIDTH - 50f - cell
             val rightTotalH = page.rightRows.size * rowH - gap
@@ -580,45 +559,11 @@ object RibbonPdfDrawer {
             }
         }
 
-        // Нижняя заметка + мини-полоска
         canvas.drawText(
             "Лист $pageNum из $totalPages. Повесьте листы в ряд по порядку — получится лента букв во всю доску",
             PAGE_WIDTH / 2f, 428f, Paint().apply {
                 isAntiAlias = true; textSize = 11f; color = COL_SUB
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC); textAlign = Paint.Align.CENTER
             })
-
-        val stripLetters = page.rows.flatten() + (page.rightRows?.flatten() ?: emptyList())
-        val sSize = 14f; val sGap = 5f
-        val stripW = stripLetters.size * (sSize + sGap) - sGap
-        var sx = (PAGE_WIDTH - stripW) / 2f
-        for (l in stripLetters) {
-            val sr = RectF(sx, 442f, sx + sSize, 442f + sSize)
-            when (l.color) {
-                RibbonColor.BOTH -> {
-                    canvas.drawRoundRect(sr, 4f, 4f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
-                    val clip = Path().apply { addRoundRect(sr, 4f, 4f, Path.Direction.CW) }
-                    canvas.save(); canvas.clipPath(clip)
-                    canvas.drawPath(Path().apply { moveTo(sr.left, sr.top); lineTo(sr.right, sr.top); lineTo(sr.left, sr.bottom); close() },
-                        Paint().apply { color = COL_BLUE; style = Paint.Style.FILL })
-                    canvas.drawPath(Path().apply { moveTo(sr.right, sr.top); lineTo(sr.right, sr.bottom); lineTo(sr.left, sr.bottom); close() },
-                        Paint().apply { color = COL_GREEN; style = Paint.Style.FILL })
-                    canvas.restore()
-                }
-                RibbonColor.WHITE -> {
-                    canvas.drawRoundRect(sr, 4f, 4f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
-                    canvas.drawRoundRect(sr, 4f, 4f, Paint().apply { color = COL_BORDER; style = Paint.Style.STROKE; strokeWidth = 1f })
-                }
-                else -> {
-                    val c = when (l.color) {
-                        RibbonColor.RED -> COL_RED
-                        RibbonColor.BLUE -> COL_BLUE
-                        else -> COL_GREEN
-                    }
-                    canvas.drawRoundRect(sr, 4f, 4f, Paint().apply { color = Color.argb(140, Color.red(c), Color.green(c), Color.blue(c)); style = Paint.Style.FILL })
-                }
-            }
-            sx += sSize + sGap
-        }
     }
 }
