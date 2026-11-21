@@ -178,7 +178,7 @@ fun RibbonGeneratorScreen(
                 }
             }
 
-            // БЛОК: Фон листа и шрифт
+            // БЛОК: Фон листа
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -188,16 +188,16 @@ fun RibbonGeneratorScreen(
                         Text("Фон листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = config.bgColor == RibbonBgColor.WHITE, onClick = { config = config.copy(bgColor = RibbonBgColor.WHITE) }, label = { Text("Белый") })
-                            FilterChip(selected = config.bgColor == RibbonBgColor.PEACH, onClick = { config = config.copy(bgColor = RibbonBgColor.PEACH) }, label = { Text("Цветной") })
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("Шрифт букв", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = config.font == RibbonFont.REGULAR, onClick = { config = config.copy(font = RibbonFont.REGULAR) }, label = { Text("Обычный") })
-                            FilterChip(selected = config.font == RibbonFont.CURSIVE, onClick = { config = config.copy(font = RibbonFont.CURSIVE) }, label = { Text("Письменный") })
+                            FilterChip(
+                                selected = config.bgColor == RibbonBgColor.WHITE, 
+                                onClick = { config = config.copy(bgColor = RibbonBgColor.WHITE) }, 
+                                label = { Text("Белый (экономия краски)") }
+                            )
+                            FilterChip(
+                                selected = config.bgColor == RibbonBgColor.PEACH, 
+                                onClick = { config = config.copy(bgColor = RibbonBgColor.PEACH) }, 
+                                label = { Text("Цветной") }
+                            )
                         }
                     }
                 }
