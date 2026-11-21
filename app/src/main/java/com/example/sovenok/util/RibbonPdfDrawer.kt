@@ -15,7 +15,7 @@ import android.graphics.pdf.PdfDocument
 import androidx.core.content.res.ResourcesCompat
 import com.example.sovenok.R
 import com.example.sovenok.data.*
-import kotlin.math.min
+import kotlin.math.minOf
 import kotlin.random.Random
 
 object RibbonPdfDrawer {
@@ -521,8 +521,11 @@ object RibbonPdfDrawer {
         val reservedRight = if (page.rightRows != null) 190f else 0f
         val availableWidth = PAGE_WIDTH - 100f - reservedRight
         val gridTop = 115f; val gridBottom = 395f
-        var cell = min(availableWidth / maxColsLeft - gap, (gridBottom - gridTop) / rowCount - gap, 125f)
-        val colW = cell + gap; val rowH = cell + gap
+        
+        // ИСПРАВЛЕНО: minOf вместо min, и val вместо var
+        val cell = minOf(availableWidth / maxColsLeft - gap, (gridBottom - gridTop) / rowCount - gap, 125f)
+        val colW = cell + gap
+        val rowH = cell + gap
 
         val totalWidth = maxColsLeft * colW - gap
         val baseX = if (page.rightRows != null) 50f else (PAGE_WIDTH - totalWidth) / 2f
