@@ -5,7 +5,6 @@ enum class RibbonColor { RED, BLUE, GREEN, BOTH, WHITE }
 data class RibbonLetter(val char: String, val color: RibbonColor)
 
 object RibbonData {
-    // Гласные (верхний и нижний ряд)
     val topVowels = listOf(
         RibbonLetter("Аа", RibbonColor.RED),
         RibbonLetter("Оо", RibbonColor.RED),
@@ -13,6 +12,7 @@ object RibbonData {
         RibbonLetter("Ыы", RibbonColor.RED),
         RibbonLetter("Ээ", RibbonColor.RED)
     )
+    
     val bottomVowels = listOf(
         RibbonLetter("Яя", RibbonColor.RED),
         RibbonLetter("Ёё", RibbonColor.RED),
@@ -21,12 +21,11 @@ object RibbonData {
         RibbonLetter("Ее", RibbonColor.RED)
     )
 
-    // Согласные (звонкие - верхний ряд)
     val topConsonants = listOf(
-        RibbonLetter("Лл", RibbonColor.GREEN),
-        RibbonLetter("Мм", RibbonColor.GREEN),
-        RibbonLetter("Нн", RibbonColor.GREEN),
-        RibbonLetter("Рр", RibbonColor.GREEN),
+        RibbonLetter("Лл", RibbonColor.BOTH),
+        RibbonLetter("Мм", RibbonColor.BOTH),
+        RibbonLetter("Нн", RibbonColor.BOTH),
+        RibbonLetter("Рр", RibbonColor.BOTH),
         RibbonLetter("Йй", RibbonColor.GREEN),
         RibbonLetter("Бб", RibbonColor.BOTH),
         RibbonLetter("Вв", RibbonColor.BOTH),
@@ -36,7 +35,6 @@ object RibbonData {
         RibbonLetter("Зз", RibbonColor.BOTH)
     )
     
-    // Согласные (глухие - нижний ряд)
     val bottomConsonants = listOf(
         RibbonLetter("Пп", RibbonColor.BOTH),
         RibbonLetter("Фф", RibbonColor.BOTH),
@@ -50,9 +48,8 @@ object RibbonData {
         RibbonLetter("Щщ", RibbonColor.GREEN)
     )
 
-    // Знаки
     val signs = listOf(
-        RibbonLetter("ь", RibbonColor.WHITE),
-        RibbonLetter("ъ", RibbonColor.WHITE)
+        RibbonLetter("Ьь", RibbonColor.WHITE),
+        RibbonLetter("Ъъ", RibbonColor.WHITE)
     )
 }
