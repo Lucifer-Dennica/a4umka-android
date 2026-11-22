@@ -4,11 +4,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import com.example.sovenok.data.ComprehensionConfig
+import com.example.sovenok.data.ComprehensionStory
 
 object ComprehensionPdfDrawer {
     const val PAGE_WIDTH = 595f
@@ -23,6 +25,12 @@ object ComprehensionPdfDrawer {
         drawPageContent(canvas, config, story, 1)
         pages.add(bmp)
         
+        if (config.showAnswerSheet) {
+            val ansBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+            val ansCanvas = Canvas(ansBmp)
+            drawAnswerSheet(ansCanvas, config, story)
+            pages.add(ansBmp)
+        }
         return pages
     }
 
@@ -45,13 +53,14 @@ object ComprehensionPdfDrawer {
         }
     }
 
-    private fun drawPageContent(canvas: Canvas, config: ComprehensionConfig, story: com.example.sovenok.data.ComprehensionStory, pageNum: Int) {
-        val bgColor = if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA")
+    private fun drawPageContent(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory, pageNum: Int) {
+        val bgColor = if (config.isPeachBackground) Color.parseColor("#FFF3E0") else Color.WHITE
         canvas.drawColor(bgColor)
         
         var currentY = 60f
         val margin = 40f
         
+        // Шапка
         val headerPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
         
@@ -67,67 +76,83 @@ object ComprehensionPdfDrawer {
         
         currentY = 90f
         
-        val titlePaint = Paint().apply { 
-            isAntiAlias = true; textSize = 26f; color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#33691E"); typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER 
-        }
+        // Заголовок рассказа
+        val titlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.parseColor("#33691E"); typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         canvas.drawText(story.title, PAGE_WIDTH / 2f, currentY, titlePaint)
-        currentY += 25f
-        
-        val subtitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
-        canvas.drawText("Читай, замечай, размышляй", PAGE_WIDTH / 2f, currentY, subtitlePaint)
         currentY += 30f
         
         val instPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         canvas.drawText("Прочитай рассказ. Затем ответь на вопросы — устно или письменно.", margin, currentY, instPaint)
         currentY += 25f
         
+        // Текст с кумулятивным счётчиком слов
         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val lineNumPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
-        val lineHeight = bodyPaint.textSize * 1.5f
+        val lineHeight = bodyPaint.textSize * 1.6f
         
         val paragraphs = story.text.split("\n")
-        var globalLineCount = 0
+        var cumulativeWordCount = 0
         
         for (paragraph in paragraphs) {
-            val words = paragraph.split(" ")
-            var currentLine = ""
-            val lines = mutableListOf<String>()
+            val words = paragraph.split(Regex("\\s+")).filter { it.isNotBlank() }
+            var currentLineWords = mutableListOf<String>()
+            var currentLineWidth = 0f
+            val maxLineWidth = PAGE_WIDTH - margin * 2 - 40f // 40f запас для цифры справа
             
             for (word in words) {
-                val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
-                if (bodyPaint.measureText(testLine) > PAGE_WIDTH - margin * 2 - 30f) {
-                    lines.add(currentLine)
-                    currentLine = word
-                } else {
-                    currentLine = testLine
+                val wordWidth = bodyPaint.measureText(word + " ")
+                if (currentLineWidth + wordWidth > maxLineWidth && currentLineWords.isNotEmpty()) {
+                    // Рисуем строку
+                    val lineText = currentLineWords.joinToString(" ")
+                    cumulativeWordCount += currentLineWords.size
+                    canvas.drawText(lineText, margin, currentY, bodyPaint)
+                    if (config.showWordCount) {
+                        canvas.drawText(cumulativeWordCount.toString(), PAGE_WIDTH - margin, currentY, lineNumPaint)
+                    }
+                    currentY += lineHeight
+                    
+                    // Новая строка
+                    currentLineWords.clear()
+                    currentLineWidth = 0f
                 }
+                currentLineWords.add(word)
+                currentLineWidth += wordWidth
             }
-            if (currentLine.isNotEmpty()) lines.add(currentLine)
-            
-            for (line in lines) {
-                globalLineCount++
-                canvas.drawText(line, margin, currentY, bodyPaint)
-                
+            // Рисуем остаток абзаца
+            if (currentLineWords.isNotEmpty()) {
+                val lineText = currentLineWords.joinToString(" ")
+                cumulativeWordCount += currentLineWords.size
+                canvas.drawText(lineText, margin, currentY, bodyPaint)
                 if (config.showWordCount) {
-                    canvas.drawText(globalLineCount.toString(), PAGE_WIDTH - margin, currentY, lineNumPaint)
+                    canvas.drawText(cumulativeWordCount.toString(), PAGE_WIDTH - margin, currentY, lineNumPaint)
                 }
                 currentY += lineHeight
             }
-            currentY += 10f
+            currentY += 10f // Отступ между абзацами
         }
         
         currentY += 20f
         
+        // Блок инструкций по проверке техники чтения
+        val footerPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
+        canvas.drawText("В тексте ${story.totalWords} слов. Заголовок не учитывается. Слова с дефисом считаются одним словом.", margin, currentY, footerPaint)
+        currentY += 16f
+        canvas.drawText("За одну минуту: прочитано _____ слов, ошибок _____. Отметьте последнее полностью прочитанное слово.", margin, currentY, footerPaint)
+        currentY += 16f
+        canvas.drawText("Число справа — сумма слов до конца строки. Если текст закончился раньше минуты, запишите общее время: _____ сек.", margin, currentY, footerPaint)
+        currentY += 30f
+        
+        // Вопросы
         if (!config.showAnswerSheet) {
-            val qTitlePaint = Paint().apply { isAntiAlias = true; textSize = 20f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+            val qTitlePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Вопросы:", margin, currentY, qTitlePaint)
-            currentY += 30f
+            currentY += 25f
             
             val qPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; typeface = Typeface.DEFAULT }
             val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
             
             story.questions.forEachIndexed { index, question ->
-                val circlePaint = Paint().apply { color = if (config.isBlackAndWhite) Color.DKGRAY else Color.parseColor("#A5D6A7"); style = Paint.Style.FILL }
+                val circlePaint = Paint().apply { color = Color.parseColor("#A5D6A7"); style = Paint.Style.FILL }
                 canvas.drawCircle(margin + 10f, currentY - 5f, 10f, circlePaint)
                 val numPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
                 canvas.drawText((index + 1).toString(), margin + 10f, currentY, numPaint)
@@ -142,29 +167,26 @@ object ComprehensionPdfDrawer {
         }
     }
 
-    private fun drawAnswerSheet(canvas: Canvas, config: ComprehensionConfig, story: com.example.sovenok.data.ComprehensionStory) {
-        val bgColor = if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA")
+    private fun drawAnswerSheet(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory) {
+        val bgColor = if (config.isPeachBackground) Color.parseColor("#FFF3E0") else Color.WHITE
         canvas.drawColor(bgColor)
         val margin = 40f
         
         val ansTitlePaint = Paint().apply { isAntiAlias = true; textSize = 24f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-        canvas.drawText("Ответы для взрослого", PAGE_WIDTH / 2f, 60f, ansTitlePaint)
+        canvas.drawText("Ответы — для взрослого", PAGE_WIDTH / 2f, 60f, ansTitlePaint)
         
-        val hintText = if (config.showAdultHints) {
-            "Проверьте технику чтения: скорость (слов/мин), понимание прочитанного, выразительность."
-        } else {
-            "Проверьте правильность ответов ребёнка."
-        }
+        val hintText = "Ребёнок может ответить своими словами. Ниже — смысловые ориентиры, а не обязательные формулировки."
         val hintPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.GRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
         canvas.drawText(hintText, PAGE_WIDTH / 2f, 90f, hintPaint)
         
         var ansY = 140f
         val ansPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.BLACK; typeface = Typeface.DEFAULT }
+        val qPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
         
         story.questions.forEachIndexed { index, q ->
-            canvas.drawText("Вопрос ${index + 1}: $q", margin, ansY, ansPaint)
-            ansY += 20f
-            canvas.drawText("Ответ: __________________________________________________", margin, ansY, ansPaint)
+            canvas.drawText("Вопрос ${index + 1}: $q", margin, ansY, qPaint)
+            ansY += 22f
+            canvas.drawText("Ответ: ${story.answers[index]}", margin, ansY, ansPaint)
             ansY += 40f
         }
     }
