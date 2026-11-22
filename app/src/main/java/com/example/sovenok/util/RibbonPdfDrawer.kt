@@ -189,10 +189,6 @@ object RibbonPdfDrawer {
             cardTop = 394f
         }
         drawLegendCard(canvas, cardTop, colored = true)
-
-        if (isMissing) {
-            drawWatermark(canvas, if (isAnswerKey) "ответы" else "задание")
-        }
     }
 
     private fun drawColoringPage(canvas: Canvas, config: RibbonConfig, font: Typeface, titleFont: Typeface, isAnswerKey: Boolean) {
@@ -336,13 +332,6 @@ object RibbonPdfDrawer {
             isAntiAlias = true; this.color = color; textSize = 12f; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
         })
         canvas.drawLine(left, lineY, left + width, lineY, Paint().apply { this.color = color; strokeWidth = 2f })
-    }
-
-    private fun drawWatermark(canvas: Canvas, kind: String) {
-        canvas.drawText("a4umka.ru — задания и игры для детей · лента букв · $kind",
-            PAGE_WIDTH / 2f, 582f, Paint().apply {
-                isAntiAlias = true; textSize = 9f; color = Color.parseColor("#BDBDBD"); textAlign = Paint.Align.CENTER
-            })
     }
 
     private fun drawLostLettersBox(canvas: Canvas, top: Float, letters: Set<String>, font: Typeface) {
@@ -521,7 +510,6 @@ object RibbonPdfDrawer {
         val availableWidth = PAGE_WIDTH - 100f - reservedRight
         val gridTop = 115f; val gridBottom = 395f
         
-        // ИСПРАВЛЕНО: используем нативный coerceAtMost вместо minOf
         val cell = (availableWidth / maxColsLeft - gap)
             .coerceAtMost((gridBottom - gridTop) / rowCount - gap)
             .coerceAtMost(125f)
