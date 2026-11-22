@@ -91,7 +91,6 @@ object SyllablePdfDrawer {
 
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
                 currentY += 22f
-                
                 val dashPaint = Paint().apply {
                     isAntiAlias = true
                     color = Color.parseColor("#BDBDBD")
@@ -101,7 +100,6 @@ object SyllablePdfDrawer {
                 }
                 canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
                 currentY += 12f
-                
                 val questionTitlePaint = Paint().apply {
                     isAntiAlias = true
                     textSize = config.fontSize - 2f
@@ -110,7 +108,6 @@ object SyllablePdfDrawer {
                 }
                 canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
                 currentY += questionTitlePaint.textSize + 8f
-                
                 val questionPaint = Paint().apply {
                     isAntiAlias = true
                     textSize = config.fontSize - 4f
@@ -122,7 +119,7 @@ object SyllablePdfDrawer {
                         bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                         canvas = Canvas(bmp)
                         currentY = drawHeader(canvas, config, texts)
-                        currentY += 5f
+                        currentY += 22f
                         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
                         currentY += 12f
                         canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
@@ -243,7 +240,7 @@ object SyllablePdfDrawer {
                         pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
                         page = document.startPage(pageInfo)
                         currentY = drawHeader(page.canvas, config, texts)
-                        currentY += 5f
+                        currentY += 22f
                         page.canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
                         currentY += 12f
                         page.canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
