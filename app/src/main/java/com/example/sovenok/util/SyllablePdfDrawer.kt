@@ -89,8 +89,9 @@ object SyllablePdfDrawer {
                 }
             }
 
+            // Блок вопросов с пунктирной линией
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
-                currentY += 22f
+                currentY += 35f
                 val dashPaint = Paint().apply {
                     isAntiAlias = true
                     color = Color.parseColor("#BDBDBD")
@@ -99,7 +100,8 @@ object SyllablePdfDrawer {
                     pathEffect = DashPathEffect(floatArrayOf(8f, 4f), 0f)
                 }
                 canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
-                currentY += 12f
+                currentY += 15f
+
                 val questionTitlePaint = Paint().apply {
                     isAntiAlias = true
                     textSize = config.fontSize - 2f
@@ -108,6 +110,7 @@ object SyllablePdfDrawer {
                 }
                 canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
                 currentY += questionTitlePaint.textSize + 8f
+
                 val questionPaint = Paint().apply {
                     isAntiAlias = true
                     textSize = config.fontSize - 4f
@@ -119,9 +122,9 @@ object SyllablePdfDrawer {
                         bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                         canvas = Canvas(bmp)
                         currentY = drawHeader(canvas, config, texts)
-                        currentY += 22f
+                        currentY += 35f
                         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
-                        currentY += 12f
+                        currentY += 15f
                         canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
                         currentY += questionTitlePaint.textSize + 8f
                     }
@@ -210,7 +213,7 @@ object SyllablePdfDrawer {
             }
 
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
-                currentY += 22f
+                currentY += 35f
                 val dashPaint = Paint().apply {
                     isAntiAlias = true
                     color = Color.parseColor("#BDBDBD")
@@ -219,7 +222,8 @@ object SyllablePdfDrawer {
                     pathEffect = DashPathEffect(floatArrayOf(8f, 4f), 0f)
                 }
                 page.canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
-                currentY += 12f
+                currentY += 15f
+
                 val questionTitlePaint = Paint().apply {
                     isAntiAlias = true
                     textSize = config.fontSize - 2f
@@ -228,6 +232,7 @@ object SyllablePdfDrawer {
                 }
                 page.canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
                 currentY += questionTitlePaint.textSize + 8f
+
                 val questionPaint = Paint().apply {
                     isAntiAlias = true
                     textSize = config.fontSize - 4f
@@ -240,9 +245,9 @@ object SyllablePdfDrawer {
                         pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
                         page = document.startPage(pageInfo)
                         currentY = drawHeader(page.canvas, config, texts)
-                        currentY += 22f
+                        currentY += 35f
                         page.canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, dashPaint)
-                        currentY += 12f
+                        currentY += 15f
                         page.canvas.drawText("Вопросы по тексту", margin, currentY, questionTitlePaint)
                         currentY += questionTitlePaint.textSize + 8f
                     }
@@ -262,6 +267,7 @@ object SyllablePdfDrawer {
     }
 
     private fun drawHeader(canvas: Canvas, config: SyllableConfig, texts: List<SyllableText>): Float {
+        // Белый фон (экономия краски)
         canvas.drawColor(Color.WHITE)
 
         val topPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
@@ -270,6 +276,7 @@ object SyllablePdfDrawer {
         canvas.drawText("Дата:", 40f, 40f, topPaint)
         canvas.drawLine(80f, 42f, 180f, 42f, linePaint)
 
+        // Имя вместо Время
         canvas.drawText("Имя:", PAGE_WIDTH - 160f, 40f, topPaint)
         canvas.drawLine(PAGE_WIDTH - 110f, 42f, PAGE_WIDTH - 40f, 42f, linePaint)
 
@@ -280,6 +287,7 @@ object SyllablePdfDrawer {
         val countTextPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         canvas.drawText("Слов: $totalWords", PAGE_WIDTH / 2f, 42f, countTextPaint)
 
+        // Динамический заголовок: название текста или общий
         val title = if (texts.size == 1) texts.first().title else "Чтение по слогам"
         val titlePaint = Paint().apply { isAntiAlias = true; textSize = 28f; color = Color.parseColor("#33691E"); typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         canvas.drawText(title, PAGE_WIDTH / 2f, 90f, titlePaint)
