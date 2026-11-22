@@ -7,8 +7,9 @@ data class SyllableConfig(
     val selectedTexts: List<SyllableText> = emptyList(),
     val customTitle: String = "",
     val customText: String = "",
-    val fontSize: Float = 24f,       // <-- Размер шрифта
-    val textSpacing: Float = 60f,    // <-- Отступ между текстами
-    val showQuestions: Boolean = false,
-    val isMultiSelectMode: Boolean = false
+    val customQuestions: List<String> = emptyList(), // ДОБАВИТЬ ЭТО ПОЛЕ
+    val isMultiSelectMode: Boolean = false,
+    val fontSize: Float = 24f,
+    val textSpacing: Float = 40f,
+    val showQuestions: Boolean = true
 )
