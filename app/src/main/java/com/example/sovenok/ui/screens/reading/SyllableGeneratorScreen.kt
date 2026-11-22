@@ -4,9 +4,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.items as gridItems  // <-- АЛИАС!
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -33,13 +34,13 @@ import com.example.sovenok.util.SyllablePdfDrawer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SyllableGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     var config by remember {
         mutableStateOf(
             SyllableConfig(selectedTexts = listOf(SyllableData.categories.first().texts.first()))
@@ -48,21 +49,20 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     var showInfoSheet by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-    
-    // Состояние для режима редактирования
+
+    // Режим редактирования выбранных текстов
     var editMode by remember { mutableStateOf(false) }
     var editedTexts by remember { mutableStateOf<List<SyllableText>>(emptyList()) }
-    
+
     LaunchedEffect(config) {
         delay(300)
         previewPages = SyllablePdfDrawer.generatePreviewPages(config, context)
     }
-    
-    // При изменении selectedTexts обновляем editedTexts
+
     LaunchedEffect(config.selectedTexts) {
         editedTexts = config.selectedTexts.toList()
     }
-    
+
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
@@ -101,7 +101,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // БЛОК: Источник текста + Редактирование
+            // БЛОК: Источник текста (3 вкладки)
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -110,10 +110,12 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text("Источник текста", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        // Три вкладки: Готовый / Свой / Редактировать (со счётчиком)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
                                 selected = config.source == SyllableSource.READY && !editMode,
-                                onClick = { 
+                                onClick = {
                                     config = config.copy(source = SyllableSource.READY)
                                     editMode = false
                                 },
@@ -121,22 +123,21 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             )
                             FilterChip(
                                 selected = config.source == SyllableSource.CUSTOM,
-                                onClick = { 
+                                onClick = {
                                     config = config.copy(source = SyllableSource.CUSTOM)
                                     editMode = false
                                 },
                                 label = { Text("Свой текст") }
                             )
-                            // ВКЛАДКА РЕДАКТИРОВАТЬ со счётчиком
                             FilterChip(
                                 selected = editMode,
-                                onClick = { 
+                                onClick = {
                                     if (config.selectedTexts.isNotEmpty()) {
                                         editMode = true
                                         editedTexts = config.selectedTexts.toList()
                                     } else {
-                                        scope.launch { 
-                                            snackbarHostState.showSnackbar("Сначала выберите тексты во вкладке «Готовый текст»") 
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Сначала выберите тексты во вкладке «Готовый текст»")
                                         }
                                     }
                                 },
@@ -144,26 +145,39 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // РЕЖИМ РЕДАКТИРОВАНИЯ
-                        if (editMode && config.source == SyllableSource.READY) {
+
+                        // === ВКЛАДКА РЕДАКТИРОВАТЬ ===
+                        if (editMode) {
                             if (editedTexts.isEmpty()) {
-                                Text("Нет выбранных текстов. Вернитесь во вкладку «Готовый текст» и выберите тексты.", 
-                                    color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "Нет выбранных текстов. Вернитесь во вкладку «Готовый текст» и выберите тексты.",
+                                    color = Color.Gray,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             } else {
-                                Text("Редактирование выбранных текстов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                                Text("Изменения сразу отображаются в предпросмотре", fontSize = 11.sp, color = Color.Gray)
+                                Text(
+                                    "Редактирование выбранных текстов",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    "Изменения сразу отображаются в предпросмотре",
+                                    fontSize = 11.sp,
+                                    color = Color.Gray
+                                )
                                 Spacer(modifier = Modifier.height(12.dp))
-                                
+
                                 editedTexts.forEachIndexed { index, editedText ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                        )
                                     ) {
                                         Column(modifier = Modifier.padding(12.dp)) {
                                             Text(editedText.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                             Spacer(modifier = Modifier.height(8.dp))
-                                            
+
                                             OutlinedTextField(
                                                 value = editedText.title,
                                                 onValueChange = { newTitle ->
@@ -176,7 +190,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                                 singleLine = true
                                             )
                                             Spacer(modifier = Modifier.height(8.dp))
-                                            
+
                                             OutlinedTextField(
                                                 value = editedText.text,
                                                 onValueChange = { newText ->
@@ -188,7 +202,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                                 modifier = Modifier.fillMaxWidth().height(120.dp),
                                                 maxLines = 6
                                             )
-                                            
+
                                             if (editedText.questions.isNotEmpty()) {
                                                 Spacer(modifier = Modifier.height(8.dp))
                                                 Text("Вопросы:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
@@ -219,9 +233,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                                             config = config.copy(selectedTexts = editedTexts)
                                                         },
                                                         modifier = Modifier.weight(1f)
-                                                    ) {
-                                                        Text("+ Вопрос")
-                                                    }
+                                                    ) { Text("+ Вопрос") }
                                                     if (editedText.questions.size > 1) {
                                                         OutlinedButton(
                                                             onClick = {
@@ -232,9 +244,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                                                 config = config.copy(selectedTexts = editedTexts)
                                                             },
                                                             modifier = Modifier.weight(1f)
-                                                        ) {
-                                                            Text("− Удалить")
-                                                        }
+                                                        ) { Text("− Удалить") }
                                                     }
                                                 }
                                             }
@@ -244,8 +254,8 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
-                        // РЕЖИМ ГОТОВЫХ ТЕКСТОВ (двухрядный список)
-                        else if (config.source == SyllableSource.READY && !editMode) {
+                        // === ВКЛАДКА ГОТОВЫЙ ТЕКСТ (двухрядный список) ===
+                        else if (config.source == SyllableSource.READY) {
                             Text("← Листайте вкладки →", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items(SyllableData.categories) { category ->
@@ -257,15 +267,15 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // ДВУХРЯДНЫЙ СПИСОК
+
                             LazyVerticalGrid(
                                 columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.heightIn(max = 400.dp)
+                                userScrollEnabled = false
                             ) {
-                                items(selectedCategory.texts) { textObj ->
+                                gridItems(selectedCategory.texts) { textObj ->
                                     val isSelected = config.selectedTexts.contains(textObj)
                                     ElevatedCard(
                                         onClick = {
@@ -287,23 +297,42 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                                 ) else Modifier
                                             )
                                     ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(textObj.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                                Text(
+                                                    textObj.title,
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.weight(1f),
+                                                    maxLines = 2
+                                                )
                                                 if (textObj.questions.isNotEmpty()) {
-                                                    Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(4.dp)) {
-                                                        Text("? вопросы", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                                                    Surface(
+                                                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                                                        shape = RoundedCornerShape(4.dp)
+                                                    ) {
+                                                        Text(
+                                                            "? вопросы",
+                                                            fontSize = 9.sp,
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                        )
                                                     }
                                                 }
                                             }
-                                            Text(textObj.text.take(40).replace("\n", " ") + "...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                textObj.text.take(40).replace("\n", " ") + "...",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                                maxLines = 2
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
-                        // РЕЖИМ СВОЕГО ТЕКСТА
-                        else if (config.source == SyllableSource.CUSTOM) {
+                        // === ВКЛАДКА СВОЙ ТЕКСТ ===
+                        else {
                             OutlinedTextField(
                                 value = config.customTitle,
                                 onValueChange = { config = config.copy(customTitle = it) },
@@ -318,11 +347,48 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth().height(150.dp),
                                 maxLines = 8
                             )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Вопросы по тексту (необязательно)", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            config.customQuestions.forEachIndexed { index, question ->
+                                OutlinedTextField(
+                                    value = question,
+                                    onValueChange = { newQuestion ->
+                                        val newQuestions = config.customQuestions.toMutableList()
+                                        newQuestions[index] = newQuestion
+                                        config = config.copy(customQuestions = newQuestions)
+                                    },
+                                    label = { Text("Вопрос ${index + 1}") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        config = config.copy(customQuestions = config.customQuestions + "")
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) { Text("+ Добавить вопрос") }
+                                if (config.customQuestions.isNotEmpty()) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            val newQuestions = config.customQuestions.toMutableList()
+                                            newQuestions.removeAt(newQuestions.size - 1)
+                                            config = config.copy(customQuestions = newQuestions)
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) { Text("− Удалить") }
+                                }
+                            }
                         }
                     }
                 }
             }
-            
+
             // БЛОК: Настройки печати
             item {
                 OutlinedCard(
@@ -380,7 +446,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-            
+
             // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -399,24 +465,21 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().aspectRatio(SyllablePdfDrawer.PAGE_WIDTH / SyllablePdfDrawer.PAGE_HEIGHT)
                     ) { page ->
                         if (page < previewPages.size) {
-                            ZoomableImage(
-                                bitmap = previewPages[page],
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            ZoomableImage(bitmap = previewPages[page], modifier = Modifier.fillMaxSize())
                         }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
-        
+
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
                     Text("Чтение по слогам", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Этот раздел помогает детям 5–7 лет учиться читать слитно. Под каждым слогом рисуется дуга, а под одиночными гласными — точка.\n\n" +
+                        "Этот раздел помогает детям 5–7 лет учиться читать слитно. Под каждым слогом рисуется дуга, а под одиночными гласными — точка. Такая разметка показывает ребёнку, какие буквы читаются вместе, а какие отдельно.\n\n" +
                         "В генераторе более 100 готовых текстов от столбиков слов до рассказов для 1 класса. Или вставьте свой текст — разметка проставится автоматически.\n\n" +
                         "Как пользоваться:\n" +
                         "• Выберите «Готовый текст» и накликните нужные рассказы из списка\n" +
