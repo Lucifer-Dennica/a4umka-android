@@ -146,7 +146,14 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                         }
                                     }
                                 },
-                                label = { Text("Редактировать (${config.selectedTexts.size})") }
+                                label = { 
+                                    Text(
+                                        "Редактировать (${config.selectedTexts.size})",
+                                         maxLines = 1,
+                                         softWrap = false,
+                                         fontSize = 12.sp
+                                    )   
+                                }    
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
