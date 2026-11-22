@@ -89,9 +89,8 @@ object SyllablePdfDrawer {
                 }
             }
 
-            // ВОПРОСЫ С ПУНКТИРНОЙ ЛИНИЕЙ (отступ уменьшен с 10f до 5f)
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
-                currentY += 5f
+                currentY += 22f
                 
                 val dashPaint = Paint().apply {
                     isAntiAlias = true
