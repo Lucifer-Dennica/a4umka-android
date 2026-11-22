@@ -183,10 +183,10 @@ object RibbonPdfDrawer {
             drawColoredCell(canvas, letter, config, signX, startY + i * rowH, cellW, cellH, font, missing = false)
         }
 
-        var cardTop = 352f
+        var cardTop = 360f
         if (isMissing && !isAnswerKey && config.showHint && missingSet.isNotEmpty()) {
-            drawLostLettersBox(canvas, 352f, missingSet, font)
-            cardTop = 394f
+            drawLostLettersBox(canvas, 340f, missingSet, font)
+            cardTop = 400f
         }
         drawLegendCard(canvas, cardTop, colored = true)
     }
