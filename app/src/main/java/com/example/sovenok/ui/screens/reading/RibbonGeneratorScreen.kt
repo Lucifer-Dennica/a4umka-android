@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,8 +44,10 @@ fun RibbonGeneratorScreen(
     var showInfoSheet by remember { mutableStateOf(false) }
 
     var previewPages by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
+    
+    // При изменении config (включая изменение seed) пересоздаем превью
     LaunchedEffect(config) {
-        delay(300)
+        delay(300) // Небольшая задержка, чтобы не дергать генерацию при быстром переключении
         previewPages = RibbonPdfDrawer.getPreview(config, context)
     }
 
@@ -159,7 +162,7 @@ fun RibbonGeneratorScreen(
                             }
 
                             if (config.mode == RibbonMode.MISSING) {
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                                 Text("Сколько букв спрятать:", style = MaterialTheme.typography.labelLarge)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -167,10 +170,26 @@ fun RibbonGeneratorScreen(
                                     FilterChip(selected = config.missingCount == MissingCount.SIXTEEN, onClick = { config = config.copy(missingCount = MissingCount.SIXTEEN) }, label = { Text("16") })
                                     FilterChip(selected = config.missingCount == MissingCount.ALL, onClick = { config = config.copy(missingCount = MissingCount.ALL) }, label = { Text("Все") })
                                 }
+                                
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Checkbox(checked = config.showHint, onCheckedChange = { config = config.copy(showHint = it) })
                                     Text("Подсказка: «Эти буквы потерялись»")
+                                }
+
+                                // === НОВАЯ КНОПКА: ОБНОВИТЬ ВАРИАНТ ===
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        // Меняем seed на текущее время, что заставляет LaunchedEffect пересоздать превью с новыми буквами
+                                        config = config.copy(seed = System.currentTimeMillis())
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                                ) {
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Обновить")
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Сгенерировать новый вариант")
                                 }
                             }
                         }
@@ -229,7 +248,7 @@ fun RibbonGeneratorScreen(
             // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
