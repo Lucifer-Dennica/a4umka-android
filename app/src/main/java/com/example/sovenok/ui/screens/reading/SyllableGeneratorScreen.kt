@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -25,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sovenok.data.*
@@ -50,7 +50,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     
-    // Состояние для режима редактирования
     var editMode by remember { mutableStateOf(false) }
     var editedTexts by remember { mutableStateOf<List<SyllableText>>(emptyList()) }
     
@@ -59,7 +58,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
         previewPages = SyllablePdfDrawer.generatePreviewPages(config, context)
     }
     
-    // При изменении selectedTexts обновляем editedTexts
     LaunchedEffect(config.selectedTexts) {
         editedTexts = config.selectedTexts.toList()
     }
@@ -108,7 +106,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // БЛОК: Источник текста + Редактирование
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -134,6 +131,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 },
                                 label = { Text("Свой текст") }
                             )
+                            // ИСПРАВЛЕНИЕ: Аккуратный перенос на две строки с центрированием
                             FilterChip(
                                 selected = editMode,
                                 onClick = { 
@@ -147,18 +145,15 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                     }
                                 },
                                 label = { 
-                                    Text(
-                                        "Редактировать (${config.selectedTexts.size})",
-                                         maxLines = 1,
-                                         softWrap = false,
-                                         fontSize = 12.sp
-                                    )   
-                                }    
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("Редактировать", fontSize = 11.sp)
+                                        Text("(${config.selectedTexts.size})", fontSize = 11.sp)
+                                    }
+                                }
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // РЕЖИМ РЕДАКТИРОВАНИЯ
                         if (editMode && config.source == SyllableSource.READY) {
                             if (editedTexts.isEmpty()) {
                                 Text("Нет выбранных текстов. Вернитесь во вкладку «Готовый текст» и выберите тексты.", 
@@ -257,7 +252,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
-                        // РЕЖИМ ГОТОВЫХ ТЕКСТОВ (двухрядный список)
                         else if (config.source == SyllableSource.READY && !editMode) {
                             Text("← Листайте вкладки →", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -271,7 +265,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            // ДВУХРЯДНЫЙ СПИСОК
                             LazyVerticalGrid(
                                 columns = GridCells.Fixed(2),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -315,7 +308,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
-                        // РЕЖИМ СВОЕГО ТЕКСТА
                         else if (config.source == SyllableSource.CUSTOM) {
                             OutlinedTextField(
                                 value = config.customTitle,
@@ -336,7 +328,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 }
             }
             
-            // БЛОК: Настройки печати
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -394,7 +385,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 }
             }
             
-            // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
