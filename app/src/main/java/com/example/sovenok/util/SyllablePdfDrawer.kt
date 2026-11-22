@@ -213,7 +213,7 @@ object SyllablePdfDrawer {
             }
 
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
-                currentY += 5f
+                currentY += 22f
                 val dashPaint = Paint().apply {
                     isAntiAlias = true
                     color = Color.parseColor("#BDBDBD")
