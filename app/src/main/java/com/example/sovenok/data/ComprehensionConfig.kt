@@ -6,5 +6,6 @@ data class ComprehensionConfig(
     val showWordCount: Boolean = true,
     val showAdultHints: Boolean = true,
     val showAnswerSheet: Boolean = false,
-    val isPeachBackground: Boolean = false 
+    val isPeachBackground: Boolean = false, 
+    val fontSize: Float = 18f 
 )
