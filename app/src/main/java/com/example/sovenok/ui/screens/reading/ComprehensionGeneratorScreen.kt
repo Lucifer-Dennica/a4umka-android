@@ -30,7 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
+Composable
 fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -39,11 +39,19 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(ComprehensionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var dropdownExpanded by remember { mutableStateOf(false) }
+    
+    // Состояние для редактирования
+    var editMode by remember { mutableStateOf(false) }
+    var editedStory by remember { mutableStateOf<com.example.sovenok.data.ComprehensionStory?>(null) }
 
     LaunchedEffect(Unit) {
         if (config.selectedStory == null) {
             config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
         }
+    }
+    
+    LaunchedEffect(config.selectedStory) {
+        editedStory = config.selectedStory
     }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -68,7 +76,12 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         Icon(Icons.Default.Info, contentDescription = "Справка")
                     }
                     IconButton(onClick = {
-                        val result = PdfExporter.exportComprehension(context, config)
+                        val finalConfig = if (editMode && editedStory != null) {
+                            config.copy(selectedStory = editedStory)
+                        } else {
+                            config
+                        }
+                        val result = PdfExporter.exportComprehension(context, finalConfig)
                         scope.launch {
                             if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
                             else snackbarHostState.showSnackbar("Ошибка сохранения")
@@ -86,7 +99,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // БЛОК: Класс и рассказ
+            // БЛОК: Класс, рассказ и редактирование
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -102,6 +115,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     onClick = {
                                         config = config.copy(grade = grade, selectedStory = ReadingComprehensionData.getRandomStory(grade))
                                         dropdownExpanded = false
+                                        editMode = false
                                     },
                                     label = { Text(grade.toString()) }
                                 )
@@ -113,6 +127,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                             Text("Рассказ", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                             TextButton(onClick = {
                                 config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
+                                editMode = false
                             }) {
                                 Icon(Icons.Default.Refresh, contentDescription = null)
                                 Spacer(Modifier.width(4.dp))
@@ -131,7 +146,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                                 label = {
                                     if (config.selectedStory != null) {
-                                        Text("${config.selectedStory!!.text.split(" ").size} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
+                                        Text("${config.selectedStory!!.totalWords} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
                                     }
                                 }
                             )
@@ -145,15 +160,81 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                         text = {
                                             Column {
                                                 Text(story.title, fontWeight = FontWeight.Bold)
-                                                Text("${story.text.split(" ").size} слов", fontSize = 12.sp, color = Color.Gray)
+                                                Text("${story.totalWords} слов", fontSize = 12.sp, color = Color.Gray)
                                             }
                                         },
                                         onClick = {
                                             config = config.copy(selectedStory = story)
                                             dropdownExpanded = false
+                                            editMode = false
                                         }
                                     )
                                 }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = !editMode,
+                                onClick = { editMode = false },
+                                label = { Text("Просмотр") }
+                            )
+                            FilterChip(
+                                selected = editMode,
+                                onClick = { 
+                                    if (config.selectedStory != null) {
+                                        editMode = true
+                                        editedStory = config.selectedStory
+                                    }
+                                },
+                                label = { Text("Редактировать") }
+                            )
+                        }
+                        
+                        // ПОЛЯ РЕДАКТИРОВАНИЯ
+                        if (editMode && editedStory != null) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = editedStory!!.title,
+                                onValueChange = { editedStory = editedStory!!.copy(title = it); config = config.copy(selectedStory = editedStory) },
+                                label = { Text("Название") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = editedStory!!.text,
+                                onValueChange = { editedStory = editedStory!!.copy(text = it); config = config.copy(selectedStory = editedStory) },
+                                label = { Text("Текст рассказа") },
+                                modifier = Modifier.fillMaxWidth().height(150.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Вопросы и ответы:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+                            editedStory!!.questions.forEachIndexed { index, q ->
+                                OutlinedTextField(
+                                    value = q,
+                                    onValueChange = { 
+                                        val newQ = editedStory!!.questions.toMutableList().apply { this[index] = it }
+                                        editedStory = editedStory!!.copy(questions = newQ)
+                                        config = config.copy(selectedStory = editedStory)
+                                    },
+                                    label = { Text("Вопрос ${index + 1}") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true
+                                )
+                                OutlinedTextField(
+                                    value = editedStory!!.answers[index],
+                                    onValueChange = { 
+                                        val newA = editedStory!!.answers.toMutableList().apply { this[index] = it }
+                                        editedStory = editedStory!!.copy(answers = newA)
+                                        config = config.copy(selectedStory = editedStory)
+                                    },
+                                    label = { Text("Ответ") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
                     }
@@ -170,20 +251,16 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         Text("Настройки печати", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Количество слов справа", modifier = Modifier.weight(1f))
+                            Text("Счётчик слов справа", modifier = Modifier.weight(1f))
                             Switch(checked = config.showWordCount, onCheckedChange = { config = config.copy(showWordCount = it) })
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Подсказки для взрослого", modifier = Modifier.weight(1f))
-                            Switch(checked = config.showAdultHints, onCheckedChange = { config = config.copy(showAdultHints = it) })
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Отдельный лист ответов", modifier = Modifier.weight(1f))
                             Switch(checked = config.showAnswerSheet, onCheckedChange = { config = config.copy(showAnswerSheet = it) })
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Чёрно-белая печать", modifier = Modifier.weight(1f))
-                            Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
+                            Text("Персиковый фон листа", modifier = Modifier.weight(1f))
+                            Switch(checked = config.isPeachBackground, onCheckedChange = { config = config.copy(isPeachBackground = it) })
                         }
                     }
                 }
@@ -191,7 +268,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
             // ПРЕДПРОСМОТР
             item {
-                Text("Предпросмотр листа A4 (4K):", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 if (previewPages.size > 1) {
                     Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                 }
@@ -223,10 +300,12 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     Text("Тексты для чтения с вопросами", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Этот раздел помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.\n\n" +
-                        "В подборке 100 рассказов — по 25 для каждого класса. Выберите конкретную историю или случайный вариант.\n\n" +
-                        "• Количество слов по строкам — дополнительная разметка для проверки техники чтения.\n" +
-                        "• Отдельный лист ответов добавит вторую страницу с подсказками для взрослого.",
+                        "Этот раздел помогает перейти от чтения к обсуждению. На листе A4 — рассказ, вопросы и место для ответов.\n\n" +
+                        "В подборке рассказы для 1–4 классов. Выберите конкретную историю или случайный вариант.\n\n" +
+                        "• Счётчик слов справа помогает проверять технику чтения.\n" +
+                        "• Вкладка «Редактировать» позволяет изменить текст, вопросы и ответы под ваш класс.\n" +
+                        "• «Отдельный лист ответов» добавит вторую страницу с подсказками для взрослого.\n" +
+                        "• По умолчанию фон белый для экономии краски, но его можно сделать персиковым.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(32.dp))
