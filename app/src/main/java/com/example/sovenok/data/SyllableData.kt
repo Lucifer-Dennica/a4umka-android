@@ -16,7 +16,7 @@ object SyllableData {
         SyllableCategory(
             name = "Слоги и слова",
             texts = listOf(
-                SyllableText("Слоги и слова", """мама папа баба
+                SyllableText("Слова из двух слогов", """мама папа баба
 дыня ваза лиса
 коза вода рука
 нога река зима
