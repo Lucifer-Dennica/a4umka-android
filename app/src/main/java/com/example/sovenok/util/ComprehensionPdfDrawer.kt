@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -36,7 +35,6 @@ object ComprehensionPdfDrawer {
 
     fun drawDocument(document: PdfDocument, config: ComprehensionConfig, context: Context) {
         val story = config.selectedStory ?: return
-
         var pageNum = 1
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
         var page = document.startPage(pageInfo)
@@ -106,7 +104,6 @@ object ComprehensionPdfDrawer {
                         canvas.drawText(cumulativeWordCount.toString(), PAGE_WIDTH - margin, currentY, lineNumPaint)
                     }
                     currentY += lineHeight
-                    
                     currentLineWords.clear()
                     currentLineWidth = 0f
                 }
