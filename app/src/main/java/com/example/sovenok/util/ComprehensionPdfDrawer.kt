@@ -65,7 +65,7 @@ object ComprehensionPdfDrawer {
         // Резервируем место на странице: шапка (~110pt) + заголовок рассказа (~50pt) + инструкции
         val usableHeight = PAGE_HEIGHT - 180f  // с учётом шапки и заголовков
         var storyHeight = 0f
-        val bodyPaint = Paint().apply { textSize = 18f }
+        val bodyPaint = Paint().apply { textSize = config.fontSize }
         val lineHeight = bodyPaint.textSize * 1.5f
         for (paragraph in story.text.split("\n")) {
             val words = paragraph.split(" ")
@@ -135,8 +135,8 @@ object ComprehensionPdfDrawer {
         canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory,
         layout: Layout, pageIndex: Int
     ) {
-        val bgColor = if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA")
-        canvas.drawColor(bgColor)
+        // Фон всегда белый
+        canvas.drawColor(Color.WHITE)
 
         val margin = 40f
         val headerPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
@@ -165,7 +165,7 @@ object ComprehensionPdfDrawer {
 
             val titlePaint = Paint().apply {
                 isAntiAlias = true; textSize = 26f
-                color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#33691E")
+                color = Color.parseColor("#33691E")
                 typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
             }
             canvas.drawText(story.title, PAGE_WIDTH / 2f, currentY, titlePaint)
@@ -179,7 +179,10 @@ object ComprehensionPdfDrawer {
             canvas.drawText("Прочитай рассказ. Затем ответь на вопросы — устно или письменно.", margin, currentY, instPaint)
             currentY += 25f
 
-            val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT }
+            // Используем размер шрифта из конфига
+            val bodyPaint = Paint().apply {
+                isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT
+            }
             val lineNumPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
             val lineHeight = bodyPaint.textSize * 1.5f
 
@@ -249,7 +252,7 @@ object ComprehensionPdfDrawer {
             if (currentY > PAGE_HEIGHT - 60f) return@forEachIndexed
 
             val circlePaint = Paint().apply {
-                color = if (config.isBlackAndWhite) Color.DKGRAY else Color.parseColor("#A5D6A7")
+                color = Color.parseColor("#A5D6A7")
                 style = Paint.Style.FILL
             }
             canvas.drawCircle(margin + 10f, currentY - 5f, 10f, circlePaint)
