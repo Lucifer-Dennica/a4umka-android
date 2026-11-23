@@ -9,381 +9,290 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import com.example.sovenok.data.ComprehensionConfig
+import com.example.sovenok.data.ComprehensionStory
 
 object ComprehensionPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
     const val MARGIN = 40f
-    
-    // Высота элементов
-    const val HEADER_HEIGHT = 70f // Шапка с Имя/Класс/Дата
-    const val TITLE_BLOCK_HEIGHT = 80f // Заголовок + подзаголовок + инструкция
-    const val CONTENT_START_Y = HEADER_HEIGHT + TITLE_BLOCK_HEIGHT // 150f
+    const val START_Y = 70f
     const val BOTTOM_MARGIN = 50f
-    const val AVAILABLE_HEIGHT = PAGE_HEIGHT - CONTENT_START_Y - BOTTOM_MARGIN // 642f
-    
+
+    data class LineData(val text: String, val cumulativeWords: Int)
+    data class LayoutPage(val lines: List<LineData>, val hasQuestions: Boolean)
+
     fun generatePreviewPages(config: ComprehensionConfig, context: Context): List<Bitmap> {
         val story = config.selectedStory ?: return emptyList()
-        val pages = mutableListOf<Bitmap>()
-        
-        // Рассчитываем страницы
         val layout = calculateLayout(config, story)
-        
-        // Рисуем страницы с текстом
-        for (page in 1..layout.textPages) {
+        val pages = mutableListOf<Bitmap>()
+
+        for (i in layout.indices) {
             val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
-            drawTextPage(canvas, config, story, page, layout)
+            drawPage(canvas, config, story, layout[i], i + 1, layout.size)
             pages.add(bmp)
         }
-        
-        // Рисуем страницу ответов
+
         if (config.showAnswerSheet) {
             val bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
             drawAnswerSheet(canvas, config, story)
             pages.add(bmp)
         }
-        
+
         return pages
     }
 
     fun drawDocument(document: PdfDocument, config: ComprehensionConfig, context: Context) {
         val story = config.selectedStory ?: return
-        
         val layout = calculateLayout(config, story)
         var pageNum = 1
-        
-        // Страницы с текстом
-        for (page in 1..layout.textPages) {
+
+        for (i in layout.indices) {
             val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
-            val pdfPage = document.startPage(pageInfo)
-            drawTextPage(pdfPage.canvas, config, story, page, layout)
-            document.finishPage(pdfPage)
+            val page = document.startPage(pageInfo)
+            drawPage(page.canvas, config, story, layout[i], pageNum, layout.size)
+            document.finishPage(page)
             pageNum++
         }
-        
-        // Страница ответов
+
         if (config.showAnswerSheet) {
             val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
-            val pdfPage = document.startPage(pageInfo)
-            drawAnswerSheet(pdfPage.canvas, config, story)
-            document.finishPage(pdfPage)
+            val page = document.startPage(pageInfo)
+            drawAnswerSheet(page.canvas, config, story)
+            document.finishPage(page)
         }
     }
-    
-    data class PageLayout(
-        val textPages: Int,
-        val textLinesPerPage: List<Int>, // количество строк текста на каждой странице
-        val questionsOnLastPage: Boolean // вопросы на последней странице текста
-    )
-    
-    private fun calculateLayout(config: ComprehensionConfig, story: com.example.sovenok.data.ComprehensionStory): PageLayout {
-        val bodyPaint = Paint().apply {
-            isAntiAlias = true
-            textSize = config.fontSize
-            typeface = Typeface.DEFAULT
-        }
-        
-        val lineHeight = config.fontSize * 1.5f
-        val maxWidth = PAGE_WIDTH - MARGIN * 2 - 30f
-        
-        // Разбиваем текст на строки
-        val textLines = splitTextIntoLines(story.text, bodyPaint, maxWidth)
-        
-        // Считаем высоту вопросов
-        val qPaint = Paint().apply {
-            isAntiAlias = true
-            textSize = if (config.grade >= 3) 13f else 14f
-            typeface = Typeface.DEFAULT
-        }
-        
-        var questionsHeight = 30f // заголовок "Вопросы:"
-        story.questions.forEach { question ->
-            questionsHeight += 15f // номер
-            questionsHeight += 15f // текст вопроса
-            questionsHeight += 30f // рамка ответа
-            questionsHeight += 20f // отступ
-        }
-        
-        val maxLinesPerPage = ((AVAILABLE_HEIGHT - questionsHeight) / lineHeight).toInt()
-        
-        // Разбиваем строки на страницы
-        val pages = mutableListOf<List<String>>()
-        var currentPage = mutableListOf<String>()
-        
-        for (line in textLines) {
-            if (currentPage.size >= maxLinesPerPage && currentPage.isNotEmpty()) {
-                pages.add(currentPage)
-                currentPage = mutableListOf()
-            }
-            currentPage.add(line)
-        }
-        if (currentPage.isNotEmpty()) {
-            pages.add(currentPage)
-        }
-        
-        val textPages = pages.size.coerceAtLeast(1)
-        val textLinesPerPage = pages.map { it.size }
-        
-        return PageLayout(
-            textPages = textPages,
-            textLinesPerPage = textLinesPerPage,
-            questionsOnLastPage = true
-        )
-    }
-    
-    private fun splitTextIntoLines(text: String, paint: Paint, maxWidth: Float): List<String> {
-        val lines = mutableListOf<String>()
-        val paragraphs = text.split("\n")
-        
-        for (paragraph in paragraphs) {
-            val words = paragraph.split(" ")
+
+    private fun calculateLayout(config: ComprehensionConfig, story: ComprehensionStory): List<LayoutPage> {
+        val paint = Paint().apply { textSize = config.fontSize; typeface = Typeface.DEFAULT }
+        val lineHeight = config.fontSize * 1.4f
+        val maxWidth = PAGE_WIDTH - (MARGIN * 2)
+        val availableHeight = PAGE_HEIGHT - START_Y - BOTTOM_MARGIN
+
+        // 1. Разбиваем текст на строки с накопительным счетчиком слов
+        val allLines = mutableListOf<LineData>()
+        var runningWordCount = 0
+        val paragraphs = story.text.split("\n")
+
+        for (para in paragraphs) {
+            val words = para.split(" ")
             var currentLine = ""
-            
+            var lineWordCount = 0
+
             for (word in words) {
                 val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
                 if (paint.measureText(testLine) > maxWidth) {
                     if (currentLine.isNotEmpty()) {
-                        lines.add(currentLine)
+                        runningWordCount += lineWordCount
+                        allLines.add(LineData(currentLine, runningWordCount))
                     }
                     currentLine = word
+                    lineWordCount = 1
                 } else {
                     currentLine = testLine
+                    lineWordCount++
                 }
             }
             if (currentLine.isNotEmpty()) {
-                lines.add(currentLine)
+                runningWordCount += lineWordCount
+                allLines.add(LineData(currentLine, runningWordCount))
             }
-            lines.add("") // пустая строка между абзацами
+            allLines.add(LineData("", runningWordCount)) // Пустая строка для абзаца
         }
+
+        // 2. Разбиваем на страницы
+        val pages = mutableListOf<LayoutPage>()
+        var currentPageLines = mutableListOf<LineData>()
+        var currentY = START_Y
         
-        return lines
+        // Высота, которую займут вопросы
+        val qPaint = Paint().apply { textSize = if (config.grade >= 3) 13f else 14f }
+        val qLineHeight = qPaint.textSize * 1.3f
+        val questionBlockHeight = 40f + (story.questions.size * (qLineHeight + 30f + 20f)) // заголовок + (вопрос + рамка + отступ)
+
+        fun isRoomFor(height: Float): Boolean = currentY + height <= availableHeight
+
+        fun savePage(hasQuestions: Boolean = false) {
+            if (currentPageLines.isNotEmpty() || hasQuestions) {
+                pages.add(LayoutPage(currentPageLines.toList(), hasQuestions))
+                currentPageLines.clear()
+                currentY = START_Y
+            }
+        }
+
+        for (line in allLines) {
+            if (!isRoomFor(lineHeight)) {
+                savePage()
+            }
+            currentPageLines.add(line)
+            currentY += if (line.text.isEmpty()) lineHeight * 0.6f else lineHeight
+        }
+
+        // Проверяем, влезают ли вопросы на последнюю страницу с текстом
+        val hasQuestions = !config.showAnswerSheet && story.questions.isNotEmpty()
+        if (hasQuestions) {
+            if (!isRoomFor(questionBlockHeight)) {
+                savePage(hasQuestions = true) // Вопросы уйдут на новую страницу
+            } else {
+                savePage(hasQuestions = true) // Вопросы поместятся на текущей
+            }
+        } else if (currentPageLines.isNotEmpty()) {
+            savePage()
+        }
+
+        return pages.ifEmpty { listOf(LayoutPage(emptyList(), false)) }
     }
-    
-    private fun drawTextPage(canvas: Canvas, config: ComprehensionConfig, story: com.example.sovenok.data.ComprehensionStory, pageNum: Int, layout: PageLayout) {
-        val bgColor = if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA")
+
+    private fun drawPage(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory, pageData: LayoutPage, pageNum: Int, totalPages: Int) {
+        val bgColor = if (config.isPeachBackground) Color.parseColor("#FFF5E6") else Color.WHITE
         canvas.drawColor(bgColor)
-        
-        val headerPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
+
+        val headerPaint = Paint().apply { textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-        
+
         // Шапка
         canvas.drawText("Имя:", MARGIN, 40f, headerPaint)
         canvas.drawLine(MARGIN + 35f, 42f, MARGIN + 150f, 42f, linePaint)
         
         val gradeText = "${config.grade} класс"
-        val gradeWidth = headerPaint.measureText(gradeText)
-        canvas.drawText(gradeText, PAGE_WIDTH / 2f - gradeWidth / 2f, 40f, headerPaint)
+        canvas.drawText(gradeText, PAGE_WIDTH / 2f - headerPaint.measureText(gradeText) / 2f, 40f, headerPaint)
         
         canvas.drawText("Дата:", PAGE_WIDTH - 140f, 40f, headerPaint)
         canvas.drawLine(PAGE_WIDTH - 100f, 42f, PAGE_WIDTH - MARGIN, 42f, linePaint)
-        
-        var currentY = CONTENT_START_Y
-        
-        // Заголовок (только на первой странице)
+
+        var currentY = START_Y
+
+        // Заголовок и инструкция только на 1-й странице
         if (pageNum == 1) {
-            val titlePaint = Paint().apply { 
-                isAntiAlias = true
-                textSize = 26f
-                color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#33691E")
-                typeface = Typeface.DEFAULT_BOLD
-                textAlign = Paint.Align.CENTER 
-            }
+            val titlePaint = Paint().apply { textSize = 26f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
             canvas.drawText(story.title, PAGE_WIDTH / 2f, currentY, titlePaint)
             currentY += 25f
             
-            val subtitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
-            canvas.drawText("Читай, замечай, размышляй", PAGE_WIDTH / 2f, currentY, subtitlePaint)
+            val subPaint = Paint().apply { textSize = 12f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
+            canvas.drawText("Читай, замечай, размышляй", PAGE_WIDTH / 2f, currentY, subPaint)
             currentY += 30f
             
-            val instPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
-            canvas.drawText("Прочитай рассказ. Затем ответь на вопросы — устно или письменно.", MARGIN, currentY, instPaint)
+            val instPaint = Paint().apply { textSize = 12f; color = Color.DKGRAY }
+            canvas.drawText("Прочитай рассказ. Затем ответь на вопросы.", MARGIN, currentY, instPaint)
             currentY += 25f
         }
-        
-        val bodyPaint = Paint().apply { 
-            isAntiAlias = true
-            textSize = config.fontSize
-            color = Color.BLACK
-            typeface = Typeface.DEFAULT 
-        }
-        val lineNumPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
-        val lineHeight = config.fontSize * 1.5f
-        val maxWidth = PAGE_WIDTH - MARGIN * 2 - 30f
-        
-        // Получаем строки для этой страницы
-        val textLines = splitTextIntoLines(story.text, bodyPaint, maxWidth)
-        val linesForThisPage = if (pageNum <= layout.textLinesPerPage.size) {
-            val startIndex = layout.textLinesPerPage.take(pageNum - 1).sum()
-            val endIndex = startIndex + layout.textLinesPerPage[pageNum - 1]
-            textLines.subList(startIndex.coerceAtMost(textLines.size), endIndex.coerceAtMost(textLines.size))
-        } else {
-            emptyList()
-        }
-        
-        var globalLineCount = if (pageNum > 1) {
-            layout.textLinesPerPage.take(pageNum - 1).sum()
-        } else {
-            0
-        }
-        
-        for (line in linesForThisPage) {
-            if (line.isNotEmpty()) {
-                globalLineCount++
-                canvas.drawText(line, MARGIN, currentY, bodyPaint)
-                
+
+        val bodyPaint = Paint().apply { textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
+        val lineHeight = config.fontSize * 1.4f
+        val countPaint = Paint().apply { textSize = 10f; color = Color.GRAY; textAlign = Paint.Align.RIGHT }
+
+        // Рисуем строки текста
+        for (lineData in pageData.lines) {
+            if (lineData.text.isNotEmpty()) {
+                canvas.drawText(lineData.text, MARGIN, currentY, bodyPaint)
                 if (config.showWordCount) {
-                    canvas.drawText(globalLineCount.toString(), PAGE_WIDTH - MARGIN, currentY, lineNumPaint)
+                    canvas.drawText(lineData.cumulativeWords.toString(), PAGE_WIDTH - MARGIN, currentY, countPaint)
                 }
             }
-            currentY += lineHeight
+            currentY += if (lineData.text.isEmpty()) lineHeight * 0.6f else lineHeight
         }
-        
-        currentY += 20f
-        
-        // Вопросы (только на последней странице текста)
-        if (pageNum == layout.textPages && layout.questionsOnLastPage) {
-            val qTitlePaint = Paint().apply { isAntiAlias = true; textSize = 20f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
+
+        // Рисуем вопросы, если они на этой странице
+        if (pageData.hasQuestions) {
+            currentY += 20f
+            val qTitlePaint = Paint().apply { textSize = 20f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Вопросы:", MARGIN, currentY, qTitlePaint)
             currentY += 30f
-            
-            val qPaint = Paint().apply { 
-                isAntiAlias = true
-                textSize = if (config.grade >= 3) 13f else 14f
-                color = Color.BLACK
-                typeface = Typeface.DEFAULT 
-            }
+
+            val qPaint = Paint().apply { textSize = if (config.grade >= 3) 13f else 14f; color = Color.BLACK }
+            val qLineHeight = qPaint.textSize * 1.3f
             val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
-            
+            val circlePaint = Paint().apply { color = Color.DKGRAY; style = Paint.Style.FILL }
+
             story.questions.forEachIndexed { index, question ->
-                val circlePaint = Paint().apply { color = if (config.isBlackAndWhite) Color.DKGRAY else Color.parseColor("#A5D6A7"); style = Paint.Style.FILL }
                 canvas.drawCircle(MARGIN + 10f, currentY - 5f, 10f, circlePaint)
-                val numPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
+                val numPaint = Paint().apply { textSize = 12f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
                 canvas.drawText((index + 1).toString(), MARGIN + 10f, currentY, numPaint)
                 
                 canvas.drawText(question, MARGIN + 30f, currentY, qPaint)
-                currentY += 20f
+                currentY += qLineHeight + 5f
                 
                 val ansBox = RectF(MARGIN + 30f, currentY, PAGE_WIDTH - MARGIN, currentY + 30f)
                 canvas.drawRoundRect(ansBox, 5f, 5f, boxPaint)
-                currentY += 50f
+                currentY += 40f
             }
         }
+        
+        // Номер страницы внизу
+        if (totalPages > 1) {
+            val pagePaint = Paint().apply { textSize = 12f; color = Color.GRAY; textAlign = Paint.Align.CENTER }
+            canvas.drawText("Страница $pageNum", PAGE_WIDTH / 2f, PAGE_HEIGHT - 20f, pagePaint)
+        }
     }
-    
-    private fun drawAnswerSheet(canvas: Canvas, config: ComprehensionConfig, story: com.example.sovenok.data.ComprehensionStory) {
-        val bgColor = if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA")
-        canvas.drawColor(bgColor)
-        
-        val headerPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
-        val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-        
-        // Шапка
-        canvas.drawText("Имя:", MARGIN, 40f, headerPaint)
-        canvas.drawLine(MARGIN + 35f, 42f, MARGIN + 150f, 42f, linePaint)
-        
-        val gradeText = "${config.grade} класс"
-        val gradeWidth = headerPaint.measureText(gradeText)
-        canvas.drawText(gradeText, PAGE_WIDTH / 2f - gradeWidth / 2f, 40f, headerPaint)
-        
-        canvas.drawText("Дата:", PAGE_WIDTH - 140f, 40f, headerPaint)
-        canvas.drawLine(PAGE_WIDTH - 100f, 42f, PAGE_WIDTH - MARGIN, 42f, linePaint)
-        
-        var currentY = 90f
-        
-        val titlePaint = Paint().apply { 
-            isAntiAlias = true
-            textSize = 26f
-            color = if (config.isBlackAndWhite) Color.BLACK else Color.parseColor("#33691E")
-            typeface = Typeface.DEFAULT_BOLD
-            textAlign = Paint.Align.CENTER 
-        }
-        canvas.drawText(story.title, PAGE_WIDTH / 2f, currentY, titlePaint)
-        currentY += 25f
-        
-        val subtitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
-        canvas.drawText("Ответы — для взрослого", PAGE_WIDTH / 2f, currentY, subtitlePaint)
-        currentY += 30f
-        
-        // Блок "Как проверять"
-        val hintTitlePaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
-        canvas.drawText("Как проверять", MARGIN, currentY, hintTitlePaint)
-        currentY += 20f
-        
-        val hintText = if (config.showAdultHints) {
-            "Ребёнок может ответить своими словами. Ниже — смысловые ориентиры, а не обязательные формулировки."
-        } else {
-            "Проверьте правильность ответов ребёнка."
-        }
-        val hintPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
-        drawWrappedText(canvas, hintText, MARGIN, currentY, PAGE_WIDTH - MARGIN * 2, hintPaint, 18f)
+
+    private fun drawAnswerSheet(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory) {
+        canvas.drawColor(Color.WHITE)
+        val margin = 40f
+        var currentY = 60f
+
+        val titlePaint = Paint().apply { textSize = 24f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        canvas.drawText("Ответы и методические подсказки", PAGE_WIDTH / 2f, currentY, titlePaint)
         currentY += 40f
+
+        val hintPaint = Paint().apply { textSize = 12f; color = Color.DKGRAY }
+        val hintText = if (config.grade <= 2) "Проверьте, называет ли ребёнок героев и предметы. Ответы могут быть краткими." 
+                       else "Ребёнок может ответить своими словами. Ниже — смысловые ориентиры, а не обязательные формулировки."
         
-        // Вопросы с ответами
-        val qPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; typeface = Typeface.DEFAULT }
-        val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
-        
-        story.questions.forEachIndexed { index, question ->
-            canvas.drawText("${index + 1}. $question", MARGIN, currentY, qPaint)
+        // Простой перенос текста подсказки
+        val words = hintText.split(" ")
+        var line = ""
+        for (word in words) {
+            val test = if (line.isEmpty()) word else "$line $word"
+            if (hintPaint.measureText(test) > PAGE_WIDTH - margin * 2) {
+                canvas.drawText(line, margin, currentY, hintPaint)
+                currentY += 18f
+                line = word
+            } else {
+                line = test
+            }
+        }
+        if (line.isNotEmpty()) {
+            canvas.drawText(line, margin, currentY, hintPaint)
+            currentY += 30f
+        }
+
+        val qPaint = Paint().apply { textSize = 14f; color = Color.BLACK }
+        story.questions.forEachIndexed { index, q ->
+            canvas.drawText("${index + 1}. $q", margin, currentY, qPaint)
             currentY += 25f
-            canvas.drawText("Ответ: __________________________________________________", MARGIN, currentY, qPaint)
+            val ans = if (index < story.answers.size && story.answers[index].isNotEmpty()) story.answers[index] else "_______________________________"
+            canvas.drawText("Ответ: $ans", margin, currentY, qPaint)
             currentY += 40f
         }
         
-        // Блок "В тексте N слов"
+        // Блок подсчета слов внизу листа ответов
         currentY += 20f
-        val wordCount = story.text.split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
-        val wordCountTitlePaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
-        canvas.drawText("В тексте $wordCount ${getWordForm(wordCount)}", MARGIN, currentY, wordCountTitlePaint)
-        currentY += 25f
+        val techPaint = Paint().apply { textSize = 11f; color = Color.DKGRAY }
+        val techText = "В тексте ${story.totalWords} ${getWordForm(story.totalWords)}. За одну минуту: прочитано _____ слов, ошибок _____. " +
+            "Если текст закончился раньше минуты, запишите общее время: _____ сек. Для следующей проверки выберите незнакомый текст."
         
-        val techPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
-        val techText = "Заголовков не учитывается. Слова с дефисом считаются одним словом, отдельное тире словом не считается.\n\n" +
-            "За одну минуту: прочитано _____ слов, ошибок _____. Отметьте последнее полностью прочитанное слово. Число справа — сумма слов до конца строки; для неполной строки прибавьте прочитанные слова к числу предыдущей.\n\n" +
-            "Если текст закончился раньше минуты, запишите общее время: _____ секунд. Не пересчитывайте его автоматически в минутный норматив. Для следующей проверки выберите незнакомый текст. Обсудите содержание после чтения."
-        
-        drawWrappedText(canvas, techText, MARGIN, currentY, PAGE_WIDTH - MARGIN * 2, techPaint, 16f)
-    }
-    
-    private fun drawWrappedText(canvas: Canvas, text: String, x: Float, y: Float, maxWidth: Float, paint: Paint, lineHeight: Float) {
-        var currentY = y
-        val paragraphs = text.split("\n")
-        
-        for (paragraph in paragraphs) {
-            if (paragraph.isEmpty()) {
-                currentY += lineHeight / 2
-                continue
-            }
-            
-            val words = paragraph.split(" ")
-            var currentLine = ""
-            
-            for (word in words) {
-                val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
-                if (paint.measureText(testLine) > maxWidth) {
-                    canvas.drawText(currentLine, x, currentY, paint)
-                    currentY += lineHeight
-                    currentLine = word
-                } else {
-                    currentLine = testLine
-                }
-            }
-            if (currentLine.isNotEmpty()) {
-                canvas.drawText(currentLine, x, currentY, paint)
-                currentY += lineHeight
+        var tLine = ""
+        for (word in techText.split(" ")) {
+            val test = if (tLine.isEmpty()) word else "$tLine $word"
+            if (techPaint.measureText(test) > PAGE_WIDTH - margin * 2) {
+                canvas.drawText(tLine, margin, currentY, techPaint)
+                currentY += 16f
+                tLine = word
+            } else {
+                tLine = test
             }
         }
+        if (tLine.isNotEmpty()) canvas.drawText(tLine, margin, currentY, techPaint)
     }
-    
+
     private fun getWordForm(count: Int): String {
-        val lastTwoDigits = count % 100
-        val lastDigit = count % 10
-        
+        val lastTwo = count % 100
+        val last = count % 10
         return when {
-            lastTwoDigits in 11..19 -> "слов"
-            lastDigit == 1 -> "слово"
-            lastDigit in 2..4 -> "слова"
+            lastTwo in 11..19 -> "слов"
+            last == 1 -> "слово"
+            last in 2..4 -> "слова"
             else -> "слов"
         }
     }
