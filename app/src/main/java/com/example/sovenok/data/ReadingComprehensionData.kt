@@ -6,6 +6,8 @@ data class ComprehensionStory(
     val title: String,
     val text: String,
     val questions: List<String>
+    val answers: List<String>,     
+    val totalWords: Int              
 )
 
 object ReadingComprehensionData {
