@@ -16,7 +16,6 @@ object ComprehensionPdfDrawer {
     const val PAGE_HEIGHT = 842f
     private const val MARGIN = 40f
     private val GREEN = Color.parseColor("#33691E")
-    private val GREEN_LIGHT = Color.parseColor("#A5D6A7")
     private val PEACH = Color.parseColor("#FFF3E0")
     private val BOX_STROKE = Color.parseColor("#D7CCC8")
     private val BOX_FILL = Color.WHITE
@@ -52,10 +51,9 @@ object ComprehensionPdfDrawer {
         var bmp = newBmp(); var canvas = Canvas(bmp)
         var y = drawHeader(canvas, config, story, "Читай, замечай, размышляй")
 
-        // инфо-бокс
-        y = drawInfoBox(canvas, y, "Прочитай рассказ. Затем ответь на вопросы — устно или письменно.") + 14f
+        // инфо-бокс + увеличенный зазор снизу до текста (было 14f, стало 24f)
+        y = drawInfoBox(canvas, y, "Прочитай рассказ. Затем ответь на вопросы — устно или письменно.") + 24f
 
-        // текст рассказа с кумулятивным счётчиком слов
         val body = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val num = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.parseColor("#9E9E9E"); typeface = Typeface.DEFAULT }
         val lh = body.textSize * 1.5f
@@ -63,24 +61,29 @@ object ComprehensionPdfDrawer {
         var cum = 0
         for (para in story.text.split("\n")) {
             for (line in wrap(para, body, maxW)) {
-                if (y > PAGE_HEIGHT - 40f) { bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
-                    y = drawHeader(canvas, config, story, "Читай, замечай, размышляй") }
+                if (y > PAGE_HEIGHT - 40f) {
+                    bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+                    y = drawHeader(canvas, config, story, "Читай, замечай, размышляй")
+                }
                 canvas.drawText(line, MARGIN, y, body)
-                if (config.showWordCount) { cum += line.split(Regex("\\s+")).filter { it.isNotBlank() }.size
-                    canvas.drawText(cum.toString(), PAGE_WIDTH - MARGIN, y, num) }
+                if (config.showWordCount) {
+                    cum += line.split(Regex("\\s+")).filter { it.isNotBlank() }.size
+                    canvas.drawText(cum.toString(), PAGE_WIDTH - MARGIN, y, num)
+                }
                 y += lh
             }
         }
         y += 18f
 
-        // вопросы в карточках
         val qBody = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val linePaint = Paint().apply { color = Color.parseColor("#CFD8DC"); strokeWidth = 1f }
         story.questions.forEachIndexed { i, q ->
             val lines = wrap(q, qBody, PAGE_WIDTH - MARGIN * 2 - 44f)
             val boxH = 22f + lines.size * 16f + 30f
-            if (y + boxH > PAGE_HEIGHT - 30f) { bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
-                y = drawHeader(canvas, config, story, "Читай, замечай, размышляй") + 6f }
+            if (y + boxH > PAGE_HEIGHT - 30f) {
+                bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+                y = drawHeader(canvas, config, story, "Читай, замечай, размышляй") + 6f
+            }
             drawBox(canvas, y, boxH)
             canvas.drawCircle(MARGIN + 16f, y + 16f, 9f, Paint().apply { color = GREEN; style = Paint.Style.FILL })
             val n = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
@@ -100,7 +103,6 @@ object ComprehensionPdfDrawer {
         var bmp = newBmp(); var canvas = Canvas(bmp)
         var y = drawHeader(canvas, config, story, "Ответы — для взрослого")
 
-        // «Как проверять»
         y = drawLabeledBox(canvas, y, "Как проверять",
             "Ребёнок может ответить своими словами. Ниже — смысловые ориентиры, а не обязательные формулировки.") + 12f
 
@@ -111,8 +113,10 @@ object ComprehensionPdfDrawer {
             val qLines = wrap("${i + 1}. $q", qBold, PAGE_WIDTH - MARGIN * 2 - 24f)
             val aLines = wrap(a, aBody, PAGE_WIDTH - MARGIN * 2 - 24f)
             val boxH = 18f + qLines.size * 18f + 6f + aLines.size * 18f + 10f
-            if (y + boxH > PAGE_HEIGHT - 30f) { bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
-                y = drawHeader(canvas, config, story, "Ответы — для взрослого") + 6f }
+            if (y + boxH > PAGE_HEIGHT - 30f) {
+                bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+                y = drawHeader(canvas, config, story, "Ответы — для взрослого") + 6f
+            }
             drawBox(canvas, y, boxH)
             var ty = y + 20f
             for (ln in qLines) { canvas.drawText(ln, MARGIN + 12f, ty, qBold); ty += 18f }
@@ -121,7 +125,6 @@ object ComprehensionPdfDrawer {
             y += boxH + 8f
         }
 
-        // «В тексте N слов»
         val wc = if (story.totalWords > 0) story.totalWords else story.text.split(Regex("\\s+")).filter { it.isNotBlank() }.size
         val instr = listOf(
             "Заголовок не учитывается. Слова с дефисом считаются одним словом, отдельное тире словом не считается.",
@@ -136,8 +139,10 @@ object ComprehensionPdfDrawer {
         for (p in instr) allLines.add(small to wrap(p, small, PAGE_WIDTH - MARGIN * 2 - 24f))
         for ((_, ls) in allLines) boxH += ls.size * 15f + 2f
         boxH += 10f
-        if (y + boxH > PAGE_HEIGHT - 30f) { bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
-            y = drawHeader(canvas, config, story, "Ответы — для взрослого") + 6f }
+        if (y + boxH > PAGE_HEIGHT - 30f) {
+            bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+            y = drawHeader(canvas, config, story, "Ответы — для взрослого") + 6f
+        }
         drawBox(canvas, y, boxH)
         var ty = y + 20f
         for ((paint, ls) in allLines) { for (ln in ls) { canvas.drawText(ln, MARGIN + 12f, ty, paint); ty += 15f }; ty += 2f }
@@ -164,12 +169,13 @@ object ComprehensionPdfDrawer {
         return 118f
     }
 
+    // ИЗМЕНЁН: симметричный внутренний отступ (было 16/10, стало 18/16) — текст не прилипает к рамке
     private fun drawInfoBox(canvas: Canvas, y: Float, text: String): Float {
         val p = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.parseColor("#37474F"); typeface = Typeface.DEFAULT }
         val lines = wrap(text, p, PAGE_WIDTH - MARGIN * 2 - 24f)
-        val h = 16f + lines.size * 16f + 10f
+        val h = 18f + lines.size * 16f + 16f
         drawBox(canvas, y, h)
-        var ty = y + 18f
+        var ty = y + 22f
         for (ln in lines) { canvas.drawText(ln, MARGIN + 12f, ty, p); ty += 16f }
         return y + h
     }
