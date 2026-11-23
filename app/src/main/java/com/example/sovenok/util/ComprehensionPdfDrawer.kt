@@ -60,7 +60,6 @@ object ComprehensionPdfDrawer {
         var currentY = 60f
         val margin = 40f
         
-        // Шапка
         val headerPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
         
@@ -76,7 +75,6 @@ object ComprehensionPdfDrawer {
         
         currentY = 90f
         
-        // Заголовок рассказа
         val titlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.parseColor("#33691E"); typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         canvas.drawText(story.title, PAGE_WIDTH / 2f, currentY, titlePaint)
         currentY += 30f
@@ -85,8 +83,7 @@ object ComprehensionPdfDrawer {
         canvas.drawText("Прочитай рассказ. Затем ответь на вопросы — устно или письменно.", margin, currentY, instPaint)
         currentY += 25f
         
-        // Текст с кумулятивным счётчиком слов
-        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT }
+        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val lineNumPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
         val lineHeight = bodyPaint.textSize * 1.6f
         
@@ -97,12 +94,11 @@ object ComprehensionPdfDrawer {
             val words = paragraph.split(Regex("\\s+")).filter { it.isNotBlank() }
             var currentLineWords = mutableListOf<String>()
             var currentLineWidth = 0f
-            val maxLineWidth = PAGE_WIDTH - margin * 2 - 40f // 40f запас для цифры справа
+            val maxLineWidth = PAGE_WIDTH - margin * 2 - 40f
             
             for (word in words) {
                 val wordWidth = bodyPaint.measureText(word + " ")
                 if (currentLineWidth + wordWidth > maxLineWidth && currentLineWords.isNotEmpty()) {
-                    // Рисуем строку
                     val lineText = currentLineWords.joinToString(" ")
                     cumulativeWordCount += currentLineWords.size
                     canvas.drawText(lineText, margin, currentY, bodyPaint)
@@ -111,14 +107,12 @@ object ComprehensionPdfDrawer {
                     }
                     currentY += lineHeight
                     
-                    // Новая строка
                     currentLineWords.clear()
                     currentLineWidth = 0f
                 }
                 currentLineWords.add(word)
                 currentLineWidth += wordWidth
             }
-            // Рисуем остаток абзаца
             if (currentLineWords.isNotEmpty()) {
                 val lineText = currentLineWords.joinToString(" ")
                 cumulativeWordCount += currentLineWords.size
@@ -128,12 +122,11 @@ object ComprehensionPdfDrawer {
                 }
                 currentY += lineHeight
             }
-            currentY += 10f // Отступ между абзацами
+            currentY += 10f
         }
         
         currentY += 20f
         
-        // Блок инструкций по проверке техники чтения
         val footerPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
         canvas.drawText("В тексте ${story.totalWords} слов. Заголовок не учитывается. Слова с дефисом считаются одним словом.", margin, currentY, footerPaint)
         currentY += 16f
@@ -142,7 +135,6 @@ object ComprehensionPdfDrawer {
         canvas.drawText("Число справа — сумма слов до конца строки. Если текст закончился раньше минуты, запишите общее время: _____ сек.", margin, currentY, footerPaint)
         currentY += 30f
         
-        // Вопросы
         if (!config.showAnswerSheet) {
             val qTitlePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Вопросы:", margin, currentY, qTitlePaint)
