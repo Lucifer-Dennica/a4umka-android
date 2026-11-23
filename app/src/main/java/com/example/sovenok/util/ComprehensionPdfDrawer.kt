@@ -125,8 +125,9 @@ object ComprehensionPdfDrawer {
         currentY += 20f
         
         val footerPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
-        // ИСПРАВЛЕНО: используем story.totalWords
-        canvas.drawText("В тексте ${story.totalWords} слов. Заголовок не учитывается. Слова с дефисом считаются одним словом.", margin, currentY, footerPaint)
+        // БЕЗОПАСНЫЙ ПОДСЧЁТ: если totalWords == 0, считаем динамически
+        val wordCount = if (story.totalWords > 0) story.totalWords else story.text.split("\\s+".toRegex()).filter { it.isNotBlank() }.size
+        canvas.drawText("В тексте $wordCount слов. Заголовок не учитывается. Слова с дефисом считаются одним словом.", margin, currentY, footerPaint)
         currentY += 16f
         canvas.drawText("За одну минуту: прочитано _____ слов, ошибок _____. Отметьте последнее полностью прочитанное слово.", margin, currentY, footerPaint)
         currentY += 16f
@@ -176,7 +177,7 @@ object ComprehensionPdfDrawer {
         story.questions.forEachIndexed { index, q ->
             canvas.drawText("Вопрос ${index + 1}: $q", margin, ansY, qPaint)
             ansY += 22f
-            // ИСПРАВЛЕНО: безопасный доступ к story.answers
+            // БЕЗОПАСНЫЙ ДОСТУП: если ответа нет, выводим заглушку
             val answer = story.answers.getOrElse(index) { "Ответ не указан" }
             canvas.drawText("Ответ: $answer", margin, ansY, ansPaint)
             ansY += 40f
