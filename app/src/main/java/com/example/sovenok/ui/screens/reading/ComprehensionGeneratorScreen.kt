@@ -144,8 +144,10 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                                 label = {
                                     if (config.selectedStory != null) {
-                                        // ИСПРАВЛЕНО: используем totalWords вместо подсчёта на лету
-                                        Text("${config.selectedStory!!.totalWords} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
+                                        // БЕЗОПАСНЫЙ ПОДСЧЁТ
+                                        val wordCount = if (config.selectedStory!!.totalWords > 0) config.selectedStory!!.totalWords 
+                                            else config.selectedStory!!.text.split("\\s+".toRegex()).filter { it.isNotBlank() }.size
+                                        Text("$wordCount слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
                                     }
                                 }
                             )
@@ -159,7 +161,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                         text = {
                                             Column {
                                                 Text(story.title, fontWeight = FontWeight.Bold)
-                                                Text("${story.totalWords} слов", fontSize = 12.sp, color = Color.Gray)
+                                                val wc = if (story.totalWords > 0) story.totalWords else story.text.split("\\s+".toRegex()).filter { it.isNotBlank() }.size
+                                                Text("$wc слов", fontSize = 12.sp, color = Color.Gray)
                                             }
                                         },
                                         onClick = {
@@ -221,7 +224,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true
                                 )
-                                // ИСПРАВЛЕНО: безопасный доступ к answers
+                                // БЕЗОПАСНЫЙ ДОСТУП К ОТВЕТАМ
                                 OutlinedTextField(
                                     value = editedStory!!.answers.getOrElse(index) { "" },
                                     onValueChange = { 
