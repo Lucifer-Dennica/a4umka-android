@@ -144,6 +144,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                                 label = {
                                     if (config.selectedStory != null) {
+                                        // ИСПРАВЛЕНО: используем totalWords вместо подсчёта на лету
                                         Text("${config.selectedStory!!.totalWords} слов • ${config.selectedStory!!.questions.size} вопроса", fontSize = 12.sp)
                                     }
                                 }
@@ -220,10 +221,13 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true
                                 )
+                                // ИСПРАВЛЕНО: безопасный доступ к answers
                                 OutlinedTextField(
-                                    value = editedStory!!.answers[index],
+                                    value = editedStory!!.answers.getOrElse(index) { "" },
                                     onValueChange = { 
-                                        val newA = editedStory!!.answers.toMutableList().apply { this[index] = it }
+                                        val newA = editedStory!!.answers.toMutableList()
+                                        while (newA.size <= index) newA.add("")
+                                        newA[index] = it
                                         editedStory = editedStory!!.copy(answers = newA)
                                         config = config.copy(selectedStory = editedStory)
                                     },
