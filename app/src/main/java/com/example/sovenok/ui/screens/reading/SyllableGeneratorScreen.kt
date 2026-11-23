@@ -47,7 +47,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
 
-    // Режим редактирования: список редактируемых текстов (копия выбранных)
+    // Режим редактирования: список редактируемых текстов
     var editMode by remember { mutableStateOf(false) }
     var editedTexts by remember { mutableStateOf<List<SyllableText>>(emptyList()) }
 
@@ -353,7 +353,8 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-                if (showInfoSheet) {
+        // СПРАВКА (INFO SHEET) — ПОЛНАЯ ВЕРСИЯ
+        if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
                     modifier = Modifier
@@ -451,6 +452,8 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     Text("Чтобы ребёнок быстрее запоминал слоги, начните занятие со слоговых таблиц — они тренируют узнавание слогов с одного взгляда. Закрепить навык поможет упражнение «собери слово из слогов». Когда читает увереннее, добавьте игровые задания со словами: филворды и «найди слово в слове». А чтобы параллельно готовить руку к письму, чередуйте чтение с прописями.",
                         style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(32.dp))
-               
+                }
+            }
+        }
     }
 }
