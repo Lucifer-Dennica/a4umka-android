@@ -56,7 +56,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     LaunchedEffect(config) {
-        delay(300)
+        delay(300) // Небольшая задержка для плавности при смене настроек
         previewPages = ComprehensionPdfDrawer.generatePreviewPages(config, context)
     }
 
@@ -146,9 +146,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 label = {
                                     val s = config.selectedStory
                                     if (s != null) {
-                                        val w: Int = s.totalWords
-                                        val q: Int = s.questions.size
-                                        Text(text = "$w слов • $q вопроса", fontSize = 12.sp)
+                                        Text(text = "${s.totalWords} слов • ${s.questions.size} вопроса", fontSize = 12.sp)
                                     }
                                 }
                             )
@@ -195,7 +193,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         }
                         
                         if (editMode && editedStory != null) {
-                            val story: ComprehensionStory = editedStory!!
+                            val story = editedStory!!
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
@@ -225,7 +223,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 OutlinedTextField(
                                     value = q,
                                     onValueChange = { newQ -> 
-                                        val newQuestions: MutableList<String> = story.questions.toMutableList()
+                                        val newQuestions = story.questions.toMutableList()
                                         newQuestions[index] = newQ
                                         editedStory = story.copy(questions = newQuestions)
                                         config = config.copy(selectedStory = editedStory)
@@ -235,13 +233,13 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     singleLine = true
                                 )
                                 
-                                val ansList: List<String> = story.answers
-                                val currentAnswer: String = if (index < ansList.size) ansList[index] else ""
+                                val ansList = story.answers
+                                val currentAnswer = if (index < ansList.size) ansList[index] else ""
                                 
                                 OutlinedTextField(
                                     value = currentAnswer,
-                                    onValueChange = { newAnswer: String -> 
-                                        val newA: MutableList<String> = ansList.toMutableList()
+                                    onValueChange = { newAnswer -> 
+                                        val newA = ansList.toMutableList()
                                         while (newA.size <= index) newA.add("")
                                         newA[index] = newAnswer
                                         editedStory = story.copy(answers = newA)
@@ -283,8 +281,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                             Slider(
                                 value = config.fontSize,
                                 onValueChange = { config = config.copy(fontSize = it) },
-                                valueRange = 16f..40f,
-                                steps = 6
+                                valueRange = 16f..24f, // Ограничил до 24, так как 40 сломает верстку A4
+                                steps = 8
                             )
                         }
                     }
@@ -318,7 +316,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             }
         }
 
-                if (showInfoSheet) {
+        if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
                     modifier = Modifier
@@ -326,58 +324,13 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         .padding(16.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text("Тексты для чтения с вопросами — распечатать для 1–4 класса",
-                        style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text("Тексты для чтения с вопросами", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(12.dp))
-                    Text("Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Этот раздел помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.",
-                        style = MaterialTheme.typography.bodyLarge)
+                    Text("Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил? Этот раздел помогает перейти от чтения к обсуждению.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(16.dp))
-                    Text("Что будет на распечатке", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Что будет на распечатке:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(6.dp))
-                    Text("• Лист ребёнка — рассказ и четыре или пять вопросов. Отвечать можно устно или записывать под вопросами.\n" +
-                        "• Лист взрослого — ответы и подсказки для обсуждения. Добавляется по желанию и печатается отдельной страницей.\n" +
-                        "• Количество слов по строкам — разметка для проверки техники чтения. Числа можно отключить.\n" +
-                        "• Цветное или нейтральное оформление — выберите фон листа перед печатью.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Тексты по классам", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Истории посвящены знакомым детям ситуациям: прогулкам, семье, школьным занятиям, открытиям и совместным делам. В подборке 100 авторских рассказов — по 25 на каждый класс.\n\n" +
-                        "1 класс — первые короткие истории. 51–58 слов и четыре вопроса. Короткие предложения и крупный шрифт помогают удерживать строку; вопросы просят вспомнить героев, предметы и простую причину события.\n\n" +
-                        "2 класс — события и поступки. 82–97 слов и четыре вопроса. В рассказах несколько последовательных событий, ребёнок объясняет поступки и находит подтверждение в тексте.\n\n" +
-                        "3 класс — наблюдения и выводы. 114–135 слов и четыре вопроса. Нужно связать детали, объяснить, что помогло герою, и заметить, как изменилось его отношение к ситуации.\n\n" +
-                        "4 класс — причины и главная мысль. 154–175 слов и пять вопросов. Важны точность деталей, причинные связи и смысл поступков.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(12.dp))
-                    Text("Класс — это ориентир сложности, а не привязка к конкретному учебнику, четверти или нормативу. Выбирайте по навыку ребёнка: при необходимости возьмите предыдущий уровень.",
-                        style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Как обсуждать прочитанное", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("• Начните с устного ответа и дайте ребёнку время обдумать содержание.\n" +
-                        "• Попросите показать предложение, на которое он опирается.\n" +
-                        "• Перечитайте трудный фрагмент вместе, если ответить пока не получается.\n" +
-                        "• Запишите короткий ответ, если хотите потренировать письменную речь.\n" +
-                        "• Ответы на листе взрослого — смысловые ориентиры: повторять их слово в слово не обязательно, важны понимание истории и соответствие тексту.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Как пользоваться подсчётом слов", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Число справа показывает сумму слов от начала рассказа до конца строки. Заголовок не учитывается. Слово с дефисом считается одним словом, отдельное тире — не словом.\n\n" +
-                        "• Для проверки за минуту отметьте последнее полностью прочитанное слово и отдельно запишите ошибки.\n" +
-                        "• Для неполной строки возьмите число у предыдущей строки и прибавьте прочитанные слова текущей.\n" +
-                        "• Если рассказ закончился раньше минуты, запишите полное время чтения и не пересчитывайте его автоматически в минутный норматив.\n" +
-                        "• Для следующей проверки выберите незнакомую историю, чтобы результат не зависел от запоминания.\n" +
-                        "• Скорость сама по себе не показывает, насколько понят рассказ. Для занятия без замера времени снимите галочку с подсчётом слов.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Как составить и распечатать лист", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("• Выберите класс и рассказ (при случайном выборе следующий в этой вкладке отличается от предыдущего).\n" +
-                        "• Отметьте нужные настройки: подсчёт слов, лист ответов для взрослого, фон листа.\n" +
-                        "• Нажмите «Сохранить в PDF».\n" +
-                        "• При печати выберите A4 и масштаб 100%, отключите колонтитулы. Для цветного оформления включите печать фона.",
-                        style = MaterialTheme.typography.bodyMedium)
+                    Text("• Лист ребёнка — рассказ и вопросы. Отвечать можно устно или записывать под вопросами.\n• Лист взрослого — ответы и подсказки (добавляется по желанию).\n• Количество слов по строкам — разметка для проверки техники чтения.", style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(32.dp))
                 }
             }
