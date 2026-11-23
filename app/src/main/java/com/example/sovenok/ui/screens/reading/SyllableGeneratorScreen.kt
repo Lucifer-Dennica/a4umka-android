@@ -4,9 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items // <-- ВАЖНО: этот импорт решает ошибку с Int
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -24,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sovenok.data.*
@@ -50,16 +47,9 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     
-    var editMode by remember { mutableStateOf(false) }
-    var editedTexts by remember { mutableStateOf<List<SyllableText>>(emptyList()) }
-    
     LaunchedEffect(config) {
         delay(300)
         previewPages = SyllablePdfDrawer.generatePreviewPages(config, context)
-    }
-    
-    LaunchedEffect(config.selectedTexts) {
-        editedTexts = config.selectedTexts.toList()
     }
     
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
@@ -82,13 +72,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             scope.launch { snackbarHostState.showSnackbar("Сначала выберите хотя бы один текст") }
                             return@IconButton
                         }
-                        val finalConfig = if (editMode && editedTexts.isNotEmpty()) {
-                            config.copy(selectedTexts = editedTexts)
-                        } else {
-                            config
-                        }
-                        
-                        val result = PdfExporter.exportSyllableText(context, finalConfig)
+                        val result = PdfExporter.exportSyllableText(context, config)
                         scope.launch {
                             if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
                             else snackbarHostState.showSnackbar("Ошибка при сохранении")
@@ -115,144 +99,11 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                         Text("Источник текста", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(
-                                selected = config.source == SyllableSource.READY && !editMode,
-                                onClick = { 
-                                    config = config.copy(source = SyllableSource.READY)
-                                    editMode = false
-                                },
-                                label = { Text("Готовый текст") }
-                            )
-                            FilterChip(
-                                selected = config.source == SyllableSource.CUSTOM,
-                                onClick = { 
-                                    config = config.copy(source = SyllableSource.CUSTOM)
-                                    editMode = false
-                                },
-                                label = { Text("Свой текст") }
-                            )
-                            // ИСПРАВЛЕНИЕ: Аккуратный перенос на две строки с центрированием
-                            FilterChip(
-                                selected = editMode,
-                                onClick = { 
-                                    if (config.selectedTexts.isNotEmpty()) {
-                                        editMode = true
-                                        editedTexts = config.selectedTexts.toList()
-                                    } else {
-                                        scope.launch { 
-                                            snackbarHostState.showSnackbar("Сначала выберите тексты во вкладке «Готовый текст»") 
-                                        }
-                                    }
-                                },
-                                label = { 
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Редактировать", fontSize = 11.sp)
-                                        Text("(${config.selectedTexts.size})", fontSize = 11.sp)
-                                    }
-                                }
-                            )
+                            FilterChip(selected = config.source == SyllableSource.READY, onClick = { config = config.copy(source = SyllableSource.READY) }, label = { Text("Готовый текст") })
+                            FilterChip(selected = config.source == SyllableSource.CUSTOM, onClick = { config = config.copy(source = SyllableSource.CUSTOM) }, label = { Text("Свой текст") })
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        
-                        if (editMode && config.source == SyllableSource.READY) {
-                            if (editedTexts.isEmpty()) {
-                                Text("Нет выбранных текстов. Вернитесь во вкладку «Готовый текст» и выберите тексты.", 
-                                    color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
-                            } else {
-                                Text("Редактирование выбранных текстов", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                                Text("Изменения сразу отображаются в предпросмотре", fontSize = 11.sp, color = Color.Gray)
-                                Spacer(modifier = Modifier.height(12.dp))
-                                
-                                editedTexts.forEachIndexed { index, editedText ->
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Text(editedText.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            
-                                            OutlinedTextField(
-                                                value = editedText.title,
-                                                onValueChange = { newTitle ->
-                                                    val newText = editedText.copy(title = newTitle)
-                                                    editedTexts = editedTexts.toMutableList().apply { set(index, newText) }
-                                                    config = config.copy(selectedTexts = editedTexts)
-                                                },
-                                                label = { Text("Название") },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                singleLine = true
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            
-                                            OutlinedTextField(
-                                                value = editedText.text,
-                                                onValueChange = { newText ->
-                                                    val updatedText = editedText.copy(text = newText)
-                                                    editedTexts = editedTexts.toMutableList().apply { set(index, updatedText) }
-                                                    config = config.copy(selectedTexts = editedTexts)
-                                                },
-                                                label = { Text("Текст") },
-                                                modifier = Modifier.fillMaxWidth().height(120.dp),
-                                                maxLines = 6
-                                            )
-                                            
-                                            if (editedText.questions.isNotEmpty()) {
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text("Вопросы:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                editedText.questions.forEachIndexed { qIndex, question ->
-                                                    OutlinedTextField(
-                                                        value = question,
-                                                        onValueChange = { newQuestion ->
-                                                            val newQuestions = editedText.questions.toMutableList()
-                                                            newQuestions[qIndex] = newQuestion
-                                                            val updatedText = editedText.copy(questions = newQuestions)
-                                                            editedTexts = editedTexts.toMutableList().apply { set(index, updatedText) }
-                                                            config = config.copy(selectedTexts = editedTexts)
-                                                        },
-                                                        label = { Text("Вопрос ${qIndex + 1}") },
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        singleLine = true
-                                                    )
-                                                    Spacer(modifier = Modifier.height(4.dp))
-                                                }
-                                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                    OutlinedButton(
-                                                        onClick = {
-                                                            val newQuestions = editedText.questions.toMutableList()
-                                                            newQuestions.add("")
-                                                            val updatedText = editedText.copy(questions = newQuestions)
-                                                            editedTexts = editedTexts.toMutableList().apply { set(index, updatedText) }
-                                                            config = config.copy(selectedTexts = editedTexts)
-                                                        },
-                                                        modifier = Modifier.weight(1f)
-                                                    ) {
-                                                        Text("+ Вопрос")
-                                                    }
-                                                    if (editedText.questions.size > 1) {
-                                                        OutlinedButton(
-                                                            onClick = {
-                                                                val newQuestions = editedText.questions.toMutableList()
-                                                                newQuestions.removeAt(newQuestions.size - 1)
-                                                                val updatedText = editedText.copy(questions = newQuestions)
-                                                                editedTexts = editedTexts.toMutableList().apply { set(index, updatedText) }
-                                                                config = config.copy(selectedTexts = editedTexts)
-                                                            },
-                                                            modifier = Modifier.weight(1f)
-                                                        ) {
-                                                            Text("− Удалить")
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-                            }
-                        }
-                        else if (config.source == SyllableSource.READY && !editMode) {
+                        if (config.source == SyllableSource.READY) {
                             Text("← Листайте вкладки →", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items(SyllableData.categories) { category ->
@@ -264,14 +115,8 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.heightIn(max = 400.dp)
-                            ) {
-                                items(selectedCategory.texts) { textObj ->
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                selectedCategory.texts.forEach { textObj ->
                                     val isSelected = config.selectedTexts.contains(textObj)
                                     ElevatedCard(
                                         onClick = {
@@ -307,27 +152,14 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                     }
                                 }
                             }
-                        }
-                        else if (config.source == SyllableSource.CUSTOM) {
-                            OutlinedTextField(
-                                value = config.customTitle,
-                                onValueChange = { config = config.copy(customTitle = it) },
-                                label = { Text("Название рассказа") },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                        } else {
+                            OutlinedTextField(value = config.customTitle, onValueChange = { config = config.copy(customTitle = it) }, label = { Text("Название рассказа") }, modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = config.customText,
-                                onValueChange = { config = config.copy(customText = it) },
-                                label = { Text("Текст рассказа") },
-                                modifier = Modifier.fillMaxWidth().height(150.dp),
-                                maxLines = 8
-                            )
+                            OutlinedTextField(value = config.customText, onValueChange = { config = config.copy(customText = it) }, label = { Text("Текст рассказа") }, modifier = Modifier.fillMaxWidth().height(150.dp), maxLines = 8)
                         }
                     }
                 }
             }
-            
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -342,17 +174,9 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                     Text("Выбрать несколько вариантов")
                                     Text("Печать нескольких текстов подряд", fontSize = 12.sp, color = Color.Gray)
                                 }
-                                Switch(
-                                    checked = config.isMultiSelectMode,
-                                    onCheckedChange = { isChecked ->
-                                        config = config.copy(
-                                            isMultiSelectMode = isChecked,
-                                            selectedTexts = if (!isChecked && config.selectedTexts.size > 1)
-                                                listOf(config.selectedTexts.first())
-                                            else config.selectedTexts
-                                        )
-                                    }
-                                )
+                                Switch(checked = config.isMultiSelectMode, onCheckedChange = { isChecked ->
+                                    config = config.copy(isMultiSelectMode = isChecked, selectedTexts = if (!isChecked && config.selectedTexts.size > 1) listOf(config.selectedTexts.first()) else config.selectedTexts)
+                                })
                             }
                         }
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -376,18 +200,14 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Вопросы по тексту", modifier = Modifier.weight(1f))
-                            Switch(
-                                checked = config.showQuestions,
-                                onCheckedChange = { config = config.copy(showQuestions = it) }
-                            )
+                            Switch(checked = config.showQuestions, onCheckedChange = { config = config.copy(showQuestions = it) })
                         }
                     }
                 }
             }
-            
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
@@ -412,7 +232,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
-        
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
