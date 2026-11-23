@@ -30,7 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-Composable
+@Composable
 fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -40,7 +40,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     var showInfoSheet by remember { mutableStateOf(false) }
     var dropdownExpanded by remember { mutableStateOf(false) }
     
-    // Состояние для редактирования
     var editMode by remember { mutableStateOf(false) }
     var editedStory by remember { mutableStateOf<com.example.sovenok.data.ComprehensionStory?>(null) }
 
@@ -99,7 +98,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // БЛОК: Класс, рассказ и редактирование
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -192,7 +190,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                             )
                         }
                         
-                        // ПОЛЯ РЕДАКТИРОВАНИЯ
                         if (editMode && editedStory != null) {
                             Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
@@ -241,7 +238,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // БЛОК: Настройки печати
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -262,11 +258,19 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                             Text("Персиковый фон листа", modifier = Modifier.weight(1f))
                             Switch(checked = config.isPeachBackground, onCheckedChange = { config = config.copy(isPeachBackground = it) })
                         }
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
+                            Slider(
+                                value = config.fontSize,
+                                onValueChange = { config = config.copy(fontSize = it) },
+                                valueRange = 16f..40f,
+                                steps = 6
+                            )
+                        }
                     }
                 }
             }
 
-            // ПРЕДПРОСМОТР
             item {
                 Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 if (previewPages.size > 1) {
@@ -301,7 +305,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         "Этот раздел помогает перейти от чтения к обсуждению. На листе A4 — рассказ, вопросы и место для ответов.\n\n" +
-                        "В подборке рассказы для 1–4 классов. Выберите конкретную историю или случайный вариант.\n\n" +
+                        "В подборке 100 авторских рассказов — по 25 для каждого класса. Выберите конкретную историю или случайный вариант.\n\n" +
                         "• Счётчик слов справа помогает проверять технику чтения.\n" +
                         "• Вкладка «Редактировать» позволяет изменить текст, вопросы и ответы под ваш класс.\n" +
                         "• «Отдельный лист ответов» добавит вторую страницу с подсказками для взрослого.\n" +
