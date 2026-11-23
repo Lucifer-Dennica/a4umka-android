@@ -16,11 +16,11 @@ object ComprehensionPdfDrawer {
     const val PAGE_HEIGHT = 842f
     private const val MARGIN = 40f
     private val GREEN = Color.parseColor("#33691E")
-    private val PEACH = Color.parseColor("#FFF3E0")
+    private val PAGE_BG = Color.parseColor("#FFF8E1")
     private val BOX_STROKE = Color.parseColor("#D7CCC8")
-    private val BOX_FILL = Color.WHITE
 
-    private fun newBmp(): Bitmap = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+    private fun newBmp(): Bitmap =
+        Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
 
     fun generatePreviewPages(config: ComprehensionConfig, context: Context): List<Bitmap> {
         val story = config.selectedStory ?: return emptyList()
@@ -45,24 +45,25 @@ object ComprehensionPdfDrawer {
         }
     }
 
-    // ===== ЛИСТ РЕБЁНКА =====
+    // ===== ЛИСТ РЕБЁНКА: заголовок + инфо-бокс + текст + вопросы, с ПЕРЕНОСОМ страниц =====
     private fun buildKidPages(config: ComprehensionConfig, story: ComprehensionStory): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
         var bmp = newBmp(); var canvas = Canvas(bmp)
         var y = drawHeader(canvas, config, story, "Читай, замечай, размышляй")
 
-        // инфо-бокс + увеличенный зазор снизу до текста (было 14f, стало 24f)
-        y = drawInfoBox(canvas, y, "Прочитай рассказ. Затем ответь на вопросы — устно или письменно.") + 24f
+        // инфо-бокс как на сайте: рамка + симметричный padding + зазор до текста
+        y = drawInfoBox(canvas, y) + 26f
 
-        val body = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
+        val body = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val num = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.parseColor("#9E9E9E"); typeface = Typeface.DEFAULT }
         val lh = body.textSize * 1.5f
         val maxW = PAGE_WIDTH - MARGIN * 2 - if (config.showWordCount) 34f else 0f
         var cum = 0
+
         for (para in story.text.split("\n")) {
             for (line in wrap(para, body, maxW)) {
-                if (y > PAGE_HEIGHT - 40f) {
-                    bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+                if (y > PAGE_HEIGHT - 50f) {            // перенос страницы (чинит 2-4 класс)
+                    pages.add(bmp); bmp = newBmp(); canvas = Canvas(bmp)
                     y = drawHeader(canvas, config, story, "Читай, замечай, размышляй")
                 }
                 canvas.drawText(line, MARGIN, y, body)
@@ -73,7 +74,7 @@ object ComprehensionPdfDrawer {
                 y += lh
             }
         }
-        y += 18f
+        y += 22f
 
         val qBody = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.BLACK; typeface = Typeface.DEFAULT }
         val linePaint = Paint().apply { color = Color.parseColor("#CFD8DC"); strokeWidth = 1f }
@@ -81,7 +82,7 @@ object ComprehensionPdfDrawer {
             val lines = wrap(q, qBody, PAGE_WIDTH - MARGIN * 2 - 44f)
             val boxH = 22f + lines.size * 16f + 30f
             if (y + boxH > PAGE_HEIGHT - 30f) {
-                bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+                pages.add(bmp); bmp = newBmp(); canvas = Canvas(bmp)
                 y = drawHeader(canvas, config, story, "Читай, замечай, размышляй") + 6f
             }
             drawBox(canvas, y, boxH)
@@ -102,57 +103,28 @@ object ComprehensionPdfDrawer {
         val pages = mutableListOf<Bitmap>()
         var bmp = newBmp(); var canvas = Canvas(bmp)
         var y = drawHeader(canvas, config, story, "Ответы — для взрослого")
-
-        y = drawLabeledBox(canvas, y, "Как проверять",
-            "Ребёнок может ответить своими словами. Ниже — смысловые ориентиры, а не обязательные формулировки.") + 12f
-
         val qBold = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
         val aBody = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.parseColor("#37474F"); typeface = Typeface.DEFAULT }
         story.questions.forEachIndexed { i, q ->
-            val a = story.answers.getOrElse(i) { "Ответ не указан" }
             val qLines = wrap("${i + 1}. $q", qBold, PAGE_WIDTH - MARGIN * 2 - 24f)
-            val aLines = wrap(a, aBody, PAGE_WIDTH - MARGIN * 2 - 24f)
-            val boxH = 18f + qLines.size * 18f + 6f + aLines.size * 18f + 10f
+            val boxH = 18f + qLines.size * 18f + 6f + 18f + 10f
             if (y + boxH > PAGE_HEIGHT - 30f) {
-                bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
+                pages.add(bmp); bmp = newBmp(); canvas = Canvas(bmp)
                 y = drawHeader(canvas, config, story, "Ответы — для взрослого") + 6f
             }
             drawBox(canvas, y, boxH)
             var ty = y + 20f
             for (ln in qLines) { canvas.drawText(ln, MARGIN + 12f, ty, qBold); ty += 18f }
-            ty += 4f
-            for (ln in aLines) { canvas.drawText(ln, MARGIN + 12f, ty, aBody); ty += 18f }
+            canvas.drawText("Ответ: ______________________________", MARGIN + 12f, ty + 4f, aBody)
             y += boxH + 8f
         }
-
-        val wc = if (story.totalWords > 0) story.totalWords else story.text.split(Regex("\\s+")).filter { it.isNotBlank() }.size
-        val instr = listOf(
-            "Заголовок не учитывается. Слова с дефисом считаются одним словом, отдельное тире словом не считается.",
-            "За одну минуту: прочитано _____ слов, ошибок _____. Отметьте последнее полностью прочитанное слово. Число справа — сумма слов до конца строки; для неполной строки прибавьте прочитанные слова к числу предыдущей.",
-            "Если текст закончился раньше минуты, запишите общее время: _____ секунд. Не пересчитывайте его автоматически в минутный норматив. Для следующей проверки выберите незнакомый текст. Обсудите содержание после чтения."
-        )
-        val title = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
-        val small = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.parseColor("#37474F"); typeface = Typeface.DEFAULT }
-        var boxH = 22f
-        val allLines = mutableListOf<Pair<Paint, List<String>>>()
-        allLines.add(title to listOf("В тексте $wc слов"))
-        for (p in instr) allLines.add(small to wrap(p, small, PAGE_WIDTH - MARGIN * 2 - 24f))
-        for ((_, ls) in allLines) boxH += ls.size * 15f + 2f
-        boxH += 10f
-        if (y + boxH > PAGE_HEIGHT - 30f) {
-            bmp = newBmp(); canvas = Canvas(bmp); pages.add(bmp)
-            y = drawHeader(canvas, config, story, "Ответы — для взрослого") + 6f
-        }
-        drawBox(canvas, y, boxH)
-        var ty = y + 20f
-        for ((paint, ls) in allLines) { for (ln in ls) { canvas.drawText(ln, MARGIN + 12f, ty, paint); ty += 15f }; ty += 2f }
         pages.add(bmp)
         return pages
     }
 
     // ===== helpers =====
     private fun drawHeader(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory, subtitle: String): Float {
-        canvas.drawColor(if (config.isPeachBackground) PEACH else Color.WHITE)
+        canvas.drawColor(PAGE_BG)
         val pill = Paint().apply { isAntiAlias = true; color = Color.parseColor("#C8E6C9"); style = Paint.Style.FILL }
         val pillTxt = Paint().apply { isAntiAlias = true; textSize = 13f; color = Color.parseColor("#1B5E20"); textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT }
         val g = "${config.grade} класс"; val gw = pillTxt.measureText(g) + 28f
@@ -169,32 +141,22 @@ object ComprehensionPdfDrawer {
         return 118f
     }
 
-    // ИЗМЕНЁН: симметричный внутренний отступ (было 16/10, стало 18/16) — текст не прилипает к рамке
-    private fun drawInfoBox(canvas: Canvas, y: Float, text: String): Float {
+    // Инфо-бокс: рамка + симметричный внутренний отступ (как на сайте)
+    private fun drawInfoBox(canvas: Canvas, y: Float): Float {
         val p = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.parseColor("#37474F"); typeface = Typeface.DEFAULT }
-        val lines = wrap(text, p, PAGE_WIDTH - MARGIN * 2 - 24f)
-        val h = 18f + lines.size * 16f + 16f
+        val text = "Прочитай рассказ. Затем ответь на вопросы — устно или письменно."
+        val lines = wrap(text, p, PAGE_WIDTH - MARGIN * 2 - 32f)
+        val h = 16f + lines.size * 16f + 16f          // padding сверху и снизу по 16
         drawBox(canvas, y, h)
-        var ty = y + 22f
-        for (ln in lines) { canvas.drawText(ln, MARGIN + 12f, ty, p); ty += 16f }
-        return y + h
-    }
-
-    private fun drawLabeledBox(canvas: Canvas, y: Float, label: String, text: String): Float {
-        val lb = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
-        val p = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.parseColor("#37474F"); typeface = Typeface.DEFAULT }
-        val lines = wrap(text, p, PAGE_WIDTH - MARGIN * 2 - 24f)
-        val h = 18f + 16f + lines.size * 16f + 10f
-        drawBox(canvas, y, h)
-        canvas.drawText(label, MARGIN + 12f, y + 18f, lb)
-        var ty = y + 36f
-        for (ln in lines) { canvas.drawText(ln, MARGIN + 12f, ty, p); ty += 16f }
+        var ty = y + 16f + 12f                         // baseline первой строки
+        for (ln in lines) { canvas.drawText(ln, MARGIN + 16f, ty, p); ty += 16f }
         return y + h
     }
 
     private fun drawBox(canvas: Canvas, y: Float, h: Float) {
-        canvas.drawRoundRect(RectF(MARGIN, y, PAGE_WIDTH - MARGIN, y + h), 8f, 8f, Paint().apply { color = BOX_FILL; style = Paint.Style.FILL })
-        canvas.drawRoundRect(RectF(MARGIN, y, PAGE_WIDTH - MARGIN, y + h), 8f, 8f, Paint().apply { isAntiAlias = true; color = BOX_STROKE; style = Paint.Style.STROKE; strokeWidth = 1f })
+        val r = RectF(MARGIN, y, PAGE_WIDTH - MARGIN, y + h)
+        canvas.drawRoundRect(r, 8f, 8f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
+        canvas.drawRoundRect(r, 8f, 8f, Paint().apply { isAntiAlias = true; color = BOX_STROKE; style = Paint.Style.STROKE; strokeWidth = 1f })
     }
 
     private fun wrap(text: String, paint: Paint, maxW: Float): List<String> {
