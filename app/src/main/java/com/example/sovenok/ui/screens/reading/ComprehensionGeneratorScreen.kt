@@ -10,6 +10,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +28,7 @@ import com.example.sovenok.util.ComprehensionPdfDrawer
 import com.example.sovenok.util.PdfExporter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 private val Green = Color(0xFF4C8C2A)
 private val GreenDark = Color(0xFF33691E)
@@ -41,7 +44,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(ComprehensionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var dropdownExpanded by remember { mutableStateOf(false) }
-    var htmlMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (config.selectedStory == null) {
@@ -75,6 +77,10 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 },
                 actions = {
                     IconButton(onClick = { showInfoSheet = true }) { Icon(Icons.Default.Info, "Справка", tint = GreenDark) }
+                    IconButton(onClick = {
+                        val res = PdfExporter.exportComprehension(context, config)
+                        scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
+                    }) { Icon(Icons.Default.Save, "Сохранить", tint = GreenDark) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream)
             )
@@ -86,28 +92,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // баннер
-            item {
-                OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(12.dp)) {
-                        Text("🦊", fontSize = 28.sp)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Каждый день выкладываю новый лист заданий", modifier = Modifier.weight(1f), fontSize = 13.sp, color = GreenDark, fontWeight = FontWeight.SemiBold)
-                        OutlinedButton(onClick = { scope.launch { snackbarHostState.showSnackbar("Спасибо! Мы в соцсетях.") } },
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = GreenDark), border = BorderStroke(1.dp, Green)) { Text("Подписаться", fontSize = 12.sp) }
-                        Spacer(Modifier.width(6.dp))
-                        OutlinedButton(onClick = { scope.launch { snackbarHostState.showSnackbar("Поделиться") } },
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = GreenDark), border = BorderStroke(1.dp, Green)) { Text("Поделиться", fontSize = 12.sp) }
-                    }
-                }
-            }
-
-            item {
-                Text("100 авторских рассказов — по 25 для каждого из 1–4 классов: прочитай, найди ответ в тексте, объясни поступки героев. На листе — текст и вопросы, для взрослого — отдельные ответы и подсчёт слов.",
-                    fontSize = 13.sp, color = Color(0xFF555555))
-            }
-
-            // КЛАСС
             item {
                 OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
                     Column(Modifier.padding(12.dp)) {
@@ -137,7 +121,6 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // РАССКАЗ
             item {
                 OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
                     Column(Modifier.padding(12.dp)) {
@@ -159,56 +142,37 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                             }
                         }
                         Spacer(Modifier.height(6.dp))
-                        Text(subtitle, fontSize = 12.sp, color = Color.Gray)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(subtitle, fontSize = 12.sp, color = Color.Gray, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade)) }) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, tint = Green, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Случайный", color = Green)
+                            }
+                        }
                     }
                 }
             }
 
-            // НАСТРОЙКИ (чекбоксы как на сайте)
             item {
                 Column(Modifier.padding(horizontal = 4.dp)) {
                     CheckRow("Количество слов справа от каждой строки", config.showWordCount) { config = config.copy(showWordCount = it) }
                     CheckRow("Подсказки для проверки техники чтения на листе взрослого", config.showAdultHints) { config = config.copy(showAdultHints = it) }
                     CheckRow("Добавить отдельный лист ответов", config.showAnswerSheet) { config = config.copy(showAnswerSheet = it) }
                     CheckRow("Чёрно-белая печать", config.isBlackAndWhite) { config = config.copy(isBlackAndWhite = it) }
+                    
+                    Spacer(Modifier.height(8.dp))
+                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp, color = GreenDark, fontWeight = FontWeight.SemiBold)
+                    Slider(
+                        value = config.fontSize,
+                        onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) }, // Округление до целого для точности
+                        valueRange = 14f..24f,
+                        steps = 10, // 10 шагов дают ровно 14, 15, 16... 24
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
-            // ФОРМАТ
-            item {
-                OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text("Формат", color = GreenDark, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(6.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = !htmlMode, onClick = { htmlMode = false }, colors = RadioButtonDefaults.colors(selectedColor = Green))
-                            Text("PDF / печать — открыть лист в новой вкладке", fontSize = 13.sp)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = htmlMode, onClick = { htmlMode = true }, colors = RadioButtonDefaults.colors(selectedColor = Green))
-                            Text("HTML-файл — сохранить на компьютер", fontSize = 13.sp)
-                        }
-                    }
-                }
-            }
-
-            // БОЛЬШАЯ КНОПКА
-            item {
-                Button(
-                    onClick = {
-                        if (htmlMode) { scope.launch { snackbarHostState.showSnackbar("HTML-экспорт появится позже — выберите PDF.") } }
-                        else {
-                            val res = PdfExporter.exportComprehension(context, config)
-                            scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Color.White),
-                    shape = MaterialTheme.shapes.medium
-                ) { Text("Составить лист", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
-            }
-
-            // ПРЕДПРОСМОТР
             item {
                 Text("Предпросмотр листа A4:", color = GreenDark, fontWeight = FontWeight.Bold)
                 if (previewPages.size > 1) Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = Green, fontSize = 12.sp)
@@ -226,64 +190,15 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text("Тексты для чтения с вопросами — распечатать для 1–4 класса",
-                        style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Column(Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
+                    Text("Чтение с вопросами — лист для распечатки (1–4 класс)", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = GreenDark)
                     Spacer(Modifier.height(12.dp))
-                    Text("Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Этот раздел помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.",
-                        style = MaterialTheme.typography.bodyLarge)
+                    Text("Ребёнок прочитал рассказ. Сможет ли он объяснить поступок героя и чем всё закончилось? Генератор помогает перейти от чтения к разговору: на листе A4 — текст, вопросы и поля для ответов.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(16.dp))
-                    Text("Что будет на распечатке", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("• Лист ребёнка — рассказ и четыре или пять вопросов. Отвечать можно устно или записывать под вопросами.\n" +
-                        "• Лист взрослого — ответы и подсказки для обсуждения. Добавляется по желанию и печатается отдельной страницей.\n" +
-                        "• Количество слов по строкам — разметка для проверки техники чтения. Числа можно отключить.\n" +
-                        "• Цветное или нейтральное оформление — выберите фон листа перед печатью.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Тексты по классам", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Истории посвящены знакомым детям ситуациям: прогулкам, семье, школьным занятиям, открытиям и совместным делам. В подборке 100 авторских рассказов — по 25 на каждый класс.\n\n" +
-                        "1 класс — первые короткие истории. 51–58 слов и четыре вопроса. Короткие предложения и крупный шрифт помогают удерживать строку; вопросы просят вспомнить героев, предметы и простую причину события.\n\n" +
-                        "2 класс — события и поступки. 82–97 слов и четыре вопроса. В рассказах несколько последовательных событий, ребёнок объясняет поступки и находит подтверждение в тексте.\n\n" +
-                        "3 класс — наблюдения и выводы. 114–135 слов и четыре вопроса. Нужно связать детали, объяснить, что помогло герою, и заметить, как изменилось его отношение к ситуации.\n\n" +
-                        "4 класс — причины и главная мысль. 154–175 слов и пять вопросов. Важны точность деталей, причинные связи и смысл поступков.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(12.dp))
-                    Text("Класс — это ориентир сложности, а не привязка к конкретному учебнику, четверти или нормативу. Выбирайте по навыку ребёнка: при необходимости возьмите предыдущий уровень.",
-                        style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Как обсуждать прочитанное", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("• Начните с устного ответа и дайте ребёнку время обдумать содержание.\n" +
-                        "• Попросите показать предложение, на которое он опирается.\n" +
-                        "• Перечитайте трудный фрагмент вместе, если ответить пока не получается.\n" +
-                        "• Запишите короткий ответ, если хотите потренировать письменную речь.\n" +
-                        "• Ответы на листе взрослого — смысловые ориентиры: повторять их слово в слово не обязательно, важны понимание истории и соответствие тексту.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Как пользоваться подсчётом слов", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Число справа показывает сумму слов от начала рассказа до конца строки. Заголовок не учитывается. Слово с дефисом считается одним словом, отдельное тире — не словом.\n\n" +
-                        "• Для проверки за минуту отметьте последнее полностью прочитанное слово и отдельно запишите ошибки.\n" +
-                        "• Для неполной строки возьмите число у предыдущей строки и прибавьте прочитанные слова текущей.\n" +
-                        "• Если рассказ закончился раньше минуты, запишите полное время чтения и не пересчитывайте его автоматически в минутный норматив.\n" +
-                        "• Для следующей проверки выберите незнакомую историю, чтобы результат не зависел от запоминания.\n" +
-                        "• Скорость сама по себе не показывает, насколько понят рассказ. Для занятия без замера времени снимите галочку с подсчётом слов.",
-                        style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Как составить и распечатать лист", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text("• Выберите класс и рассказ (при случайном выборе следующий в этой вкладке отличается от предыдущего).\n" +
-                        "• Отметьте нужные настройки: подсчёт слов, лист ответов для взрослого, фон листа.\n" +
-                        "• Нажмите «Сохранить в PDF».\n" +
-                        "• При печати выберите A4 и масштаб 100%, отключите колонтитулы. Для цветного оформления включите печать фона.",
-                        style = MaterialTheme.typography.bodyMedium)
+                    InfoBlock("Что попадёт на лист", "• Лист ребёнка — рассказ и 4–5 вопросов. Отвечать можно устно или вписать под вопросом.\n• Лист взрослого — ответы и подсказки. Добавляется по желанию отдельной страницей.\n• Счётчик слов по строкам — разметка для замера техники чтения, можно выключить.\n• Цветная или чёрно-белая печать — оформление выбирается до создания листа.")
+                    InfoBlock("Уровни по классам", "1 класс — короткие истории, 51–58 слов, 4 вопроса. Крупный шрифт помогает держать строку.\n2 класс — события и поступки, 82–97 слов, 4 вопроса. Ребёнок ищет подтверждение в тексте.\n3 класс — наблюдения и выводы, 114–135 слов, 4 вопроса.\n4 класс — причины и главная мысль, 154–175 слов, 5 вопросов.")
+                    InfoBlock("Как обсуждать прочитанное", "• Начните с устного ответа, дайте время подумать.\n• Попросите показать предложение-опору.\n• Трудный фрагмент перечитайте вместе.\n• Ответы взрослого — ориентиры по смыслу, не шаблон.")
+                    InfoBlock("Как читать счётчик слов", "Число справа — сумма слов от начала до конца строки (заголовок не в счёт, слово с дефисом = одно, отдельное тире не слово). Отметьте последнее прочитанное слово за минуту, отдельно запишите ошибки. Если закончил раньше — фиксируйте полное время, не пересчитывайте в минутный норматив. В следующий раз берите незнакомый текст.")
                     Spacer(Modifier.height(32.dp))
                 }
             }
