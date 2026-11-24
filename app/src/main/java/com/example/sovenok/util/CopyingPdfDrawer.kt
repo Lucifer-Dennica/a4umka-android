@@ -138,6 +138,14 @@ object CopyingPdfDrawer {
             }
         }
 
+        if (config.showPrepSheet) {
+            onPageFinished()
+            pageIndex++
+            canvas = canvasProvider(pageIndex)
+            currentY = 50f
+            drawPrepSheet(canvas, config)
+        }
+
         if (config.addBlankPage) {
             onPageFinished()
             pageIndex++
