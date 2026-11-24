@@ -20,6 +20,7 @@ object SyllablePdfDrawer {
     private const val MARGIN = 40f
     private const val BOTTOM_LIMIT = 792f
 
+    // Цвета для листа
     private val BEIGE_FILL = Color.parseColor("#F5E9D0")
     private val BEIGE_STROKE = Color.parseColor("#D9C9A3")
     private val FIELD_TEXT = Color.parseColor("#5D4037")
@@ -231,6 +232,7 @@ object SyllablePdfDrawer {
         }
     }
 
+    // Шапка БЕЗ названия — только Дата / Слов / Время
     private fun drawHeader(canvas: Canvas, texts: List<SyllableText>): Float {
         canvas.drawColor(Color.WHITE)
         drawBeigeField(canvas, "Дата:", MARGIN, 20f, 150f)
