@@ -9,8 +9,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
-import androidx.core.content.res.ResourcesCompat
-import com.example.sovenok.R
 import com.example.sovenok.data.SyllableConfig
 import com.example.sovenok.data.SyllableSource
 import com.example.sovenok.data.SyllableText
@@ -31,8 +29,6 @@ object SyllablePdfDrawer {
     fun generatePreviewPages(config: SyllableConfig, context: Context): List<Bitmap> {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return emptyList()
-        val handFont = ResourcesCompat.getFont(context, R.font.caveat)
-            ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
 
         val pages = mutableListOf<Bitmap>()
         var bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
@@ -120,8 +116,6 @@ object SyllablePdfDrawer {
     fun drawDocument(document: PdfDocument, config: SyllableConfig, context: Context) {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return
-        val handFont = ResourcesCompat.getFont(context, R.font.caveat)
-            ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
 
         var pageNum = 1
         var page = document.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create())
@@ -230,8 +224,9 @@ object SyllablePdfDrawer {
 
             val syllables = if (cleanWord.isNotEmpty()) SyllableUtils.splitIntoSyllables(cleanWord.toString()) else emptyList()
 
+            // ширина слова БЕЗ искусственного отступа между слогами
             var wordWidth = 0f
-            for (syllable in syllables) wordWidth += paint.measureText(syllable) + 4f
+            for (syllable in syllables) wordWidth += paint.measureText(syllable)
             if (punctuation.isNotEmpty()) wordWidth += paint.measureText(punctuation.toString())
 
             if (currentX + wordWidth > rightLimit && currentX > startX) {
@@ -249,7 +244,7 @@ object SyllablePdfDrawer {
                     val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
                     canvas.drawArc(RectF(currentX, currentY + 1f, currentX + textWidth, currentY + 8f), 0f, 180f, false, arcPaint)
                 }
-                currentX += textWidth + 4f
+                currentX += textWidth  // <-- было "+ 4f", теперь слоги идут вплотную, как в обычном тексте
             }
 
             if (punctuation.isNotEmpty()) {
@@ -257,7 +252,7 @@ object SyllablePdfDrawer {
                 canvas.drawText(punctText, currentX, currentY, paint)
                 currentX += paint.measureText(punctText)
             }
-            currentX += paint.measureText(" ")
+            currentX += paint.measureText(" ")  // пробел только МЕЖДУ словами
         }
         return currentY
     }
