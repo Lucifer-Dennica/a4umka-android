@@ -261,11 +261,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             Text("Добавить чистый лист для письма", modifier = Modifier.weight(1f))
                             Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Чёрно-белый вариант", modifier = Modifier.weight(1f))
-                            Switch(checked = config.isBlackAndWhite, onCheckedChange = { config = config.copy(isBlackAndWhite = it) })
-                        }
-
+                        
                         Column {
                             Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
                             Slider(
