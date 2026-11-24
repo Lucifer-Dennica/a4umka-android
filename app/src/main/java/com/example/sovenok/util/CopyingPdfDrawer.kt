@@ -183,7 +183,7 @@ object CopyingPdfDrawer {
         val pages = mutableListOf<Bitmap>()
         var currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var currentCanvas = Canvas(currentBmp)
-        currentCanvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
+        currentCanvas.drawColor(Color.WHITE)
 
         renderDocument(config,
             canvasProvider = { 
@@ -191,7 +191,7 @@ object CopyingPdfDrawer {
                     currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                     currentCanvas = Canvas(currentBmp)
                 }
-                currentCanvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
+                currentCanvas.drawColor(Color.WHITE)
                 currentCanvas
             },
             onPageFinished = {
