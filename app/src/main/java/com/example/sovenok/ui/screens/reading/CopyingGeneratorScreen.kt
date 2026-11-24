@@ -113,14 +113,15 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Класс", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Класс:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 8.dp))
                             listOf(1, 2, 3, 4).forEach { grade ->
                                 FilterChip(
                                     selected = config.grade == grade,
                                     onClick = { config = config.copy(grade = grade, selectedStories = emptyList()) },
                                     label = { Text(grade.toString()) }
                                 )
+                                Spacer(Modifier.width(4.dp))
                             }
                         }
 
