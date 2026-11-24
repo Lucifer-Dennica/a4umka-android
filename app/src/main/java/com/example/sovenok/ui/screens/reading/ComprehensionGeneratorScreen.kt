@@ -85,7 +85,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         val finalConfig = if (editMode && editedStory != null) config.copy(selectedStory = editedStory) else config
                         val res = PdfExporter.exportComprehension(context, finalConfig)
                         scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
-                    }) { Icon(Icons.Default.Save, "Сохранить", tint = scheme.primary) }
+                    }) { Icon(Icons.Default.Save, "Сохранить", tint = Color.Black) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = scheme.surface)
             )
