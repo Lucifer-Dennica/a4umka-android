@@ -262,6 +262,11 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             Text("Добавить чистый лист для письма", modifier = Modifier.weight(1f))
                             Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
                         }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Лист подготовки и проверки", modifier = Modifier.weight(1f))
+                            Switch(checked = config.showPrepSheet, onCheckedChange = { config = config.copy(showPrepSheet = it) })
+                        }
                         
                         Column {
                             Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
