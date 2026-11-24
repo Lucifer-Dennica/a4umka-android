@@ -26,6 +26,7 @@ object CopyingPdfDrawer {
         var currentY = 50f
         val margin = 40f
         val lineSpacingPx = config.lineStep * 3.78f
+        val bottomLimit = PAGE_HEIGHT - 40f
 
         fun drawHeader() {
             val headerInfo = "${if (config.mode == CopyingMode.COPYING) "СПИСЫВАНИЕ" else "ДИКТАНТ"} • ${config.grade} КЛАСС • ОРИЕНТИР"
@@ -42,6 +43,53 @@ object CopyingPdfDrawer {
             canvas.drawText("Дата:", PAGE_WIDTH - 140f, currentY, fieldPaint)
             canvas.drawLine(PAGE_WIDTH - 100f, currentY + 2f, PAGE_WIDTH - margin, currentY + 2f, linePaint)
             currentY += 30f
+        }
+
+        // Вспомогательная функция для переноса текста С учётом создания новых страниц
+        fun drawWrappedTextWithBreaks(
+            text: String,
+            x: Float,
+            startY: Float,
+            maxWidth: Float,
+            paint: Paint,
+            lineHeight: Float
+        ): Float {
+            var cy = startY
+            val words = text.split(" ")
+            var line = ""
+            for (word in words) {
+                val testLine = if (line.isEmpty()) word else "$line $word"
+                if (paint.measureText(testLine) > maxWidth) {
+                    if (cy + lineHeight > bottomLimit) {
+                        onPageFinished()
+                        pageIndex++
+                        canvas = canvasProvider(pageIndex)
+                        cy = 50f
+                        val contPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT }
+                        canvas.drawText("Продолжение листа подготовки и проверки", margin, cy, contPaint)
+                        cy += 30f
+                    }
+                    canvas.drawText(line, x, cy, paint)
+                    cy += lineHeight
+                    line = word
+                } else {
+                    line = testLine
+                }
+            }
+            if (line.isNotEmpty()) {
+                if (cy + lineHeight > bottomLimit) {
+                    onPageFinished()
+                    pageIndex++
+                    canvas = canvasProvider(pageIndex)
+                    cy = 50f
+                    val contPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT }
+                    canvas.drawText("Продолжение листа подготовки и проверки", margin, cy, contPaint)
+                    cy += 30f
+                }
+                canvas.drawText(line, x, cy, paint)
+                cy += lineHeight
+            }
+            return cy
         }
 
         drawHeader()
@@ -61,7 +109,7 @@ object CopyingPdfDrawer {
                 if (line.isNotEmpty()) lines.add(line)
                 val textHeight = lines.size * bodyPaint.textSize * 1.5f
                 val titleHeight = 25f
-                if (currentY + titleHeight + textHeight > PAGE_HEIGHT - 40f) {
+                if (currentY + titleHeight + textHeight > bottomLimit) {
                     onPageFinished()
                     pageIndex++
                     canvas = canvasProvider(pageIndex)
@@ -120,7 +168,7 @@ object CopyingPdfDrawer {
                     canvas.drawText("Проверь: начало предложений, буквы в словах, пробелы, знаки в конце.", margin + 5f, currentY + 30f, hintPaint)
                     currentY += 60f
                     val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-                    while (currentY < PAGE_HEIGHT - 40f) {
+                    while (currentY < bottomLimit) {
                         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
                         currentY += lineSpacingPx
                     }
@@ -137,20 +185,87 @@ object CopyingPdfDrawer {
             canvas.drawText("Дополнительный лист для письма", PAGE_WIDTH / 2f - 100f, currentY, headerPaint)
             currentY += 40f
             val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-            while (currentY < PAGE_HEIGHT - 40f) {
+            while (currentY < bottomLimit) {
                 canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
                 currentY += lineSpacingPx
             }
         }
 
-        // --- Лист подготовки и проверки ---
+        // --- ИСПРАВЛЕНИЕ: Лист подготовки и проверки с полной поддержкой переноса на новые страницы ---
         if (config.showPrepSheet) {
             onPageFinished()
             pageIndex++
             canvas = canvasProvider(pageIndex)
-            drawPrepSheet(canvas, config)
+            currentY = 50f
+
+            val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT }
+            val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+            val smallHeaderPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = Typeface.DEFAULT }
+            val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+            val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
+            val lineHeight = bodyPaint.textSize * 1.5f
+
+            canvas.drawText("ОБЩИЙ ЛИСТ ВЗРОСЛОГО · ТЕКСТЫ И ПОРЯДОК РАБОТЫ", margin, currentY, smallHeaderPaint)
+            currentY += 35f
+            canvas.drawText("Подготовка и проверка", margin, currentY, bigTitlePaint)
+            currentY += 35f
+
+            val instruction = if (config.mode == CopyingMode.COPYING) {
+                "Ребёнок читает текст и списывает его в своём темпе. Образец печатный: ребёнок пишет привычным ему почерком."
+            } else {
+                "Прочитайте весь текст. Затем читайте по предложениям, при необходимости делите на короткие смысловые части. Повторите текст целиком для проверки. Заголовок можно не диктовать."
+            }
+            currentY = drawWrappedTextWithBreaks(instruction, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+            currentY += 20f
+
+            val totalPages = config.selectedStories.size * config.childrenCount + 1
+            val pensCount = config.childrenCount
+            val infoText = "${config.childrenCount} ${pluralChild(config.childrenCount)} · " +
+                "${config.selectedStories.size} ${pluralText(config.selectedStories.size)} · " +
+                "$totalPages А4 на весь комплект. Ручки: $pensCount. Общий образец: 1. " +
+                "При работе в тетради бумажный комплект не требуется. " +
+                "Класс — ориентир, а не соответствие программе."
+            currentY = drawWrappedTextWithBreaks(infoText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+            currentY += 25f
+
+            canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
+            currentY += 25f
+
+            for ((index, story) in config.selectedStories.withIndex()) {
+                // ПРОВЕРКА: если места мало, создаём новую страницу перед следующим текстом
+                if (currentY > PAGE_HEIGHT - 150f) {
+                    onPageFinished()
+                    pageIndex++
+                    canvas = canvasProvider(pageIndex)
+                    currentY = 50f
+                    val contPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT }
+                    canvas.drawText("Продолжение листа подготовки и проверки", margin, currentY, contPaint)
+                    currentY += 30f
+                }
+
+                val storyId = "copy-${String.format("%02d", index + 1)}"
+                val storyHeader = "${story.title} · ${story.wordCount} слов · $storyId"
+                canvas.drawText(storyHeader, margin, currentY, storyTitlePaint)
+                currentY += storyTitlePaint.textSize + 10f
+                currentY = drawWrappedTextWithBreaks(story.text, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+                currentY += 25f
+            }
+
+            // ПРОВЕРКА перед финальным текстом
+            if (currentY > PAGE_HEIGHT - 100f) {
+                onPageFinished()
+                pageIndex++
+                canvas = canvasProvider(pageIndex)
+                currentY = 50f
+                val contPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; typeface = Typeface.DEFAULT }
+                canvas.drawText("Продолжение листа подготовки и проверки", margin, currentY, contPaint)
+                currentY += 30f
+            }
+
+            val finalText = "Не оценивайте скорость. При проверке предложите сначала найти конец каждого предложения, затем сравнить слова по порядку. Незнакомые написания объясните до диктанта. Это авторские тренировочные тексты, не контрольные работы по программе."
+            currentY = drawWrappedTextWithBreaks(finalText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
         }
-        
+
         onPageFinished()
     }
 
@@ -158,8 +273,7 @@ object CopyingPdfDrawer {
         val pages = mutableListOf<Bitmap>()
         var currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var currentCanvas = Canvas(currentBmp)
-        currentCanvas.drawColor(Color.WHITE) // Всегда белый фон
-        
+        currentCanvas.drawColor(Color.WHITE)
         renderDocument(config,
             canvasProvider = { 
                 if (it > 0) {
@@ -180,7 +294,6 @@ object CopyingPdfDrawer {
         var pageNum = 1
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
         var page = document.startPage(pageInfo)
-        
         renderDocument(config,
             canvasProvider = { 
                 if (it > 0) {
@@ -195,79 +308,6 @@ object CopyingPdfDrawer {
                 document.finishPage(page)
             }
         )
-    }
-
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ЛИСТА ПОДГОТОВКИ
-    private fun drawPrepSheet(canvas: Canvas, config: CopyingConfig) {
-        val margin = 40f
-        var currentY = 50f
-        
-        // ИСПРАВЛЕНО: используем Color.parseColor вместо Color(0x...)
-        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT }
-        val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT_BOLD }
-        val smallHeaderPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = Typeface.DEFAULT }
-        val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT_BOLD }
-        val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-        val lineHeight = bodyPaint.textSize * 1.5f
-
-        canvas.drawText("ОБЩИЙ ЛИСТ ВЗРОСЛОГО · ТЕКСТЫ И ПОРЯДОК РАБОТЫ", margin, currentY, smallHeaderPaint)
-        currentY += 35f
-        canvas.drawText("Подготовка и проверка", margin, currentY, bigTitlePaint)
-        currentY += 35f
-
-        val instruction = if (config.mode == CopyingMode.COPYING) {
-            "Ребёнок читает текст и списывает его в своём темпе. Образец печатный: ребёнок пишет привычным ему почерком."
-        } else {
-            "Прочитайте весь текст. Затем читайте по предложениям, при необходимости делите на короткие смысловые части. Повторите текст целиком для проверки. Заголовок можно не диктовать."
-        }
-        currentY = drawWrappedText(canvas, instruction, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
-        currentY += 20f
-
-        val totalPages = config.selectedStories.size * config.childrenCount + 1
-        val pensCount = config.childrenCount
-        val infoText = "${config.childrenCount} ${pluralChild(config.childrenCount)} · " +
-            "${config.selectedStories.size} ${pluralText(config.selectedStories.size)} · " +
-            "$totalPages А4 на весь комплект. Ручки: $pensCount. Общий образец: 1. " +
-            "При работе в тетради бумажный комплект не требуется. " +
-            "Класс — ориентир, а не соответствие программе."
-        currentY = drawWrappedText(canvas, infoText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
-        currentY += 25f
-
-        canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
-        currentY += 25f
-
-        for ((index, story) in config.selectedStories.withIndex()) {
-            val storyId = "copy-${String.format("%02d", index + 1)}"
-            val storyHeader = "${story.title} · ${story.wordCount} слов · $storyId"
-            canvas.drawText(storyHeader, margin, currentY, storyTitlePaint)
-            currentY += storyTitlePaint.textSize + 10f
-            currentY = drawWrappedText(canvas, story.text, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
-            currentY += 25f
-        }
-
-        val finalText = "Не оценивайте скорость. При проверке предложите сначала найти конец каждого предложения, затем сравнить слова по порядку. Незнакомые написания объясните до диктанта. Это авторские тренировочные тексты, не контрольные работы по программе."
-        currentY = drawWrappedText(canvas, finalText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
-    }
-
-    private fun drawWrappedText(canvas: Canvas, text: String, x: Float, startY: Float, maxWidth: Float, paint: Paint, lineHeight: Float): Float {
-        var currentY = startY
-        val words = text.split(" ")
-        var line = ""
-        for (word in words) {
-            val testLine = if (line.isEmpty()) word else "$line $word"
-            if (paint.measureText(testLine) > maxWidth) {
-                canvas.drawText(line, x, currentY, paint)
-                currentY += lineHeight
-                line = word
-            } else {
-                line = testLine
-            }
-        }
-        if (line.isNotEmpty()) {
-            canvas.drawText(line, x, currentY, paint)
-            currentY += lineHeight
-        }
-        return currentY
     }
 
     private fun pluralChild(n: Int): String {
