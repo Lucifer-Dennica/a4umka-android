@@ -15,12 +15,11 @@ object ComprehensionPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
     const val MARGIN = 40f
-    const val BODY_START_FIRST = 150f   // после шапки+заголовка+инструкции
-    const val BODY_START_OTHER = 70f    // на续ных страницах только шапка
+    const val BODY_START_FIRST = 150f
+    const val BODY_START_OTHER = 70f
     const val BOTTOM_LIMIT = 792f
 
     private val GREEN = Color.parseColor("#33691E")
-    private val GREEN_LIGHT = Color.parseColor("#A5D6A7")
 
     data class LineData(val text: String, val cumulativeWords: Int)
     data class LayoutPage(val lines: List<LineData>, val hasQuestions: Boolean)
@@ -67,7 +66,6 @@ object ComprehensionPdfDrawer {
         val lineHeight = config.fontSize * 1.4f
         val maxWidth = PAGE_WIDTH - MARGIN * 2
 
-        // строки текста с накопительным счётчиком слов
         val allLines = mutableListOf<LineData>()
         var running = 0
         for (para in story.text.split("\n")) {
@@ -214,7 +212,8 @@ object ComprehensionPdfDrawer {
         }
     }
 
-    private fun drawPill(canvas: Canvas, text: String, cx: Float, cy: Float, fill: Color) {
+    // ИСПРАВЛЕНО: fill теперь Int, а не Color, так как Color.parseColor возвращает Int
+    private fun drawPill(canvas: Canvas, text: String, cx: Float, cy: Float, fill: Int) {
         val meas = Paint().apply { isAntiAlias = true; textSize = 14f; typeface = Typeface.DEFAULT_BOLD }
         val w = meas.measureText(text); val padH = 14f; val h = 24f
         canvas.drawRoundRect(RectF(cx - w / 2 - padH, cy - h / 2, cx + w / 2 + padH, cy + h / 2), 12f, 12f,
