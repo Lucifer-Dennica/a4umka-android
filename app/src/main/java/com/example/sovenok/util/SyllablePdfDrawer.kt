@@ -217,19 +217,20 @@ object SyllablePdfDrawer {
         for (word in line.split(" ")) {
             if (word.isEmpty()) continue
             val syllables = SyllableUtils.splitIntoSyllables(word)
-            for (syllable in syllables) {
+            for ((syllableIndex, syllable) in syllables.withIndex()) {
                 val textWidth = paint.measureText(syllable)
                 if (currentX + textWidth > rightLimit) break
                 canvas.drawText(syllable, currentX, y, paint)
+            
                 if (syllable.length == 1) {
                     val dotPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY }
                     canvas.drawCircle(currentX + textWidth / 2f, y + 10f, 1.5f, dotPaint)
-            } else {
-                val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
-                canvas.drawArc(RectF(currentX, y + 1f, currentX + textWidth, y + 8f), 0f, 180f, false, arcPaint)
+                } else if (syllableIndex < syllables.size - 1) {
+                    val sepPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY }
+                    canvas.drawCircle(currentX + textWidth + 2f, y + 2f, 1.5f, sepPaint)
+                }
+                currentX += textWidth + 4f
             }
-            currentX += textWidth + 4f
-        }
             currentX += paint.measureText(" ")
         }
     }
