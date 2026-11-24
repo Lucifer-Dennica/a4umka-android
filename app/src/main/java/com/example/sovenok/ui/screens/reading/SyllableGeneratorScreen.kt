@@ -303,9 +303,10 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
                             Slider(
                                 value = config.fontSize,
-                                onValueChange = { config = config.copy(fontSize = it) },
+                                onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) },
                                 valueRange = 16f..40f,
-                                steps = 6
+                                steps = 23
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                         if (config.isMultiSelectMode && config.selectedTexts.size > 1) {
