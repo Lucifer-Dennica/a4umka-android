@@ -242,9 +242,9 @@ object SyllablePdfDrawer {
                     canvas.drawCircle(currentX + textWidth / 2f, currentY + 10f, 1.5f, dotPaint)
                 } else {
                     val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
-                    canvas.drawArc(RectF(currentX, currentY + 1f, currentX + textWidth, currentY + 8f), 0f, 180f, false, arcPaint)
+                    canvas.drawArc(RectF(currentX, y + 4f, currentX + textWidth, y + 11f), 180f, 180f, false, arcPaint)
                 }
-                currentX += textWidth  // <-- было "+ 4f", теперь слоги идут вплотную, как в обычном тексте
+                currentX += textWidth  
             }
 
             if (punctuation.isNotEmpty()) {
