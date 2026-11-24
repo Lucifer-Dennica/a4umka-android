@@ -1,15 +1,15 @@
-package com.example.sovenok.data
-
 data class ComprehensionStory(
     val id: String,
     val grade: Int,
     val title: String,
     val text: String,
     val questions: List<String>,
-    val answers: List<String> = emptyList()   
+    val answers: List<String> = emptyList(),
+    val wordCount: Int = 0          
 ) {
-    val totalWords: Int                       
-        get() = text.split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
+    val totalWords: Int
+        get() = if (wordCount > 0) wordCount
+                else text.split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
 }
 
 object ReadingComprehensionData {
