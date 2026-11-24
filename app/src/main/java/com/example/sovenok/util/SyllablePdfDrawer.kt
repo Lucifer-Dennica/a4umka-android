@@ -45,8 +45,8 @@ object SyllablePdfDrawer {
             val lines = splitTextToLines(textObj.text, bodyPaint, PAGE_WIDTH - MARGIN * 2)
 
             val titlePaint = Paint().apply {
-                isAntiAlias = true; textSize = 34f; color = GREEN_TITLE
-                typeface = handFont
+                isAntiAlias = true; textSize = 26f; color = GREEN_TITLE
+                typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
                 textAlign = Paint.Align.CENTER
             }
             val subPaint = Paint().apply {
@@ -140,8 +140,8 @@ object SyllablePdfDrawer {
             val lines = splitTextToLines(textObj.text, bodyPaint, PAGE_WIDTH - MARGIN * 2)
 
             val titlePaint = Paint().apply {
-                isAntiAlias = true; textSize = 34f; color = GREEN_TITLE
-                typeface = handFont
+                isAntiAlias = true; textSize = 26f; color = GREEN_TITLE
+                typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
                 textAlign = Paint.Align.CENTER
             }
             val subPaint = Paint().apply {
@@ -268,7 +268,7 @@ object SyllablePdfDrawer {
         drawBeigeField(canvas, "Время:", PAGE_WIDTH - MARGIN - 150f, 20f, 150f)
         val totalWords = texts.sumOf { it.text.split("\\s+".toRegex()).filter { w -> w.isNotBlank() }.size }
         drawGreenPill(canvas, "Слов: $totalWords", PAGE_WIDTH / 2f, 33f)
-        return 70f
+        return 92f
     }
 
     private fun drawBeigeField(canvas: Canvas, label: String, x: Float, top: Float, width: Float) {
