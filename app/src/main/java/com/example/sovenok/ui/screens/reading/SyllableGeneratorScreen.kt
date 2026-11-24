@@ -30,6 +30,7 @@ import com.example.sovenok.util.PdfExporter
 import com.example.sovenok.util.SyllablePdfDrawer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt // ДОБАВЛЕН ИМПОРТ ДЛЯ roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -37,7 +38,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
     var config by remember {
         mutableStateOf(
             SyllableConfig(selectedTexts = listOf(SyllableData.categories.first().texts.first()))
@@ -46,27 +46,26 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     var showInfoSheet by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-
+    
     // Режим редактирования: список редактируемых текстов
     var editMode by remember { mutableStateOf(false) }
     var editedTexts by remember { mutableStateOf<List<SyllableText>>(emptyList()) }
-
+    
     // Синхронизируем черновик с выбором, пока НЕ в режиме редактирования
     LaunchedEffect(config.selectedTexts) {
         if (!editMode) editedTexts = config.selectedTexts
     }
-
+    
     // Конфиг, реально используемый для предпросмотра и экспорта
     val effectiveConfig =
         if (editMode && editedTexts.isNotEmpty() && config.source == SyllableSource.READY)
             config.copy(selectedTexts = editedTexts)
         else config
-
+        
     LaunchedEffect(effectiveConfig) {
         delay(300)
         previewPages = SyllablePdfDrawer.generatePreviewPages(effectiveConfig, context)
     }
-
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
     Scaffold(
@@ -127,7 +126,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-
                         if (config.source == SyllableSource.READY) {
                             Text("← Листайте вкладки →", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 4.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -140,7 +138,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 selectedCategory.texts.forEach { textObj ->
                                     val isSelected = config.selectedTexts.contains(textObj)
@@ -178,7 +175,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                     }
                                 }
                             }
-
                             // Переключатель режима
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -200,7 +196,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                     label = { Text("Редактировать") }
                                 )
                             }
-
                             // Редактирование ВСЕХ выбранных текстов
                             if (editMode && editedTexts.isNotEmpty()) {
                                 editedTexts.forEachIndexed { idx, t ->
@@ -275,7 +270,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
+            
             // БЛОК: Настройки печати
             item {
                 OutlinedCard(
@@ -305,7 +300,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 value = config.fontSize,
                                 onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) },
                                 valueRange = 16f..40f,
-                                steps = 23
+                                steps = 23, // <-- ДОБАВЛЕНА ЗАПЯТАЯ ЗДЕСЬ
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -326,7 +321,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
+            
             // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -338,7 +333,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
-
             item {
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
@@ -353,7 +347,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
-
+        
         // СПРАВКА (INFO SHEET) — ПОЛНАЯ ВЕРСИЯ
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
