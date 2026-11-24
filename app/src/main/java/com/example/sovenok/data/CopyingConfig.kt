@@ -13,4 +13,5 @@ data class CopyingConfig(
     val isBlackAndWhite: Boolean = false,
     val fontSize: Float = 16f,
     val combineOnOnePage: Boolean = false
+    val showPrepSheet: Boolean = false
 )
