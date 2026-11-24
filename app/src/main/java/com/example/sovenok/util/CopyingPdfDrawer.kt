@@ -32,20 +32,15 @@ object CopyingPdfDrawer {
             val headerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; typeface = Typeface.DEFAULT }
             canvas.drawText(headerInfo, margin, currentY, headerPaint)
             currentY += 30f
-            
             val fieldPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY; typeface = Typeface.DEFAULT }
             val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
-            
             canvas.drawText("Имя:", margin, currentY, fieldPaint)
             canvas.drawLine(margin + 35f, currentY + 2f, margin + 150f, currentY + 2f, linePaint)
-            
             if (config.signature.isNotEmpty()) {
                 canvas.drawText(config.signature, PAGE_WIDTH / 2f - fieldPaint.measureText(config.signature) / 2f, currentY, fieldPaint)
             }
-            
             canvas.drawText("Дата:", PAGE_WIDTH - 140f, currentY, fieldPaint)
             canvas.drawLine(PAGE_WIDTH - 100f, currentY + 2f, PAGE_WIDTH - margin, currentY + 2f, linePaint)
-            
             currentY += 30f
         }
 
@@ -85,7 +80,6 @@ object CopyingPdfDrawer {
         } else {
             for (story in config.selectedStories) {
                 for (copy in 0 until config.childrenCount) {
-                    
                     if (currentY > 150f) { 
                         onPageFinished()
                         pageIndex++
@@ -93,11 +87,9 @@ object CopyingPdfDrawer {
                         currentY = 50f
                         drawHeader()
                     }
-                    
                     val titlePaint = Paint().apply { isAntiAlias = true; textSize = 24f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
                     canvas.drawText(story.title, margin, currentY, titlePaint)
                     currentY += 30f
-
                     if (config.mode == CopyingMode.COPYING) {
                         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
                         val words = story.text.split(" ")
@@ -116,7 +108,6 @@ object CopyingPdfDrawer {
                         }
                         currentY += 15f
                     }
-
                     val boxPaint = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
                     val boxRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 40f)
                     canvas.drawRect(boxRect, boxPaint)
@@ -128,7 +119,6 @@ object CopyingPdfDrawer {
                     }
                     canvas.drawText("Проверь: начало предложений, буквы в словах, пробелы, знаки в конце.", margin + 5f, currentY + 30f, hintPaint)
                     currentY += 60f
-
                     val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
                     while (currentY < PAGE_HEIGHT - 40f) {
                         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
@@ -136,14 +126,6 @@ object CopyingPdfDrawer {
                     }
                 }
             }
-        }
-
-        if (config.showPrepSheet) {
-            onPageFinished()
-            pageIndex++
-            canvas = canvasProvider(pageIndex)
-            currentY = 50f
-            drawPrepSheet(canvas, config)
         }
 
         if (config.addBlankPage) {
@@ -161,6 +143,14 @@ object CopyingPdfDrawer {
             }
         }
 
+        // --- ВСТАВЛЕНО: Лист подготовки и проверки ---
+        if (config.showPrepSheet) {
+            onPageFinished()
+            pageIndex++
+            canvas = canvasProvider(pageIndex)
+            drawPrepSheet(canvas, config)
+        }
+
         onPageFinished()
     }
 
@@ -168,15 +158,14 @@ object CopyingPdfDrawer {
         val pages = mutableListOf<Bitmap>()
         var currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var currentCanvas = Canvas(currentBmp)
-        currentCanvas.drawColor(Color.WHITE)
-
+        currentCanvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
         renderDocument(config,
             canvasProvider = { 
                 if (it > 0) {
                     currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                     currentCanvas = Canvas(currentBmp)
                 }
-                currentCanvas.drawColor(Color.WHITE)
+                currentCanvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
                 currentCanvas
             },
             onPageFinished = {
@@ -190,7 +179,6 @@ object CopyingPdfDrawer {
         var pageNum = 1
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
         var page = document.startPage(pageInfo)
-
         renderDocument(config,
             canvasProvider = { 
                 if (it > 0) {
@@ -205,5 +193,104 @@ object CopyingPdfDrawer {
                 document.finishPage(page)
             }
         )
+    }
+
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ЛИСТА ПОДГОТОВКИ
+
+    private fun drawPrepSheet(canvas: Canvas, config: CopyingConfig) {
+        val margin = 40f
+        var currentY = 50f // <-- ДОБАВЛЕНО: чтобы переменная была видна внутри функции
+        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT }
+        val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+        val smallHeaderPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = Typeface.DEFAULT }
+        val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+        val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
+        val lineHeight = bodyPaint.textSize * 1.5f
+
+        // Верхний заголовок
+        canvas.drawText("ОБЩИЙ ЛИСТ ВЗРОСЛОГО · ТЕКСТЫ И ПОРЯДОК РАБОТЫ", margin, currentY, smallHeaderPaint)
+        currentY += 35f
+
+        // Большой заголовок
+        canvas.drawText("Подготовка и проверка", margin, currentY, bigTitlePaint)
+        currentY += 35f
+
+        // Инструкция в зависимости от режима
+        val instruction = if (config.mode == CopyingMode.COPYING) {
+            "Ребёнок читает текст и списывает его в своём темпе. Образец печатный: ребёнок пишет привычным ему почерком."
+        } else {
+            "Прочитайте весь текст. Затем читайте по предложениям, при необходимости делите на короткие смысловые части. Повторите текст целиком для проверки. Заголовок можно не диктовать."
+        }
+        currentY = drawWrappedText(canvas, instruction, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+        currentY += 20f
+
+        // Информация о комплекте
+        val totalPages = config.selectedStories.size * config.childrenCount + 1  // +1 за этот лист
+        val pensCount = config.childrenCount
+        val infoText = "${config.childrenCount} ${pluralChild(config.childrenCount)} · " +
+            "${config.selectedStories.size} ${pluralText(config.selectedStories.size)} · " +
+            "$totalPages А4 на весь комплект. Ручки: $pensCount. Общий образец: 1. " +
+            "При работе в тетради бумажный комплект не требуется. " +
+            "Класс — ориентир, а не соответствие программе."
+        currentY = drawWrappedText(canvas, infoText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+        currentY += 25f
+
+        canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
+        currentY += 25f
+        
+        for ((index, story) in config.selectedStories.withIndex()) {
+            val storyId = "copy-${String.format("%02d", index + 1)}"
+            val storyHeader = "${story.title} · ${story.wordCount} слов · $storyId"
+            canvas.drawText(storyHeader, margin, currentY, storyTitlePaint)
+            currentY += storyTitlePaint.textSize + 10f
+            currentY = drawWrappedText(canvas, story.text, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+            currentY += 25f
+        }
+
+        val finalText = "Не оценивайте скорость. При проверке предложите сначала найти конец каждого предложения, затем сравнить слова по порядку. Незнакомые написания объясните до диктанта. Это авторские тренировочные тексты, не контрольные работы по программе."
+        currentY = drawWrappedText(canvas, finalText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
+    }
+
+    private fun drawWrappedText(canvas: Canvas, text: String, x: Float, startY: Float, maxWidth: Float, paint: Paint, lineHeight: Float): Float {
+        var currentY = startY
+        val words = text.split(" ")
+        var line = ""
+        for (word in words) {
+            val testLine = if (line.isEmpty()) word else "$line $word"
+            if (paint.measureText(testLine) > maxWidth) {
+                canvas.drawText(line, x, currentY, paint)
+                currentY += lineHeight
+                line = word
+            } else {
+                line = testLine
+            }
+        }
+        if (line.isNotEmpty()) {
+            canvas.drawText(line, x, currentY, paint)
+            currentY += lineHeight
+        }
+        return currentY
+    }
+
+    private fun pluralChild(n: Int): String {
+        val lastTwo = n % 100
+        val last = n % 10
+        return when {
+            lastTwo in 11..19 -> "детей"
+            last == 1 -> "ребёнок"
+            last in 2..4 -> "ребёнка"
+            else -> "детей"
+        }
+    }
+
+    private fun pluralText(n: Int): String {
+        val lastTwo = n % 100
+        val last = n % 10
+        return when {
+            lastTwo in 11..19 -> "текстов"
+            last == 1 -> "текст"
+            last in 2..4 -> "текста"
+            else -> "текстов"
+        }
     }
 }
