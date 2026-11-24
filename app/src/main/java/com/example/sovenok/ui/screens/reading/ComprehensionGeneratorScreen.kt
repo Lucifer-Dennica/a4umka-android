@@ -10,8 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,13 +20,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sovenok.data.ComprehensionConfig
-import com.example.sovenok.data.ComprehensionStory
 import com.example.sovenok.data.ReadingComprehensionData
 import com.example.sovenok.ui.components.ZoomableImage
 import com.example.sovenok.util.ComprehensionPdfDrawer
 import com.example.sovenok.util.PdfExporter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+private val Green = Color(0xFF4C8C2A)
+private val GreenDark = Color(0xFF33691E)
+private val Cream = Color(0xFFF6F1E3)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,18 +41,15 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(ComprehensionConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var dropdownExpanded by remember { mutableStateOf(false) }
-    
-    var editMode by remember { mutableStateOf(false) }
-    var editedStory by remember { mutableStateOf<ComprehensionStory?>(null) }
+    var htmlMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (config.selectedStory == null) {
-            config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
+            config = config.copy(
+                selectedStory = ReadingComprehensionData.getRandomStory(config.grade),
+                fontSize = if (config.grade == 1) 20f else 18f
+            )
         }
-    }
-    
-    LaunchedEffect(config.selectedStory) {
-        editedStory = config.selectedStory
     }
 
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
@@ -59,37 +57,26 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
         delay(300)
         previewPages = ComprehensionPdfDrawer.generatePreviewPages(config, context)
     }
-
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
 
+    val gradeStories = ReadingComprehensionData.getStoriesByGrade(config.grade)
+    val wMin = gradeStories.minOfOrNull { it.totalWords } ?: 0
+    val wMax = gradeStories.maxOfOrNull { it.totalWords } ?: 0
+    val qNum = gradeStories.firstOrNull()?.questions?.size ?: 4
+    val subtitle = "${gradeStories.size} рассказов · $wMin–$wMax слов · $qNum ${questionForm(qNum)}."
+
     Scaffold(
+        containerColor = Cream,
         topBar = {
             TopAppBar(
-                title = { Text("Чтение с вопросами") },
+                title = { Text("📖 Чтение с вопросами", color = GreenDark, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
-                    }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад", tint = GreenDark) }
                 },
                 actions = {
-                    IconButton(onClick = { showInfoSheet = true }) {
-                        Icon(Icons.Default.Info, contentDescription = "Справка")
-                    }
-                    IconButton(onClick = {
-                        val finalConfig = if (editMode && editedStory != null) {
-                            config.copy(selectedStory = editedStory)
-                        } else {
-                            config
-                        }
-                        val result = PdfExporter.exportComprehension(context, finalConfig)
-                        scope.launch {
-                            if (result != null) snackbarHostState.showSnackbar("Сохранено: $result")
-                            else snackbarHostState.showSnackbar("Ошибка сохранения")
-                        }
-                    }) {
-                        Icon(Icons.Default.Save, contentDescription = "Сохранить в PDF")
-                    }
-                }
+                    IconButton(onClick = { showInfoSheet = true }) { Icon(Icons.Default.Info, "Справка", tint = GreenDark) }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -99,221 +86,140 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // баннер
             item {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Класс", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(8.dp))
+                OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(12.dp)) {
+                        Text("🦊", fontSize = 28.sp)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Каждый день выкладываю новый лист заданий", modifier = Modifier.weight(1f), fontSize = 13.sp, color = GreenDark, fontWeight = FontWeight.SemiBold)
+                        OutlinedButton(onClick = { scope.launch { snackbarHostState.showSnackbar("Спасибо! Мы в соцсетях.") } },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = GreenDark), border = BorderStroke(1.dp, Green)) { Text("Подписаться", fontSize = 12.sp) }
+                        Spacer(Modifier.width(6.dp))
+                        OutlinedButton(onClick = { scope.launch { snackbarHostState.showSnackbar("Поделиться") } },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = GreenDark), border = BorderStroke(1.dp, Green)) { Text("Поделиться", fontSize = 12.sp) }
+                    }
+                }
+            }
+
+            item {
+                Text("100 авторских рассказов — по 25 для каждого из 1–4 классов: прочитай, найди ответ в тексте, объясни поступки героев. На листе — текст и вопросы, для взрослого — отдельные ответы и подсчёт слов.",
+                    fontSize = 13.sp, color = Color(0xFF555555))
+            }
+
+            // КЛАСС
+            item {
+                OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Класс", color = GreenDark, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             listOf(1, 2, 3, 4).forEach { grade ->
                                 FilterChip(
                                     selected = config.grade == grade,
                                     onClick = {
-                                        config = config.copy(grade = grade, selectedStory = ReadingComprehensionData.getRandomStory(grade))
+                                        config = config.copy(
+                                            grade = grade,
+                                            fontSize = if (grade == 1) 20f else 18f,
+                                            selectedStory = ReadingComprehensionData.getRandomStory(grade)
+                                        )
                                         dropdownExpanded = false
-                                        editMode = false
                                     },
-                                    label = { Text(grade.toString()) }
+                                    label = { Text(grade.toString()) },
+                                    border = BorderStroke(1.dp, Green.copy(0.5f)),
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Green, selectedLabelColor = Color.White, containerColor = Color.White, labelColor = GreenDark)
                                 )
                             }
                         }
+                        Spacer(Modifier.height(8.dp))
+                        Text("Это ориентир по сложности: выбирайте по навыку ребёнка.", fontSize = 12.sp, color = Color.Gray)
+                    }
+                }
+            }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Рассказ", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                            TextButton(onClick = {
-                                config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade))
-                                editMode = false
-                            }) {
-                                Icon(Icons.Default.Refresh, contentDescription = null)
-                                Spacer(Modifier.width(4.dp))
-                                Text("Случайный")
-                            }
-                        }
-
-                        val stories = ReadingComprehensionData.getStoriesByGrade(config.grade)
-
+            // РАССКАЗ
+            item {
+                OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Выберите текст", color = GreenDark, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
                         ExposedDropdownMenuBox(expanded = dropdownExpanded, onExpandedChange = { dropdownExpanded = it }) {
                             OutlinedTextField(
-                                value = config.selectedStory?.title ?: "Выберите рассказ",
-                                onValueChange = {},
-                                readOnly = true,
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                                value = config.selectedStory?.title ?: "Случайный рассказ",
+                                onValueChange = {}, readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(dropdownExpanded) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                label = {
-                                    val s = config.selectedStory
-                                    if (s != null) {
-                                        val w: Int = s.totalWords
-                                        val q: Int = s.questions.size
-                                        Text(text = "$w слов • $q вопроса", fontSize = 12.sp)
-                                    }
-                                }
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Green, unfocusedBorderColor = Green.copy(0.5f))
                             )
-                            ExposedDropdownMenu(
-                                expanded = dropdownExpanded,
-                                onDismissRequest = { dropdownExpanded = false },
-                                modifier = Modifier.heightIn(max = 350.dp)
-                            ) {
-                                stories.forEach { story ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Column {
-                                                Text(story.title, fontWeight = FontWeight.Bold)
-                                                Text("${story.totalWords} слов", fontSize = 12.sp, color = Color.Gray)
-                                            }
-                                        },
-                                        onClick = {
-                                            config = config.copy(selectedStory = story)
-                                            dropdownExpanded = false
-                                            editMode = false
-                                        }
-                                    )
+                            ExposedDropdownMenu(expanded = dropdownExpanded, onDismissRequest = { dropdownExpanded = false }, modifier = Modifier.heightIn(max = 350.dp)) {
+                                gradeStories.forEach { s ->
+                                    DropdownMenuItem(text = { Column { Text(s.title, fontWeight = FontWeight.Bold); Text("${s.totalWords} слов", fontSize = 12.sp, color = Color.Gray) } },
+                                        onClick = { config = config.copy(selectedStory = s); dropdownExpanded = false })
                                 }
                             }
                         }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(
-                                selected = !editMode,
-                                onClick = { editMode = false },
-                                label = { Text("Просмотр") }
-                            )
-                            FilterChip(
-                                selected = editMode,
-                                onClick = { 
-                                    if (config.selectedStory != null) {
-                                        editMode = true
-                                        editedStory = config.selectedStory
-                                    }
-                                },
-                                label = { Text("Редактировать") }
-                            )
+                        Spacer(Modifier.height(6.dp))
+                        Text(subtitle, fontSize = 12.sp, color = Color.Gray)
+                    }
+                }
+            }
+
+            // НАСТРОЙКИ (чекбоксы как на сайте)
+            item {
+                Column(Modifier.padding(horizontal = 4.dp)) {
+                    CheckRow("Количество слов справа от каждой строки", config.showWordCount) { config = config.copy(showWordCount = it) }
+                    CheckRow("Подсказки для проверки техники чтения на листе взрослого", config.showAdultHints) { config = config.copy(showAdultHints = it) }
+                    CheckRow("Добавить отдельный лист ответов", config.showAnswerSheet) { config = config.copy(showAnswerSheet = it) }
+                    CheckRow("Чёрно-белая печать", config.isBlackAndWhite) { config = config.copy(isBlackAndWhite = it) }
+                }
+            }
+
+            // ФОРМАТ
+            item {
+                OutlinedCard(border = BorderStroke(1.dp, Green.copy(0.35f)), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Формат", color = GreenDark, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = !htmlMode, onClick = { htmlMode = false }, colors = RadioButtonDefaults.colors(selectedColor = Green))
+                            Text("PDF / печать — открыть лист в новой вкладке", fontSize = 13.sp)
                         }
-                        
-                        if (editMode && editedStory != null) {
-                            val story: ComprehensionStory = editedStory!!
-                            
-                            Spacer(modifier = Modifier.height(12.dp))
-                            OutlinedTextField(
-                                value = story.title,
-                                onValueChange = { newTitle -> 
-                                    editedStory = story.copy(title = newTitle)
-                                    config = config.copy(selectedStory = editedStory)
-                                },
-                                label = { Text("Название") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = story.text,
-                                onValueChange = { newText -> 
-                                    editedStory = story.copy(text = newText)
-                                    config = config.copy(selectedStory = editedStory)
-                                },
-                                label = { Text("Текст рассказа") },
-                                modifier = Modifier.fillMaxWidth().height(150.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Вопросы и ответы:", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                            
-                            story.questions.forEachIndexed { index, q ->
-                                OutlinedTextField(
-                                    value = q,
-                                    onValueChange = { newQ -> 
-                                        val newQuestions: MutableList<String> = story.questions.toMutableList()
-                                        newQuestions[index] = newQ
-                                        editedStory = story.copy(questions = newQuestions)
-                                        config = config.copy(selectedStory = editedStory)
-                                    },
-                                    label = { Text("Вопрос ${index + 1}") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true
-                                )
-                                
-                                val ansList: List<String> = story.answers
-                                val currentAnswer: String = if (index < ansList.size) ansList[index] else ""
-                                
-                                OutlinedTextField(
-                                    value = currentAnswer,
-                                    onValueChange = { newAnswer: String -> 
-                                        val newA: MutableList<String> = ansList.toMutableList()
-                                        while (newA.size <= index) newA.add("")
-                                        newA[index] = newAnswer
-                                        editedStory = story.copy(answers = newA)
-                                        config = config.copy(selectedStory = editedStory)
-                                    },
-                                    label = { Text("Ответ") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                            }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = htmlMode, onClick = { htmlMode = true }, colors = RadioButtonDefaults.colors(selectedColor = Green))
+                            Text("HTML-файл — сохранить на компьютер", fontSize = 13.sp)
                         }
                     }
                 }
             }
 
+            // БОЛЬШАЯ КНОПКА
             item {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Настройки печати", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Счётчик слов справа", modifier = Modifier.weight(1f))
-                            Switch(checked = config.showWordCount, onCheckedChange = { config = config.copy(showWordCount = it) })
+                Button(
+                    onClick = {
+                        if (htmlMode) { scope.launch { snackbarHostState.showSnackbar("HTML-экспорт появится позже — выберите PDF.") } }
+                        else {
+                            val res = PdfExporter.exportComprehension(context, config)
+                            scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Отдельный лист ответов", modifier = Modifier.weight(1f))
-                            Switch(checked = config.showAnswerSheet, onCheckedChange = { config = config.copy(showAnswerSheet = it) })
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Персиковый фон листа", modifier = Modifier.weight(1f))
-                            Switch(checked = config.isPeachBackground, onCheckedChange = { config = config.copy(isPeachBackground = it) })
-                        }
-                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                            Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
-                            Slider(
-                                value = config.fontSize,
-                                onValueChange = { config = config.copy(fontSize = it) },
-                                valueRange = 16f..24f,
-                                steps = 8
-                            )
-                        }
-                    }
-                }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Color.White),
+                    shape = MaterialTheme.shapes.medium
+                ) { Text("Составить лист", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
             }
 
+            // ПРЕДПРОСМОТР
             item {
-                Text("Предпросмотр листа A4:", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                if (previewPages.size > 1) {
-                    Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
-                }
-                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
+                Text("Предпросмотр листа A4:", color = GreenDark, fontWeight = FontWeight.Bold)
+                if (previewPages.size > 1) Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = Green, fontSize = 12.sp)
+                Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = Color.Gray)
             }
-
             item {
                 if (previewPages.isNotEmpty()) {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(ComprehensionPdfDrawer.PAGE_WIDTH / ComprehensionPdfDrawer.PAGE_HEIGHT)
-                    ) { page ->
-                        if (page < previewPages.size) {
-                            ZoomableImage(
-                                bitmap = previewPages[page],
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
+                    HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth().aspectRatio(ComprehensionPdfDrawer.PAGE_WIDTH / ComprehensionPdfDrawer.PAGE_HEIGHT)) { page ->
+                        if (page < previewPages.size) ZoomableImage(bitmap = previewPages[page], modifier = Modifier.fillMaxSize())
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(Modifier.height(32.dp))
                 }
             }
         }
@@ -383,4 +289,25 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun CheckRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+        Checkbox(checked = checked, onCheckedChange = onChange, colors = CheckboxDefaults.colors(checkedColor = Green, checkmarkColor = Color.White))
+        Text(label, fontSize = 14.sp, color = Color(0xFF444444))
+    }
+}
+
+@Composable
+private fun InfoBlock(title: String, body: String) {
+    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = GreenDark)
+    Spacer(Modifier.height(4.dp))
+    Text(body, style = MaterialTheme.typography.bodyMedium)
+    Spacer(Modifier.height(16.dp))
+}
+
+private fun questionForm(n: Int): String = when (n % 100) {
+    1 -> "вопрос"; in 2..4 -> if (n % 100 in 12..14) "вопросов" else when (n % 10) { in 2..4 -> "вопроса"; else -> "вопросов" }
+    else -> "вопросов"
 }
