@@ -143,14 +143,14 @@ object CopyingPdfDrawer {
             }
         }
 
-        // --- ВСТАВЛЕНО: Лист подготовки и проверки ---
+        // --- Лист подготовки и проверки ---
         if (config.showPrepSheet) {
             onPageFinished()
             pageIndex++
             canvas = canvasProvider(pageIndex)
             drawPrepSheet(canvas, config)
         }
-
+        
         onPageFinished()
     }
 
@@ -158,14 +158,15 @@ object CopyingPdfDrawer {
         val pages = mutableListOf<Bitmap>()
         var currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var currentCanvas = Canvas(currentBmp)
-        currentCanvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
+        currentCanvas.drawColor(Color.WHITE) // Всегда белый фон
+        
         renderDocument(config,
             canvasProvider = { 
                 if (it > 0) {
                     currentBmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                     currentCanvas = Canvas(currentBmp)
                 }
-                currentCanvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
+                currentCanvas.drawColor(Color.WHITE)
                 currentCanvas
             },
             onPageFinished = {
@@ -179,6 +180,7 @@ object CopyingPdfDrawer {
         var pageNum = 1
         var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
         var page = document.startPage(pageInfo)
+        
         renderDocument(config,
             canvasProvider = { 
                 if (it > 0) {
@@ -186,7 +188,7 @@ object CopyingPdfDrawer {
                     pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create()
                     page = document.startPage(pageInfo)
                 }
-                page.canvas.drawColor(if (config.isBlackAndWhite) Color.WHITE else Color.parseColor("#FAFAFA"))
+                page.canvas.drawColor(Color.WHITE)
                 page.canvas
             },
             onPageFinished = {
@@ -196,26 +198,23 @@ object CopyingPdfDrawer {
     }
 
     // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ЛИСТА ПОДГОТОВКИ
-
     private fun drawPrepSheet(canvas: Canvas, config: CopyingConfig) {
         val margin = 40f
-        var currentY = 50f // <-- ДОБАВЛЕНО: чтобы переменная была видна внутри функции
-        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT }
-        val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+        var currentY = 50f
+        
+        // ИСПРАВЛЕНО: используем Color.parseColor вместо Color(0x...)
+        val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT }
+        val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT_BOLD }
         val smallHeaderPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = Typeface.DEFAULT }
-        val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+        val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT_BOLD }
         val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
         val lineHeight = bodyPaint.textSize * 1.5f
 
-        // Верхний заголовок
         canvas.drawText("ОБЩИЙ ЛИСТ ВЗРОСЛОГО · ТЕКСТЫ И ПОРЯДОК РАБОТЫ", margin, currentY, smallHeaderPaint)
         currentY += 35f
-
-        // Большой заголовок
         canvas.drawText("Подготовка и проверка", margin, currentY, bigTitlePaint)
         currentY += 35f
 
-        // Инструкция в зависимости от режима
         val instruction = if (config.mode == CopyingMode.COPYING) {
             "Ребёнок читает текст и списывает его в своём темпе. Образец печатный: ребёнок пишет привычным ему почерком."
         } else {
@@ -224,8 +223,7 @@ object CopyingPdfDrawer {
         currentY = drawWrappedText(canvas, instruction, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
         currentY += 20f
 
-        // Информация о комплекте
-        val totalPages = config.selectedStories.size * config.childrenCount + 1  // +1 за этот лист
+        val totalPages = config.selectedStories.size * config.childrenCount + 1
         val pensCount = config.childrenCount
         val infoText = "${config.childrenCount} ${pluralChild(config.childrenCount)} · " +
             "${config.selectedStories.size} ${pluralText(config.selectedStories.size)} · " +
@@ -237,7 +235,7 @@ object CopyingPdfDrawer {
 
         canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
         currentY += 25f
-        
+
         for ((index, story) in config.selectedStories.withIndex()) {
             val storyId = "copy-${String.format("%02d", index + 1)}"
             val storyHeader = "${story.title} · ${story.wordCount} слов · $storyId"
