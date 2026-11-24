@@ -72,22 +72,22 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     val subtitle = "${gradeStories.size} рассказов · $wMin–$wMax слов · $qNum ${questionForm(qNum)}."
 
     Scaffold(
-        containerColor = scheme.surface,
+        containerColor = scheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Чтение с вопросами", color = scheme.onSurface, fontWeight = FontWeight.Bold) },
+                title = { Text("Чтение с вопросами", color = scheme.onBackground, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад", tint = scheme.onSurface) }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад", tint = scheme.onBackground) }
                 },
                 actions = {
-                    IconButton(onClick = { showInfoSheet = true }) { Icon(Icons.Default.Info, "Справка", tint = scheme.onSurface) }
+                    IconButton(onClick = { showInfoSheet = true }) { Icon(Icons.Default.Info, "Справка", tint = scheme.onBackground) }
                     IconButton(onClick = {
                         val finalConfig = if (editMode && editedStory != null) config.copy(selectedStory = editedStory) else config
                         val res = PdfExporter.exportComprehension(context, finalConfig)
                         scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
-                    }) { Icon(Icons.Default.Save, "Сохранить", tint = Color.Black) }
+                    }) { Icon(Icons.Default.Save, "Сохранить", tint = scheme.primary) }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = scheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = scheme.background)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -101,7 +101,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 OutlinedCard(border = BorderStroke(1.dp, scheme.outlineVariant), colors = CardDefaults.cardColors(containerColor = scheme.surface)) {
                     Column(Modifier.padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Класс:", color = scheme.onSurface, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
+                            Text("Класс:", color = scheme.onBackground, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
                             listOf(1, 2, 3, 4).forEach { grade ->
                                 FilterChip(
                                     selected = config.grade == grade,
@@ -120,7 +120,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                         selectedContainerColor = scheme.primaryContainer,
                                         selectedLabelColor = scheme.onPrimaryContainer,
                                         containerColor = scheme.surface,
-                                        labelColor = scheme.onSurface
+                                        labelColor = scheme.onBackground
                                     )
                                 )
                                 Spacer(Modifier.width(4.dp))
@@ -136,14 +136,20 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 OutlinedCard(border = BorderStroke(1.dp, scheme.outlineVariant), colors = CardDefaults.cardColors(containerColor = scheme.surface)) {
                     Column(Modifier.padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Выберите текст", color = scheme.onSurface, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text("Выберите текст", color = scheme.onBackground, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 FilterChip(selected = !editMode, onClick = { editMode = false },
                                     label = { Text("Просмотр") },
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = scheme.primaryContainer, selectedLabelColor = scheme.onPrimaryContainer))
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = scheme.primaryContainer,
+                                        selectedLabelColor = scheme.onPrimaryContainer
+                                    ))
                                 FilterChip(selected = editMode, onClick = { if (config.selectedStory != null) { editMode = true; editedStory = config.selectedStory } },
                                     label = { Text("Редактировать") },
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = scheme.primaryContainer, selectedLabelColor = scheme.onPrimaryContainer))
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = scheme.primaryContainer,
+                                        selectedLabelColor = scheme.onPrimaryContainer
+                                    ))
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -208,7 +214,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     CheckRow("Вопросы по тексту на отдельном листе", config.showQuestionsOnSeparateSheet) { config = config.copy(showQuestionsOnSeparateSheet = it) }
 
                     Spacer(Modifier.height(8.dp))
-                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp, color = scheme.onSurface, fontWeight = FontWeight.SemiBold)
+                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp, color = scheme.onBackground, fontWeight = FontWeight.SemiBold)
                     Slider(
                         value = config.fontSize,
                         onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) },
@@ -220,7 +226,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             }
 
             item {
-                Text("Предпросмотр листа A4:", color = scheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("Предпросмотр листа A4:", color = scheme.onBackground, fontWeight = FontWeight.Bold)
                 if (previewPages.size > 1) Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = scheme.primary, fontSize = 12.sp)
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = scheme.onSurfaceVariant)
             }
@@ -237,7 +243,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Тексты для чтения с вопросами — распечатать для 1–4 класса", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = scheme.onSurface)
+                    Text("Тексты для чтения с вопросами — распечатать для 1–4 класса", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = scheme.onBackground)
                     Spacer(Modifier.height(12.dp))
                     Text("Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Генератор помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(12.dp))
@@ -261,8 +267,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 @Composable
 private fun CheckRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-        Checkbox(checked = checked, onCheckedChange = onChange)
-        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+        Checkbox(checked = checked, onCheckedChange = onChange, colors = CheckboxDefaults.colors(checkedColor = scheme.primary, checkmarkColor = Color.White))
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 
