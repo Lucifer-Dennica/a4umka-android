@@ -15,11 +15,14 @@ object ComprehensionPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
     const val MARGIN = 40f
-    const val BODY_START_FIRST = 160f // Чуть ниже из-за увеличенного отступа
     const val BODY_START_OTHER = 70f
     const val BOTTOM_LIMIT = 792f
 
-    private val ACCENT_COLOR = Color.BLACK // Строго черный, как в других разделах
+    private val GREEN_DARK = Color.parseColor("#33691E")   // цвет темы и текста пилюли
+    private val GREEN_LIGHT = Color.parseColor("#A5D6A7")  // фон пилюли класса
+    private val BEIGE_FILL = Color.parseColor("#F5E9D0")   // фон рамок Имя/Дата
+    private val BEIGE_STROKE = Color.parseColor("#D9C9A3") // обводка рамок
+    private val FIELD_TEXT = Color.parseColor("#5D4037")   // текст в рамках
 
     data class LineData(val text: String, val cumulativeWords: Int)
     data class LayoutPage(val lines: List<LineData>, val hasQuestions: Boolean)
@@ -59,7 +62,7 @@ object ComprehensionPdfDrawer {
         }
     }
 
-    private fun questionBlockHeight(story: ComprehensionStory) = 40f + story.questions.size * 65f // Увеличили высоту под вопросы
+    private fun questionBlockHeight(story: ComprehensionStory) = 40f + story.questions.size * 65f
 
     private fun calculateLayout(config: ComprehensionConfig, story: ComprehensionStory): List<LayoutPage> {
         val paint = Paint().apply { textSize = config.fontSize; typeface = Typeface.DEFAULT }
@@ -83,58 +86,59 @@ object ComprehensionPdfDrawer {
 
         val pages = mutableListOf<LayoutPage>()
         var cur = mutableListOf<LineData>()
-        var y = BODY_START_FIRST
-        
+        var y = BODY_START_OTHER
         fun savePage(hasQuestions: Boolean = false) {
             if (cur.isNotEmpty() || hasQuestions) {
                 pages.add(LayoutPage(cur.toList(), hasQuestions))
-                cur.clear()
-                y = BODY_START_OTHER
+                cur.clear(); y = BODY_START_OTHER
             }
         }
-
         for (l in allLines) {
             if (y + lineHeight > BOTTOM_LIMIT) savePage(false)
             cur.add(l); y += if (l.text.isEmpty()) lineHeight * 0.6f else lineHeight
         }
-
         val qH = questionBlockHeight(story)
         if (story.questions.isNotEmpty()) {
             if (config.showQuestionsOnSeparateSheet) {
-                savePage(false) // Завершаем лист с текстом
-                savePage(true)  // Создаем новый лист только с вопросами
+                savePage(false); savePage(true)
             } else {
-                if (y + qH > BOTTOM_LIMIT) {
-                    savePage(false) // Текст не влезает с вопросами, переносим вопросы на новый лист
-                    savePage(true)
-                } else {
-                    savePage(true) // Вопросы помещаются на текущем листе
-                }
+                if (y + qH > BOTTOM_LIMIT) { savePage(false); savePage(true) } else savePage(true)
             }
-        } else if (cur.isNotEmpty()) {
-            savePage(false)
-        }
+        } else if (cur.isNotEmpty()) savePage(false)
         return pages.ifEmpty { listOf(LayoutPage(emptyList(), false)) }
+    }
+
+    private fun drawHeader(canvas: Canvas, config: ComprehensionConfig) {
+        canvas.drawFieldBox("Имя:", MARGIN, 20f, 150f)
+        canvas.drawFieldBox("Дата:", PAGE_WIDTH - MARGIN - 150f, 20f, 150f)
+        canvas.drawPill("${config.grade} класс", PAGE_WIDTH / 2f, 33f, GREEN_LIGHT, GREEN_DARK)
+    }
+
+    private fun Canvas.drawFieldBox(label: String, x: Float, top: Float, width: Float) {
+        val bottom = top + 26f
+        val fill = Paint().apply { color = BEIGE_FILL; style = Paint.Style.FILL; isAntiAlias = true }
+        val stroke = Paint().apply { color = BEIGE_STROKE; style = Paint.Style.STROKE; strokeWidth = 1f; isAntiAlias = true }
+        drawRoundRect(RectF(x, top, x + width, bottom), 8f, 8f, fill)
+        drawRoundRect(RectF(x, top, x + width, bottom), 8f, 8f, stroke)
+        val tp = Paint().apply { isAntiAlias = true; textSize = 13f; color = FIELD_TEXT }
+        drawText(label, x + 10f, top + 18f, tp)
+        val line = Paint().apply { color = FIELD_TEXT.copy(alpha = 0.4f); strokeWidth = 1f; isAntiAlias = true }
+        drawLine(x + 10f + tp.measureText(label) + 6f, top + 18f, x + width - 10f, top + 18f, line)
     }
 
     private fun drawPage(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory,
                          page: LayoutPage, pageNum: Int, totalPages: Int) {
-        canvas.drawColor(Color.WHITE)
-        val header = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY }
-        val ln = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f; isAntiAlias = true }
-
-        canvas.drawText("Имя:", MARGIN, 40f, header)
-        canvas.drawLine(MARGIN + 35f, 42f, MARGIN + 150f, 42f, ln)
-        drawPill(canvas, "${config.grade} класс", PAGE_WIDTH / 2f, 38f, ACCENT_COLOR)
-        canvas.drawText("Дата:", PAGE_WIDTH - 140f, 40f, header)
-        canvas.drawLine(PAGE_WIDTH - 100f, 42f, PAGE_WIDTH - MARGIN, 42f, ln)
+        canvas.drawColor(Color.WHITE) // фон листа белый
+        drawHeader(canvas, config)
 
         var y = BODY_START_OTHER
         if (pageNum == 1) {
-            val title = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-            // ПУНКТ 7: Опускаем название текста ниже (было 25f, стало 35f)
-            canvas.drawText(story.title, PAGE_WIDTH / 2f, y, title); y += 35f 
-            
+            val title = Paint().apply {
+                isAntiAlias = true; textSize = 26f; color = GREEN_DARK
+                typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
+                textAlign = Paint.Align.CENTER
+            }
+            canvas.drawText(story.title, PAGE_WIDTH / 2f, y, title); y += 35f
             val sub = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
             canvas.drawText("Читай, замечай, размышляй", PAGE_WIDTH / 2f, y, sub); y += 28f
             val inst = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY }
@@ -144,7 +148,6 @@ object ComprehensionPdfDrawer {
         val body = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK }
         val num = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.GRAY; textAlign = Paint.Align.RIGHT }
         val lh = config.fontSize * 1.4f
-        
         for (l in page.lines) {
             if (l.text.isNotEmpty()) {
                 canvas.drawText(l.text, MARGIN, y, body)
@@ -157,29 +160,19 @@ object ComprehensionPdfDrawer {
             y += 10f
             val qt = Paint().apply { isAntiAlias = true; textSize = 18f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD }
             canvas.drawText("Вопросы:", MARGIN, y, qt); y += 30f
-            
             val qp = Paint().apply { isAntiAlias = true; textSize = if (config.grade >= 4) 13f else 14f; color = Color.BLACK }
             val box = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f; isAntiAlias = true }
-            val circ = Paint().apply { color = Color.DKGRAY; style = Paint.Style.FILL; isAntiAlias = true }
+            val circ = Paint().apply { color = GREEN_DARK; style = Paint.Style.FILL; isAntiAlias = true } // зелёный как тема
             val cn = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
             val ul = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f; isAntiAlias = true }
-
             story.questions.forEachIndexed { i, q ->
-                val top = y
-                // ПУНКТ 3: Увеличиваем высоту блока вопроса, чтобы было место для письма
-                val bot = y + 60f 
-                
+                val top = y; val bot = y + 60f
                 canvas.drawRoundRect(RectF(MARGIN, top, PAGE_WIDTH - MARGIN, bot), 8f, 8f, box)
                 canvas.drawCircle(MARGIN + 18f, top + 18f, 11f, circ)
                 canvas.drawText((i + 1).toString(), MARGIN + 18f, top + 22f, cn)
-                
-                // Текст вопроса
                 canvas.drawText(q, MARGIN + 38f, top + 22f, qp)
-                
-                // ПУНКТ 3: Опускаем линию для письма ниже (было bot - 12f, стало bot - 18f)
                 canvas.drawLine(MARGIN + 38f, bot - 18f, PAGE_WIDTH - MARGIN - 12f, bot - 18f, ul)
-                
-                y = bot + 15f // Увеличенный отступ между вопросами
+                y = bot + 15f
             }
         }
 
@@ -191,14 +184,10 @@ object ComprehensionPdfDrawer {
 
     private fun drawAnswerSheet(canvas: Canvas, config: ComprehensionConfig, story: ComprehensionStory) {
         canvas.drawColor(Color.WHITE)
-        val header = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.DKGRAY }
-        val ln = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f; isAntiAlias = true }
-        canvas.drawText("Имя:", MARGIN, 40f, header); canvas.drawLine(MARGIN + 35f, 42f, MARGIN + 150f, 42f, ln)
-        drawPill(canvas, "${config.grade} класс", PAGE_WIDTH / 2f, 38f, ACCENT_COLOR)
-        canvas.drawText("Дата:", PAGE_WIDTH - 140f, 40f, header); canvas.drawLine(PAGE_WIDTH - 100f, 42f, PAGE_WIDTH - MARGIN, 42f, ln)
+        drawHeader(canvas, config)
 
         var y = 90f
-        val title = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.BLACK; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+        val title = Paint().apply { isAntiAlias = true; textSize = 26f; color = GREEN_DARK; typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC); textAlign = Paint.Align.CENTER }
         canvas.drawText(story.title, PAGE_WIDTH / 2f, y, title); y += 22f
         val sub = Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.GRAY; textAlign = Paint.Align.CENTER; typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC) }
         canvas.drawText("Ответы — для взрослого", PAGE_WIDTH / 2f, y, sub); y += 30f
@@ -237,13 +226,13 @@ object ComprehensionPdfDrawer {
         }
     }
 
-    private fun drawPill(canvas: Canvas, text: String, cx: Float, cy: Float, fill: Int) {
+    private fun Canvas.drawPill(text: String, cx: Float, cy: Float, fill: Int, textColor: Int) {
         val meas = Paint().apply { isAntiAlias = true; textSize = 14f; typeface = Typeface.DEFAULT_BOLD }
         val w = meas.measureText(text); val padH = 14f; val h = 24f
-        canvas.drawRoundRect(RectF(cx - w / 2 - padH, cy - h / 2, cx + w / 2 + padH, cy + h / 2), 12f, 12f,
+        drawRoundRect(RectF(cx - w / 2 - padH, cy - h / 2, cx + w / 2 + padH, cy + h / 2), 12f, 12f,
             Paint().apply { color = fill; style = Paint.Style.FILL; isAntiAlias = true })
-        val tp = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
-        canvas.drawText(text, cx, cy + 5f, tp)
+        val tp = Paint().apply { isAntiAlias = true; textSize = 14f; color = textColor; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD }
+        drawText(text, cx, cy + 5f, tp)
     }
 
     private fun drawWrapped(canvas: Canvas, text: String, x: Float, y: Float, maxWidth: Float, paint: Paint, lineH: Float): Float {
