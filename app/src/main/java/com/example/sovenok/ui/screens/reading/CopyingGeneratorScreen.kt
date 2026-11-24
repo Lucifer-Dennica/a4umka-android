@@ -28,8 +28,8 @@ import com.example.sovenok.ui.components.ZoomableImage
 import com.example.sovenok.util.CopyingPdfDrawer
 import com.example.sovenok.util.PdfExporter
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,14 +37,12 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
     var config by remember { mutableStateOf(CopyingConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
-
     var searchQuery by remember { mutableStateOf("") }
     var volumeFilter by remember { mutableStateOf("Любой объём") }
     var themeFilter by remember { mutableStateOf("Все темы") }
-
+    
     val filteredStories = remember(searchQuery, volumeFilter, themeFilter, config.grade) {
         val allStories = CopyingData.getStories(config.grade)
         allStories.filter { story ->
@@ -62,15 +60,14 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
             matchesSearch && matchesVolume && matchesTheme
         }
     }
-
+    
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
     LaunchedEffect(config) {
         delay(300)
         previewPages = CopyingPdfDrawer.generatePreview(config, context)
     }
-
     val pagerState = rememberPagerState(pageCount = { previewPages.size.coerceAtLeast(1) })
-
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -125,7 +122,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                                 Spacer(Modifier.width(4.dp))
                             }
                         }
-
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             var volExpanded by remember { mutableStateOf(false) }
                             ExposedDropdownMenuBox(expanded = volExpanded, onExpandedChange = { volExpanded = it }, modifier = Modifier.weight(1f)) {
@@ -156,7 +152,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
-
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
@@ -164,12 +159,11 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             modifier = Modifier.fillMaxWidth()
                         )
-
                         Text("Подходит: ${filteredStories.size}. Выбрано: ${config.selectedStories.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
-
+            
             items(filteredStories, key = { it.id }) { story ->
                 val isSelected = config.selectedStories.contains(story)
                 Card(
@@ -193,7 +187,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
+            
             // БЛОК: Как работаем и настройки листа
             item {
                 OutlinedCard(
@@ -206,9 +200,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             FilterChip(selected = config.mode == CopyingMode.COPYING, onClick = { config = config.copy(mode = CopyingMode.COPYING) }, label = { Text("Списываем") })
                             FilterChip(selected = config.mode == CopyingMode.DICTATION, onClick = { config = config.copy(mode = CopyingMode.DICTATION) }, label = { Text("Диктант") })
                         }
-
                         Text("Настройки листа", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("Печатать несколько текстов на одном листе (только для учителя)")
@@ -216,7 +208,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             }
                             Switch(checked = config.combineOnOnePage, onCheckedChange = { config = config.copy(combineOnOnePage = it) })
                         }
-
                         if (!config.combineOnOnePage) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 var childrenExpanded by remember { mutableStateOf(false) }
@@ -234,7 +225,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
-
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             var stepExpanded by remember { mutableStateOf(false) }
                             ExposedDropdownMenuBox(expanded = stepExpanded, onExpandedChange = { stepExpanded = it }, modifier = Modifier.weight(1f)) {
@@ -250,24 +240,20 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
-
                         OutlinedTextField(
                             value = config.signature,
                             onValueChange = { config = config.copy(signature = it) },
                             label = { Text("Подпись на листе (необязательно)") },
                             modifier = Modifier.fillMaxWidth()
                         )
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Добавить чистый лист для письма", modifier = Modifier.weight(1f))
                             Switch(checked = config.addBlankPage, onCheckedChange = { config = config.copy(addBlankPage = it) })
                         }
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Лист подготовки и проверки", modifier = Modifier.weight(1f))
                             Switch(checked = config.showPrepSheet, onCheckedChange = { config = config.copy(showPrepSheet = it) })
                         }
-                        
                         Column {
                             Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
                             Slider(
@@ -281,11 +267,11 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
+            
             // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Предпросмотр листов A4 (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    Text("Предпросмотр листов A4:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     if (previewPages.size > 1) {
                         Text("Стр. ${pagerState.currentPage + 1} из ${previewPages.size}", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                     }
@@ -293,7 +279,6 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
             }
-
             item {
                 if (previewPages.isNotEmpty()) {
                     HorizontalPager(
@@ -311,7 +296,8 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
-
+        
+        // СПРАВКА (INFO SHEET)
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
@@ -323,11 +309,10 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                     Text("Тексты для списывания и диктантов", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(12.dp))
                     Text(
-                       "Для письменного занятия нужен понятный образец, подходящий объём и достаточно места для своего почерка. Здесь собраны 100 авторских текстов: по 25 для каждого класса с 1-го по 4-й (от 22 до 84 слов).",
+                        "Для письменного занятия нужен понятный образец, подходящий объём и достаточно места для своего почерка. Здесь собраны 100 авторских текстов: по 25 для каждого класса с 1-го по 4-й (от 22 до 84 слов).",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(Modifier.height(16.dp))
-
                     InfoBlock(
                         "Как выбрать текст",
                         "Класс — это ориентир, а не строгое соответствие программе. Сначала прочитайте рассказ целиком: понятны ли слова, знакома ли ситуация. Объём варьируется: даже в 1 классе есть варианты как до 50, так и больше 50 слов. Тема («Природа» или «Дом») помогает быстро найти знакомый сюжет."
@@ -352,18 +337,17 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                         "Как использовать готовый лист",
                         "• Перед списыванием прочитайте текст целиком, уточните непонятные слова.\n• Ребёнок читает предложение, пишет его, сверяется с образцом.\n• Для диктанта взрослый сначала читает весь текст, затем диктует по частям, а в конце читает всё ещё раз для самопроверки."
                     )
-
                     Spacer(Modifier.height(32.dp))
                 }
             }
         }
     }
+}
 
-    @Composable
-    private fun InfoBlock(title: String, body: String) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Spacer(Modifier.height(4.dp))
-        Text(body, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(16.dp))
-    }
+@Composable
+fun InfoBlock(title: String, body: String) {
+    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+    Spacer(Modifier.height(4.dp))
+    Text(body, style = MaterialTheme.typography.bodyMedium)
+    Spacer(Modifier.height(16.dp))
 }
