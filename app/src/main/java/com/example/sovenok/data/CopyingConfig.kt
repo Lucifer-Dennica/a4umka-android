@@ -7,10 +7,10 @@ data class CopyingConfig(
     val selectedStories: List<CopyingStory> = emptyList(),
     val mode: CopyingMode = CopyingMode.COPYING,
     val childrenCount: Int = 1,
-    val lineStep: Int = 8, // в мм
+    val lineStep: Int = 8,
     val signature: String = "",
     val addBlankPage: Boolean = false,
     val isBlackAndWhite: Boolean = false,
     val fontSize: Float = 16f,
-    val combineOnOnePage: Boolean = false // <-- НОВОЕ: печатать всё подряд на одном листе
+    val combineOnOnePage: Boolean = false
 )
