@@ -34,19 +34,42 @@ object SyllablePdfDrawer {
         val pages = mutableListOf<Bitmap>()
         var bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var canvas = Canvas(bmp)
-        var currentY = drawHeader(canvas, texts, withTitle = true)
+        var currentY = drawHeader(canvas, texts)
 
         for (textObj in texts) {
             val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
             val lineHeight = bodyPaint.textSize * 2.2f
             val lines = splitTextToLines(textObj.text, bodyPaint, PAGE_WIDTH - MARGIN * 2)
 
+            // Название текста по центру зелёным — для КАЖДОГО добавленного текста
+            val titlePaint = Paint().apply {
+                isAntiAlias = true; textSize = 26f; color = GREEN_TITLE
+                typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
+                textAlign = Paint.Align.CENTER
+            }
+            val subPaint = Paint().apply {
+                isAntiAlias = true; textSize = 12f; color = SUBTITLE_GRAY
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
+                textAlign = Paint.Align.CENTER
+            }
+            // если название не влезает — новая страница
+            if (currentY + titlePaint.textSize + 14f + subPaint.textSize + 20f + lineHeight > BOTTOM_LIMIT) {
+                pages.add(bmp)
+                bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+                canvas = Canvas(bmp)
+                currentY = drawHeader(canvas, texts)
+            }
+            canvas.drawText(textObj.title, PAGE_WIDTH / 2f, currentY, titlePaint)
+            currentY += titlePaint.textSize + 14f
+            canvas.drawText("слова для чтения по слогам", PAGE_WIDTH / 2f, currentY, subPaint)
+            currentY += subPaint.textSize + 20f
+
             for (line in lines) {
                 if (currentY + lineHeight > BOTTOM_LIMIT) {
                     pages.add(bmp)
                     bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                     canvas = Canvas(bmp)
-                    currentY = drawHeader(canvas, texts, withTitle = false)
+                    currentY = drawHeader(canvas, texts)
                 }
                 drawSyllableLine(canvas, line, MARGIN, currentY, bodyPaint, PAGE_WIDTH - MARGIN)
                 currentY += lineHeight
@@ -63,7 +86,7 @@ object SyllablePdfDrawer {
                     pages.add(bmp)
                     bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                     canvas = Canvas(bmp)
-                    currentY = drawHeader(canvas, texts, withTitle = false)
+                    currentY = drawHeader(canvas, texts)
                 }
                 canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, dashPaint)
                 currentY += 26f
@@ -81,7 +104,7 @@ object SyllablePdfDrawer {
                         pages.add(bmp)
                         bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
                         canvas = Canvas(bmp)
-                        currentY = drawHeader(canvas, texts, withTitle = false)
+                        currentY = drawHeader(canvas, texts)
                     }
                     canvas.drawText("${index + 1}. $q", MARGIN, currentY, questionPaint)
                     currentY += questionPaint.textSize * 1.5f
@@ -99,19 +122,35 @@ object SyllablePdfDrawer {
 
         var pageNum = 1
         var page = document.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create())
-        var currentY = drawHeader(page.canvas, texts, withTitle = true)
+        var currentY = drawHeader(page.canvas, texts)
 
         fun newPage() {
             document.finishPage(page)
             pageNum++
             page = document.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create())
-            currentY = drawHeader(page.canvas, texts, withTitle = false)
+            currentY = drawHeader(page.canvas, texts)
         }
 
         for (textObj in texts) {
             val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
             val lineHeight = bodyPaint.textSize * 2.2f
             val lines = splitTextToLines(textObj.text, bodyPaint, PAGE_WIDTH - MARGIN * 2)
+
+            val titlePaint = Paint().apply {
+                isAntiAlias = true; textSize = 26f; color = GREEN_TITLE
+                typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
+                textAlign = Paint.Align.CENTER
+            }
+            val subPaint = Paint().apply {
+                isAntiAlias = true; textSize = 12f; color = SUBTITLE_GRAY
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
+                textAlign = Paint.Align.CENTER
+            }
+            if (currentY + titlePaint.textSize + 14f + subPaint.textSize + 20f + lineHeight > BOTTOM_LIMIT) newPage()
+            page.canvas.drawText(textObj.title, PAGE_WIDTH / 2f, currentY, titlePaint)
+            currentY += titlePaint.textSize + 14f
+            page.canvas.drawText("слова для чтения по слогам", PAGE_WIDTH / 2f, currentY, subPaint)
+            currentY += subPaint.textSize + 20f
 
             for (line in lines) {
                 if (currentY + lineHeight > BOTTOM_LIMIT) newPage()
@@ -192,29 +231,12 @@ object SyllablePdfDrawer {
         }
     }
 
-    private fun drawHeader(canvas: Canvas, texts: List<SyllableText>, withTitle: Boolean): Float {
+    private fun drawHeader(canvas: Canvas, texts: List<SyllableText>): Float {
         canvas.drawColor(Color.WHITE)
         drawBeigeField(canvas, "Дата:", MARGIN, 20f, 150f)
         drawBeigeField(canvas, "Время:", PAGE_WIDTH - MARGIN - 150f, 20f, 150f)
         val totalWords = texts.sumOf { it.text.split("\\s+".toRegex()).filter { w -> w.isNotBlank() }.size }
         drawGreenPill(canvas, "Слов: $totalWords", PAGE_WIDTH / 2f, 33f)
-
-        if (withTitle) {
-            val title = if (texts.size == 1) texts.first().title else "Чтение по слогам"
-            val titlePaint = Paint().apply {
-                isAntiAlias = true; textSize = 28f; color = GREEN_TITLE
-                typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
-                textAlign = Paint.Align.CENTER
-            }
-            canvas.drawText(title, PAGE_WIDTH / 2f, 90f, titlePaint)
-            val subPaint = Paint().apply {
-                isAntiAlias = true; textSize = 12f; color = SUBTITLE_GRAY
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
-                textAlign = Paint.Align.CENTER
-            }
-            canvas.drawText("слова для чтения по слогам", PAGE_WIDTH / 2f, 112f, subPaint)
-            return 140f
-        }
         return 70f
     }
 
