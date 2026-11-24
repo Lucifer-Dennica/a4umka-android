@@ -1,6 +1,7 @@
 package com.example.sovenok.ui.screens.reading
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -10,7 +11,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -30,7 +30,7 @@ import com.example.sovenok.util.PdfExporter
 import com.example.sovenok.util.SyllablePdfDrawer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt // ДОБАВЛЕН ИМПОРТ ДЛЯ roundToInt
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -46,22 +46,19 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
     var showInfoSheet by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(SyllableData.categories.first()) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-    
-    // Режим редактирования: список редактируемых текстов
+
     var editMode by remember { mutableStateOf(false) }
     var editedTexts by remember { mutableStateOf<List<SyllableText>>(emptyList()) }
-    
-    // Синхронизируем черновик с выбором, пока НЕ в режиме редактирования
+
     LaunchedEffect(config.selectedTexts) {
         if (!editMode) editedTexts = config.selectedTexts
     }
-    
-    // Конфиг, реально используемый для предпросмотра и экспорта
+
     val effectiveConfig =
         if (editMode && editedTexts.isNotEmpty() && config.source == SyllableSource.READY)
             config.copy(selectedTexts = editedTexts)
         else config
-        
+
     LaunchedEffect(effectiveConfig) {
         delay(300)
         previewPages = SyllablePdfDrawer.generatePreviewPages(effectiveConfig, context)
@@ -104,7 +101,6 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // БЛОК: Источник текста
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -138,45 +134,37 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                selectedCategory.texts.forEach { textObj ->
-                                    val isSelected = config.selectedTexts.contains(textObj)
-                                    ElevatedCard(
-                                        onClick = {
-                                            if (config.isMultiSelectMode) {
-                                                val newList = config.selectedTexts.toMutableList()
-                                                if (isSelected) newList.remove(textObj) else newList.add(textObj)
-                                                config = config.copy(selectedTexts = newList)
-                                            } else {
-                                                config = config.copy(selectedTexts = listOf(textObj))
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .then(
-                                                if (isSelected) Modifier.border(
-                                                    2.dp,
-                                                    MaterialTheme.colorScheme.primary,
-                                                    CardDefaults.elevatedShape
-                                                ) else Modifier
-                                            )
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(textObj.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                                if (textObj.questions.isNotEmpty()) {
-                                                    Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(4.dp)) {
-                                                        Text("? вопросы", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
-                                                    }
+
+                            // ДВЕ КОЛОНКИ карточек выбора
+                            selectedCategory.texts.chunked(2).forEach { rowTexts ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowTexts.forEach { textObj ->
+                                        TextChoiceCard(
+                                            textObj = textObj,
+                                            isSelected = config.selectedTexts.contains(textObj),
+                                            modifier = Modifier.weight(1f),
+                                            onClick = {
+                                                if (config.isMultiSelectMode) {
+                                                    val newList = config.selectedTexts.toMutableList()
+                                                    if (config.selectedTexts.contains(textObj)) newList.remove(textObj) else newList.add(textObj)
+                                                    config = config.copy(selectedTexts = newList)
+                                                } else {
+                                                    config = config.copy(selectedTexts = listOf(textObj))
                                                 }
                                             }
-                                            Text(textObj.text.take(40).replace("\n", " ") + "...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                                        }
+                                        )
+                                    }
+                                    if (rowTexts.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
+
                             // Переключатель режима
-                            Spacer(modifier = Modifier.height(12.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 FilterChip(
                                     selected = !editMode,
@@ -196,7 +184,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                     label = { Text("Редактировать") }
                                 )
                             }
-                            // Редактирование ВСЕХ выбранных текстов
+
                             if (editMode && editedTexts.isNotEmpty()) {
                                 editedTexts.forEachIndexed { idx, t ->
                                     Spacer(modifier = Modifier.height(12.dp))
@@ -270,8 +258,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-            
-            // БЛОК: Настройки печати
+
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -300,7 +287,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                                 value = config.fontSize,
                                 onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) },
                                 valueRange = 16f..40f,
-                                steps = 23, // <-- ДОБАВЛЕНА ЗАПЯТАЯ ЗДЕСЬ
+                                steps = 23,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -321,8 +308,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-            
-            // ПРЕДПРОСМОТР
+
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
@@ -347,8 +333,7 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
-        
-        // СПРАВКА (INFO SHEET) — ПОЛНАЯ ВЕРСИЯ
+
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(
@@ -449,6 +434,37 @@ fun SyllableGeneratorScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(32.dp))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TextChoiceCard(
+    textObj: SyllableText,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.then(
+            if (isSelected) Modifier.border(
+                2.dp,
+                MaterialTheme.colorScheme.primary,
+                CardDefaults.elevatedShape
+            ) else Modifier
+        )
+    ) {
+        Column(modifier = Modifier.padding(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(textObj.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                if (textObj.questions.isNotEmpty()) {
+                    Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(4.dp)) {
+                        Text("? вопросы", fontSize = 9.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                    }
+                }
+            }
+            Text(textObj.text.take(30).replace("\n", " ") + "...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         }
     }
 }
