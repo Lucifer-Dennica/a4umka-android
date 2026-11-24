@@ -86,8 +86,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         val res = PdfExporter.exportComprehension(context, finalConfig)
                         scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
                     }) { 
-                        // ИЗМЕНЕНО: иконка сохранения теперь мятная (secondary)
-                        Icon(Icons.Default.Save, "Сохранить", tint = scheme.secondary) 
+                        
+                        Icon(Icons.Default.Save, "Сохранить", tint = Color.Black) 
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = scheme.surface)
@@ -120,7 +120,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     label = { Text(grade.toString()) },
                                     border = BorderStroke(1.dp, scheme.outlineVariant),
                                     colors = FilterChipDefaults.filterChipColors(
-                                        // ИЗМЕНЕНО: мятный фон при выборе (secondaryContainer)
+
                                         selectedContainerColor = scheme.secondaryContainer,
                                         selectedLabelColor = scheme.onSecondaryContainer,
                                         containerColor = scheme.surface,
@@ -144,11 +144,11 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 FilterChip(selected = !editMode, onClick = { editMode = false },
                                     label = { Text("Просмотр") },
-                                    // ИЗМЕНЕНО: мятный фон
+                                    
                                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = scheme.secondaryContainer, selectedLabelColor = scheme.onSecondaryContainer))
                                 FilterChip(selected = editMode, onClick = { if (config.selectedStory != null) { editMode = true; editedStory = config.selectedStory } },
                                     label = { Text("Редактировать") },
-                                    // ИЗМЕНЕНО: мятный фон
+                                    
                                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = scheme.secondaryContainer, selectedLabelColor = scheme.onSecondaryContainer))
                             }
                         }
@@ -159,7 +159,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 onValueChange = {}, readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(dropdownExpanded) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                // ИЗМЕНЕНО: мятная рамка при фокусе
+                                
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = scheme.secondary, unfocusedBorderColor = scheme.outlineVariant)
                             )
                             ExposedDropdownMenu(expanded = dropdownExpanded, onDismissRequest = { dropdownExpanded = false }, modifier = Modifier.heightIn(max = 350.dp)) {
@@ -173,7 +173,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(subtitle, fontSize = 12.sp, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                             TextButton(onClick = { config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade)); editMode = false }) {
-                                // ИЗМЕНЕНО: мятная иконка и текст
+                                
                                 Icon(Icons.Default.Refresh, contentDescription = null, tint = scheme.secondary, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
                                 Text("Случайный", color = scheme.secondary)
