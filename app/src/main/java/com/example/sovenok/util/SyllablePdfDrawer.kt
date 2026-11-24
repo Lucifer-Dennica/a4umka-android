@@ -16,11 +16,9 @@ import com.example.sovenok.data.SyllableText
 object SyllablePdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
-
     private const val MARGIN = 40f
     private const val BOTTOM_LIMIT = 792f
 
-    // Цвета для листа
     private val BEIGE_FILL = Color.parseColor("#F5E9D0")
     private val BEIGE_STROKE = Color.parseColor("#D9C9A3")
     private val FIELD_TEXT = Color.parseColor("#5D4037")
@@ -31,18 +29,14 @@ object SyllablePdfDrawer {
     fun generatePreviewPages(config: SyllableConfig, context: Context): List<Bitmap> {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return emptyList()
-
         val pages = mutableListOf<Bitmap>()
         var bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
         var canvas = Canvas(bmp)
         var currentY = drawHeader(canvas, texts)
-
         for (textObj in texts) {
             val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
             val lineHeight = bodyPaint.textSize * 2.2f
             val lines = splitTextToLines(textObj.text, bodyPaint, PAGE_WIDTH - MARGIN * 2)
-
-            // Название текста по центру зелёным — для КАЖДОГО добавленного текста
             val titlePaint = Paint().apply {
                 isAntiAlias = true; textSize = 26f; color = GREEN_TITLE
                 typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
@@ -53,7 +47,6 @@ object SyllablePdfDrawer {
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
                 textAlign = Paint.Align.CENTER
             }
-            // если название не влезает — новая страница
             if (currentY + titlePaint.textSize + 14f + subPaint.textSize + 20f + lineHeight > BOTTOM_LIMIT) {
                 pages.add(bmp)
                 bmp = Bitmap.createBitmap(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
@@ -64,7 +57,6 @@ object SyllablePdfDrawer {
             currentY += titlePaint.textSize + 14f
             canvas.drawText("слова для чтения по слогам", PAGE_WIDTH / 2f, currentY, subPaint)
             currentY += subPaint.textSize + 20f
-
             for (line in lines) {
                 if (currentY + lineHeight > BOTTOM_LIMIT) {
                     pages.add(bmp)
@@ -72,10 +64,9 @@ object SyllablePdfDrawer {
                     canvas = Canvas(bmp)
                     currentY = drawHeader(canvas, texts)
                 }
-                drawSyllableLine(canvas, line, MARGIN, currentY, bodyPaint, PAGE_WIDTH - MARGIN)
+                currentY = drawSyllableLine(canvas, line, MARGIN, currentY, bodyPaint, PAGE_WIDTH - MARGIN)
                 currentY += lineHeight
             }
-
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
                 currentY += 30f
                 val dashPaint = Paint().apply {
@@ -120,23 +111,19 @@ object SyllablePdfDrawer {
     fun drawDocument(document: PdfDocument, config: SyllableConfig, context: Context) {
         val texts = getTextsToPrint(config)
         if (texts.isEmpty()) return
-
         var pageNum = 1
         var page = document.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create())
         var currentY = drawHeader(page.canvas, texts)
-
         fun newPage() {
             document.finishPage(page)
             pageNum++
             page = document.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH.toInt(), PAGE_HEIGHT.toInt(), pageNum).create())
             currentY = drawHeader(page.canvas, texts)
         }
-
         for (textObj in texts) {
             val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
             val lineHeight = bodyPaint.textSize * 2.2f
             val lines = splitTextToLines(textObj.text, bodyPaint, PAGE_WIDTH - MARGIN * 2)
-
             val titlePaint = Paint().apply {
                 isAntiAlias = true; textSize = 26f; color = GREEN_TITLE
                 typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
@@ -152,13 +139,11 @@ object SyllablePdfDrawer {
             currentY += titlePaint.textSize + 14f
             page.canvas.drawText("слова для чтения по слогам", PAGE_WIDTH / 2f, currentY, subPaint)
             currentY += subPaint.textSize + 20f
-
             for (line in lines) {
                 if (currentY + lineHeight > BOTTOM_LIMIT) newPage()
-                drawSyllableLine(page.canvas, line, MARGIN, currentY, bodyPaint, PAGE_WIDTH - MARGIN)
+                currentY = drawSyllableLine(page.canvas, line, MARGIN, currentY, bodyPaint, PAGE_WIDTH - MARGIN)
                 currentY += lineHeight
             }
-
             if (config.showQuestions && textObj.questions.isNotEmpty()) {
                 currentY += 30f
                 val dashPaint = Paint().apply {
@@ -212,29 +197,74 @@ object SyllablePdfDrawer {
         return result
     }
 
-    private fun drawSyllableLine(canvas: Canvas, line: String, startX: Float, y: Float, paint: Paint, rightLimit: Float) {
+    // ИСПРАВЛЕНО: перенос длинных слов + пунктуация без разметки
+    private fun drawSyllableLine(canvas: Canvas, line: String, startX: Float, y: Float, paint: Paint, rightLimit: Float): Float {
         var currentX = startX
-        for (word in line.split(" ")) {
+        var currentY = y
+        val lineHeight = paint.textSize * 2.2f
+        val words = line.split(" ")
+
+        for (word in words) {
             if (word.isEmpty()) continue
-            val syllables = SyllableUtils.splitIntoSyllables(word)
+
+            // Отделяем пунктуацию от слова
+            val punctuation = StringBuilder()
+            val cleanWord = StringBuilder()
+            for (char in word) {
+                if (char.isLetter() || char == 'ё' || char == 'Ё') {
+                    cleanWord.append(char)
+                } else {
+                    punctuation.append(char)
+                }
+            }
+
+            val syllables = if (cleanWord.isNotEmpty()) {
+                SyllableUtils.splitIntoSyllables(cleanWord.toString())
+            } else {
+                emptyList()
+            }
+
+            // Считаем полную ширину слова с пунктуацией
+            var wordWidth = 0f
+            for (syllable in syllables) {
+                wordWidth += paint.measureText(syllable) + 4f
+            }
+            if (punctuation.isNotEmpty()) {
+                wordWidth += paint.measureText(punctuation.toString())
+            }
+
+            // Если слово не влезает — переносим на новую строку
+            if (currentX + wordWidth > rightLimit && currentX > startX) {
+                currentX = startX
+                currentY += lineHeight
+            }
+
+            // Рисуем слоги с разметкой
             for (syllable in syllables) {
                 val textWidth = paint.measureText(syllable)
-                if (currentX + textWidth > rightLimit) break
-                canvas.drawText(syllable, currentX, y, paint)
+                canvas.drawText(syllable, currentX, currentY, paint)
                 if (syllable.length == 1) {
                     val dotPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY }
-                    canvas.drawCircle(currentX + textWidth / 2f, y + 10f, 1.5f, dotPaint)
+                    canvas.drawCircle(currentX + textWidth / 2f, currentY + 10f, 1.5f, dotPaint)
                 } else {
                     val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
-                    canvas.drawArc(RectF(currentX, y + 1f, currentX + textWidth, y + 8f), 0f, 180f, false, arcPaint)
+                    canvas.drawArc(RectF(currentX, currentY + 1f, currentX + textWidth, currentY + 8f), 0f, 180f, false, arcPaint)
                 }
                 currentX += textWidth + 4f
             }
+
+            // Рисуем пунктуацию БЕЗ разметки
+            if (punctuation.isNotEmpty()) {
+                val punctText = punctuation.toString()
+                canvas.drawText(punctText, currentX, currentY, paint)
+                currentX += paint.measureText(punctText)
+            }
+
             currentX += paint.measureText(" ")
         }
+        return currentY
     }
 
-    // Шапка БЕЗ названия — только Дата / Слов / Время
     private fun drawHeader(canvas: Canvas, texts: List<SyllableText>): Float {
         canvas.drawColor(Color.WHITE)
         drawBeigeField(canvas, "Дата:", MARGIN, 20f, 150f)
