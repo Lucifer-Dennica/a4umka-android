@@ -72,22 +72,25 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
     val subtitle = "${gradeStories.size} рассказов · $wMin–$wMax слов · $qNum ${questionForm(qNum)}."
 
     Scaffold(
-        containerColor = scheme.background,
+        containerColor = scheme.surface,
         topBar = {
             TopAppBar(
-                title = { Text("Чтение с вопросами", color = scheme.onBackground, fontWeight = FontWeight.Bold) },
+                title = { Text("Чтение с вопросами", color = scheme.onSurface, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад", tint = scheme.onBackground) }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Назад", tint = scheme.onSurface) }
                 },
                 actions = {
-                    IconButton(onClick = { showInfoSheet = true }) { Icon(Icons.Default.Info, "Справка", tint = scheme.onBackground) }
+                    IconButton(onClick = { showInfoSheet = true }) { Icon(Icons.Default.Info, "Справка", tint = scheme.onSurface) }
                     IconButton(onClick = {
                         val finalConfig = if (editMode && editedStory != null) config.copy(selectedStory = editedStory) else config
                         val res = PdfExporter.exportComprehension(context, finalConfig)
                         scope.launch { snackbarHostState.showSnackbar(if (res != null) "Лист составлен: $res" else "Ошибка сохранения") }
-                    }) { Icon(Icons.Default.Save, "Сохранить", tint = scheme.primary) }
+                    }) { 
+                        // ИЗМЕНЕНО: иконка сохранения теперь мятная (secondary)
+                        Icon(Icons.Default.Save, "Сохранить", tint = scheme.secondary) 
+                    }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = scheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = scheme.surface)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -101,7 +104,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 OutlinedCard(border = BorderStroke(1.dp, scheme.outlineVariant), colors = CardDefaults.cardColors(containerColor = scheme.surface)) {
                     Column(Modifier.padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Класс:", color = scheme.onBackground, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
+                            Text("Класс:", color = scheme.onSurface, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
                             listOf(1, 2, 3, 4).forEach { grade ->
                                 FilterChip(
                                     selected = config.grade == grade,
@@ -117,10 +120,11 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                     label = { Text(grade.toString()) },
                                     border = BorderStroke(1.dp, scheme.outlineVariant),
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = scheme.primaryContainer,
-                                        selectedLabelColor = scheme.onPrimaryContainer,
+                                        // ИЗМЕНЕНО: мятный фон при выборе (secondaryContainer)
+                                        selectedContainerColor = scheme.secondaryContainer,
+                                        selectedLabelColor = scheme.onSecondaryContainer,
                                         containerColor = scheme.surface,
-                                        labelColor = scheme.onBackground
+                                        labelColor = scheme.onSurface
                                     )
                                 )
                                 Spacer(Modifier.width(4.dp))
@@ -136,20 +140,16 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                 OutlinedCard(border = BorderStroke(1.dp, scheme.outlineVariant), colors = CardDefaults.cardColors(containerColor = scheme.surface)) {
                     Column(Modifier.padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Выберите текст", color = scheme.onBackground, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text("Выберите текст", color = scheme.onSurface, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 FilterChip(selected = !editMode, onClick = { editMode = false },
                                     label = { Text("Просмотр") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = scheme.primaryContainer,
-                                        selectedLabelColor = scheme.onPrimaryContainer
-                                    ))
+                                    // ИЗМЕНЕНО: мятный фон
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = scheme.secondaryContainer, selectedLabelColor = scheme.onSecondaryContainer))
                                 FilterChip(selected = editMode, onClick = { if (config.selectedStory != null) { editMode = true; editedStory = config.selectedStory } },
                                     label = { Text("Редактировать") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = scheme.primaryContainer,
-                                        selectedLabelColor = scheme.onPrimaryContainer
-                                    ))
+                                    // ИЗМЕНЕНО: мятный фон
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = scheme.secondaryContainer, selectedLabelColor = scheme.onSecondaryContainer))
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -159,7 +159,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                                 onValueChange = {}, readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(dropdownExpanded) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = scheme.primary, unfocusedBorderColor = scheme.outlineVariant)
+                                // ИЗМЕНЕНО: мятная рамка при фокусе
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = scheme.secondary, unfocusedBorderColor = scheme.outlineVariant)
                             )
                             ExposedDropdownMenu(expanded = dropdownExpanded, onDismissRequest = { dropdownExpanded = false }, modifier = Modifier.heightIn(max = 350.dp)) {
                                 gradeStories.forEach { s ->
@@ -172,9 +173,10 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(subtitle, fontSize = 12.sp, color = scheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                             TextButton(onClick = { config = config.copy(selectedStory = ReadingComprehensionData.getRandomStory(config.grade)); editMode = false }) {
-                                Icon(Icons.Default.Refresh, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(16.dp))
+                                // ИЗМЕНЕНО: мятная иконка и текст
+                                Icon(Icons.Default.Refresh, contentDescription = null, tint = scheme.secondary, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Случайный", color = scheme.primary)
+                                Text("Случайный", color = scheme.secondary)
                             }
                         }
 
@@ -214,7 +216,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
                     CheckRow("Вопросы по тексту на отдельном листе", config.showQuestionsOnSeparateSheet) { config = config.copy(showQuestionsOnSeparateSheet = it) }
 
                     Spacer(Modifier.height(8.dp))
-                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp, color = scheme.onBackground, fontWeight = FontWeight.SemiBold)
+                    Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp, color = scheme.onSurface, fontWeight = FontWeight.SemiBold)
                     Slider(
                         value = config.fontSize,
                         onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) },
@@ -226,8 +228,8 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
             }
 
             item {
-                Text("Предпросмотр листа A4:", color = scheme.onBackground, fontWeight = FontWeight.Bold)
-                if (previewPages.size > 1) Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = scheme.primary, fontSize = 12.sp)
+                Text("Предпросмотр листа A4:", color = scheme.onSurface, fontWeight = FontWeight.Bold)
+                if (previewPages.size > 1) Text("Страница ${pagerState.currentPage + 1} из ${previewPages.size}", color = scheme.secondary, fontSize = 12.sp)
                 Text("Двумя пальцами можно приблизить лист", fontSize = 10.sp, color = scheme.onSurfaceVariant)
             }
             item {
@@ -243,7 +245,7 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Тексты для чтения с вопросами — распечатать для 1–4 класса", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = scheme.onBackground)
+                    Text("Тексты для чтения с вопросами — распечатать для 1–4 класса", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = scheme.onSurface)
                     Spacer(Modifier.height(12.dp))
                     Text("Ребёнок прочитал рассказ. А может ли он объяснить, почему герой так поступил и чем закончилась история? Генератор помогает перейти от чтения к обсуждению: на листе A4 — рассказ, вопросы и место для ответов.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(12.dp))
@@ -267,14 +269,15 @@ fun ComprehensionGeneratorScreen(onBack: () -> Unit) {
 @Composable
 private fun CheckRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-        Checkbox(checked = checked, onCheckedChange = onChange, colors = CheckboxDefaults.colors(checkedColor = scheme.primary, checkmarkColor = Color.White))
-        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+        Checkbox(checked = checked, onCheckedChange = onChange)
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
 @Composable
 private fun InfoBlock(title: String, body: String) {
-    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+    // ИЗМЕНЕНО: заголовок блока теперь мятный (secondary)
+    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
     Spacer(Modifier.height(4.dp))
     Text(body, style = MaterialTheme.typography.bodyMedium)
     Spacer(Modifier.height(16.dp))
