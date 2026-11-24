@@ -12,6 +12,6 @@ data class CopyingConfig(
     val addBlankPage: Boolean = false,
     val isBlackAndWhite: Boolean = false,
     val fontSize: Float = 16f,
-    val combineOnOnePage: Boolean = false
+    val combineOnOnePage: Boolean = false,
     val showPrepSheet: Boolean = false
 )
