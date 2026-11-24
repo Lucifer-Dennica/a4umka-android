@@ -45,7 +45,6 @@ object CopyingPdfDrawer {
             currentY += 30f
         }
 
-        // Вспомогательная функция для переноса текста С учётом создания новых страниц
         fun drawWrappedTextWithBreaks(
             text: String,
             x: Float,
@@ -93,7 +92,6 @@ object CopyingPdfDrawer {
         }
 
         drawHeader()
-
         if (config.combineOnOnePage) {
             for (story in config.selectedStories) {
                 val bodyPaint = Paint().apply { isAntiAlias = true; textSize = config.fontSize; color = Color.BLACK; typeface = Typeface.DEFAULT }
@@ -175,7 +173,6 @@ object CopyingPdfDrawer {
                 }
             }
         }
-
         if (config.addBlankPage) {
             onPageFinished()
             pageIndex++
@@ -190,26 +187,26 @@ object CopyingPdfDrawer {
                 currentY += lineSpacingPx
             }
         }
-
-        // --- ИСПРАВЛЕНИЕ: Лист подготовки и проверки с полной поддержкой переноса на новые страницы ---
+        
+        // --- ИСПРАВЛЕНИЕ: используем Color.parseColor вместо недопустимого Color(0x...) ---
         if (config.showPrepSheet) {
             onPageFinished()
             pageIndex++
             canvas = canvasProvider(pageIndex)
             currentY = 50f
-
-            val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT }
-            val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+            
+            val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT }
+            val bigTitlePaint = Paint().apply { isAntiAlias = true; textSize = 26f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT_BOLD }
             val smallHeaderPaint = Paint().apply { isAntiAlias = true; textSize = 11f; color = Color.GRAY; typeface = Typeface.DEFAULT }
-            val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color(0xFF2E3B2E); typeface = Typeface.DEFAULT_BOLD }
+            val storyTitlePaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = Color.parseColor("#2E3B2E"); typeface = Typeface.DEFAULT_BOLD }
             val linePaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
             val lineHeight = bodyPaint.textSize * 1.5f
-
+            
             canvas.drawText("ОБЩИЙ ЛИСТ ВЗРОСЛОГО · ТЕКСТЫ И ПОРЯДОК РАБОТЫ", margin, currentY, smallHeaderPaint)
             currentY += 35f
             canvas.drawText("Подготовка и проверка", margin, currentY, bigTitlePaint)
             currentY += 35f
-
+            
             val instruction = if (config.mode == CopyingMode.COPYING) {
                 "Ребёнок читает текст и списывает его в своём темпе. Образец печатный: ребёнок пишет привычным ему почерком."
             } else {
@@ -217,7 +214,7 @@ object CopyingPdfDrawer {
             }
             currentY = drawWrappedTextWithBreaks(instruction, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
             currentY += 20f
-
+            
             val totalPages = config.selectedStories.size * config.childrenCount + 1
             val pensCount = config.childrenCount
             val infoText = "${config.childrenCount} ${pluralChild(config.childrenCount)} · " +
@@ -227,12 +224,11 @@ object CopyingPdfDrawer {
                 "Класс — ориентир, а не соответствие программе."
             currentY = drawWrappedTextWithBreaks(infoText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
             currentY += 25f
-
+            
             canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
             currentY += 25f
-
+            
             for ((index, story) in config.selectedStories.withIndex()) {
-                // ПРОВЕРКА: если места мало, создаём новую страницу перед следующим текстом
                 if (currentY > PAGE_HEIGHT - 150f) {
                     onPageFinished()
                     pageIndex++
@@ -242,7 +238,6 @@ object CopyingPdfDrawer {
                     canvas.drawText("Продолжение листа подготовки и проверки", margin, currentY, contPaint)
                     currentY += 30f
                 }
-
                 val storyId = "copy-${String.format("%02d", index + 1)}"
                 val storyHeader = "${story.title} · ${story.wordCount} слов · $storyId"
                 canvas.drawText(storyHeader, margin, currentY, storyTitlePaint)
@@ -250,8 +245,7 @@ object CopyingPdfDrawer {
                 currentY = drawWrappedTextWithBreaks(story.text, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
                 currentY += 25f
             }
-
-            // ПРОВЕРКА перед финальным текстом
+            
             if (currentY > PAGE_HEIGHT - 100f) {
                 onPageFinished()
                 pageIndex++
@@ -261,11 +255,9 @@ object CopyingPdfDrawer {
                 canvas.drawText("Продолжение листа подготовки и проверки", margin, currentY, contPaint)
                 currentY += 30f
             }
-
             val finalText = "Не оценивайте скорость. При проверке предложите сначала найти конец каждого предложения, затем сравнить слова по порядку. Незнакомые написания объясните до диктанта. Это авторские тренировочные тексты, не контрольные работы по программе."
             currentY = drawWrappedTextWithBreaks(finalText, margin, currentY, PAGE_WIDTH - margin * 2, bodyPaint, lineHeight)
         }
-
         onPageFinished()
     }
 
