@@ -28,6 +28,7 @@ import com.example.sovenok.ui.components.ZoomableImage
 import com.example.sovenok.util.CopyingPdfDrawer
 import com.example.sovenok.util.PdfExporter
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -266,9 +267,10 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
                             Text("Размер шрифта: ${config.fontSize.toInt()}", fontSize = 14.sp)
                             Slider(
                                 value = config.fontSize,
-                                onValueChange = { config = config.copy(fontSize = it) },
+                                onValueChange = { config = config.copy(fontSize = it.roundToInt().toFloat()) },
                                 valueRange = 12f..24f,
-                                steps = 6
+                                steps = 11,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
