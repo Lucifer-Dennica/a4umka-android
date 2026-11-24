@@ -241,8 +241,16 @@ object SyllablePdfDrawer {
                     val dotPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY }
                     canvas.drawCircle(currentX + textWidth / 2f, currentY + 10f, 1.5f, dotPaint)
                 } else {
-                    val arcPaint = Paint().apply { isAntiAlias = true; color = Color.DKGRAY; style = Paint.Style.STROKE; strokeWidth = 1.5f }
-                    canvas.drawArc(RectF(currentX, y + 4f, currentX + textWidth, y + 11f), 180f, 180f, false, arcPaint)
+                    val arcPath = android.graphics.Path()
+                    arcPath.addArc(RectF(currentX, y + 1f, currentX + textWidth, y + 8f), 0f, 180f)
+                    val arcPaint = Paint().apply { 
+                        isAntiAlias = true
+                        color = Color.DKGRAY
+                        style = Paint.Style.STROKE
+                        strokeWidth = 1.5f
+                        strokeCap = Paint.Cap.ROUND  
+                    }
+                    canvas.drawPath(arcPath, arcPaint)
                 }
                 currentX += textWidth  
             }
