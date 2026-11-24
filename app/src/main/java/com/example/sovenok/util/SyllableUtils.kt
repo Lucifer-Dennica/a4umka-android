@@ -5,33 +5,46 @@ object SyllableUtils {
         'а', 'е', 'ё', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я',
         'А', 'Е', 'Ё', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я'
     )
-    private val softHard = setOf('ь', 'ъ', 'й', 'Ь', 'Ъ', 'Й')
 
     fun splitIntoSyllables(word: String): List<String> {
         if (word.isBlank()) return emptyList()
         
         val result = mutableListOf<String>()
         var currentSyllable = StringBuilder()
-        var hasVowel = false
+        var consonantCount = 0
         
         for (i in word.indices) {
             val char = word[i]
-            currentSyllable.append(char)
             
             if (char in vowels) {
-                hasVowel = true
-            } else if (hasVowel && i < word.length - 1) {
-                val nextChar = word[i + 1]
-                // Разрываем слог, если после согласной идет гласная, 
-                // и текущая согласная не является 'й', 'ь' или 'ъ'
-                if (nextChar in vowels && char !in softHard) {
-                    result.add(currentSyllable.toString())
-                    currentSyllable = StringBuilder()
-                    hasVowel = false
+                // Гласная - завершаем текущий слог
+                currentSyllable.append(char)
+                result.add(currentSyllable.toString())
+                currentSyllable = StringBuilder()
+                consonantCount = 0
+            } else {
+                // Согласная
+                if (currentSyllable.isEmpty()) {
+                    // Согласная перед гласной
+                    consonantCount++
+                    currentSyllable.append(char)
+                    
+                    // Если следующая буква гласная, оставляем эту согласную в текущем слоге
+                    // Если следующая буква согласная, и у нас уже есть 1 согласная, 
+                    // то текущую делаем отдельным слогом
+                    if (i + 1 < word.length && word[i + 1] !in vowels && consonantCount >= 1) {
+                        result.add(currentSyllable.toString())
+                        currentSyllable = StringBuilder()
+                        consonantCount = 0
+                    }
+                } else {
+                    // Согласная после гласной (в конце слова или перед следующей гласной)
+                    currentSyllable.append(char)
                 }
             }
         }
         
+        // Добавляем остаток
         if (currentSyllable.isNotEmpty()) {
             result.add(currentSyllable.toString())
         }
