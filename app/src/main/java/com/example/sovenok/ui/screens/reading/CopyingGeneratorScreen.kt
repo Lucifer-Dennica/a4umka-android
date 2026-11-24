@@ -211,7 +211,7 @@ fun CopyingGeneratorScreen(onBack: () -> Unit) {
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Печатать несколько текстов на одном листе")
+                                Text("Печатать несколько текстов на одном листе (только для учителя)")
                                 Text("Для экономии бумаги (тексты идут подряд)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                             }
                             Switch(checked = config.combineOnOnePage, onCheckedChange = { config = config.copy(combineOnOnePage = it) })
