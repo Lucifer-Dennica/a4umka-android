@@ -395,6 +395,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun BookForm(
     book: DiaryBook,
