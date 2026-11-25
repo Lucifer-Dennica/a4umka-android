@@ -16,7 +16,7 @@ data class DiaryBook(
     val memorable: String = "",
     val lesson: String = "",
     val newWords: String = "",
-    val rating: Int = 0 
+    val rating: Int = 0
 ) {
     fun isEmpty(): Boolean =
         author.isBlank() && title.isBlank() && genre.isBlank() && pages.isBlank() &&
