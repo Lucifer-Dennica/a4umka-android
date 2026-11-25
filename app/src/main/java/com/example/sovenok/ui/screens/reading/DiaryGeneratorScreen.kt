@@ -184,7 +184,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                     DiaryColor.ORANGE to "Оранжевый",
                                     DiaryColor.BLUE to "Синий",
                                     DiaryColor.PINK to "Розовый",
-                                    DiaryColor.BLUE to "Синий",
                                     DiaryColor.BLACK_WHITE to "Черно-белый"
                                 ).forEach { (type, name) ->
                                     DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(color = type); colorExpanded = false })
@@ -217,6 +216,19 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                             FilterChip(
                                 selected = config.titleFont == DiaryFont.CAVEAT,
                                 onClick = { config = config.copy(titleFont = DiaryFont.CAVEAT) },
+                                label = { Text("Рукописный") }
+                            )
+                        }
+                        Text("Шрифт текста на листах", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = config.fieldFont == DiaryFont.SYSTEM,
+                                onClick = { config = config.copy(fieldFont = DiaryFont.SYSTEM) },
+                                label = { Text("Обычный") }
+                            )
+                            FilterChip(
+                                selected = config.fieldFont == DiaryFont.CAVEAT,
+                                onClick = { config = config.copy(fieldFont = DiaryFont.CAVEAT) },
                                 label = { Text("Рукописный") }
                             )
                         }
