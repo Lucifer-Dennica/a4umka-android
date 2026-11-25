@@ -144,7 +144,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                     value = when(config.ruling) {
                                         DiaryRuling.STANDARD -> "Обычная линейка"
                                         DiaryRuling.WIDE -> "Широкая линейка"
-                                        DiaryRuling.GRID -> "Клетка"
                                         DiaryRuling.NONE -> "Без линий"
                                     }, onValueChange = {}, readOnly = true,
                                     label = { Text("Разлиновка", fontSize = 12.sp) },
@@ -155,7 +154,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                     listOf(
                                         DiaryRuling.STANDARD to "Обычная",
                                         DiaryRuling.WIDE to "Широкая (1 класс)",
-                                        DiaryRuling.GRID to "Клетка",
                                         DiaryRuling.NONE to "Без линий"
                                     ).forEach { (type, name) ->
                                         DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(ruling = type); rulingExpanded = false })
