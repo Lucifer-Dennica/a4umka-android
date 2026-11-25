@@ -132,7 +132,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                     modifier = Modifier.menuAnchor().fillMaxWidth()
                                 )
                                 ExposedDropdownMenu(expanded = pagesExpanded, onDismissRequest = { pagesExpanded = false }) {
-                                    listOf(4, 8, 12, 16).forEach { count ->
+                                    (1..16).toList().forEach { count ->
                                         DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(bookPagesCount = count); pagesExpanded = false })
                                     }
                                 }
