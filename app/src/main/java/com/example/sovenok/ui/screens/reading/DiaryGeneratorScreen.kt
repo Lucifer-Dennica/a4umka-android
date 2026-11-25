@@ -190,10 +190,38 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                 }
                             }
                         }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            var listExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(expanded = listExpanded, onExpandedChange = { listExpanded = it }, modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = "Строк: ${config.listRowsCount}", onValueChange = {}, readOnly = true,
+                                    label = { Text("Строк в списке", fontSize = 12.sp) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = listExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                                )
+                                ExposedDropdownMenu(expanded = listExpanded, onDismissRequest = { listExpanded = false }) {
+                                    (8..18).toList().forEach { count ->
+                                        DropdownMenuItem(text = { Text("$count") }, onClick = { config = config.copy(listRowsCount = count); listExpanded = false })
+                                    }
+                                }
+                            }
+                        }
+                        Text("Шрифт заголовков", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = config.titleFont == DiaryFont.SYSTEM,
+                                onClick = { config = config.copy(titleFont = DiaryFont.SYSTEM) },
+                                label = { Text("Обычный") }
+                            )
+                            FilterChip(
+                                selected = config.titleFont == DiaryFont.CAVEAT,
+                                onClick = { config = config.copy(titleFont = DiaryFont.CAVEAT) },
+                                label = { Text("Рукописный") }
+                            )
+                        }
                     }
                 }
             }
-
             // БЛОК: Что ещё вложить в дневник
             item {
                 OutlinedCard(
