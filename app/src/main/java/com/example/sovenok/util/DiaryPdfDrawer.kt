@@ -199,15 +199,13 @@ object DiaryPdfDrawer {
         val labelGap = 8f
         val rowStep = 25f
         val fieldGap = 8f
-
+        
         fun drawField(label: String, value: String, linesCount: Int = 1) {
             currentY += labelGap
             canvas.drawText(label, MARGIN, currentY, labelPaint)
-            
             if (value.isNotBlank()) {
                 canvas.drawText(value, MARGIN + 4f, currentY + rowStep - 4f, valuePaint)
             }
-            
             val fieldTop = currentY
             val fieldHeight = linesCount * rowStep
             
@@ -226,7 +224,7 @@ object DiaryPdfDrawer {
             }
             currentY = fieldTop + fieldHeight + fieldGap
         }
-
+        
         if (config.showAuthor) drawField("Автор", book.author)
         if (config.showTitle) drawField("Название", book.title)
         if (config.showGenre) drawField("Жанр", book.genre)
@@ -237,12 +235,12 @@ object DiaryPdfDrawer {
         if (config.showMemorable) drawField("Что запомнилось больше всего", book.memorable, 3)
         if (config.showLesson) drawField("Чему научила эта книга", book.lesson, 2)
         if (config.showNewWords) drawField("Новые слова", book.newWords, 1)
-
+        
         val ratingReserve = if (config.showRating) 64f else 0f
         val usableBottom = PAGE_HEIGHT - 40f - ratingReserve
         val boxTop = currentY + labelGap + 6f
         val drawingFits = config.showDrawing && boxTop + 55f <= usableBottom
-
+        
         if (drawingFits) {
             canvas.drawText("Рисунок к книге", MARGIN, currentY + labelGap, labelPaint)
             val framePaint = Paint().apply {
@@ -265,16 +263,14 @@ object DiaryPdfDrawer {
                 }
             }
         }
-
+        
         if (config.showRating) {
             val ratingLabelY = PAGE_HEIGHT - 40f - 44f
             canvas.drawText("Моя оценка", MARGIN, ratingLabelY, labelPaint)
-            
             val starR = 13f
             val step = 38f
             var cx = MARGIN + starR
             val starCy = ratingLabelY + 8f + starR
-            
             for (s in 0 until 5) {
                 if (s < book.rating) {
                     drawStarFilled(canvas, cx, starCy, starR, colors.textColor)
@@ -283,7 +279,6 @@ object DiaryPdfDrawer {
                 }
                 cx += step
             }
-            
             val hintPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = colors.subtitleColor }
             canvas.drawText("раскрась звёзды — от 1 до 5", MARGIN, starCy + starR + 12f, hintPaint)
         }
@@ -322,17 +317,13 @@ object DiaryPdfDrawer {
             isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Моя книга", PAGE_WIDTH / 2f, 50f, titlePaint)
-        
         val framePaint = Paint().apply { color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 2f }
         canvas.drawRect(RectF(MARGIN, 80f, PAGE_WIDTH - MARGIN, 500f), framePaint)
-        
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1.5f; style = Paint.Style.STROKE }
         canvas.drawLine(MARGIN, 560f, PAGE_WIDTH - MARGIN, 560f, linePaint)
         canvas.drawLine(MARGIN, 620f, PAGE_WIDTH - MARGIN, 620f, linePaint)
-        
         val ratingPaint = Paint().apply { isAntiAlias = true; textSize = 36f; color = colors.textColor }
         canvas.drawText("😞   😐   😊", MARGIN, 750f, ratingPaint)
-        
         val labelPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = colors.subtitleColor }
         canvas.drawText("Обведи нужное", MARGIN, 780f, labelPaint)
     }
@@ -344,12 +335,10 @@ object DiaryPdfDrawer {
         filledRows: List<FilledTableRow> = emptyList()
     ) {
         val rows = rowsIn.coerceAtLeast(1)
-        
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText(title, PAGE_WIDTH / 2f, 50f, titlePaint)
-        
         val subtitlePaint = Paint().apply {
             isAntiAlias = true; textSize = 13f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
@@ -359,7 +348,6 @@ object DiaryPdfDrawer {
         val headerHeight = 34f
         val tableBottom = BOTTOM_LIMIT
         val rowHeight = (tableBottom - tableTop - headerHeight) / rows
-        
         val available = PAGE_WIDTH - MARGIN * 2
         val sum = colWidths.sum()
         val widths = colWidths.map { it / sum * available }
@@ -374,13 +362,11 @@ object DiaryPdfDrawer {
         val linePaint = Paint().apply {
             isAntiAlias = true; color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE
         }
-        
         for (r in 0..rows) {
             val y = tableTop + headerHeight + r * rowHeight
             canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
         }
         canvas.drawLine(MARGIN, tableTop, PAGE_WIDTH - MARGIN, tableTop, linePaint)
-        
         for (x in xs) {
             canvas.drawLine(x, tableTop, x, tableBottom, linePaint)
         }
@@ -391,6 +377,7 @@ object DiaryPdfDrawer {
             typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
         }
         
+        // ИСПРАВЛЕНИЕ: ty объявлена как var, чтобы её можно было изменять
         for (i in headers.indices) {
             val lines = headers[i].split("\n")
             val cx = xs[i] + widths[i] / 2f
@@ -414,11 +401,9 @@ object DiaryPdfDrawer {
         for (r in 0 until rows) {
             val y = tableTop + headerHeight + r * rowHeight + rowHeight / 2f + 4f
             val filled = filledRows.getOrNull(r)
-            
             if (withNumbers) {
                 canvas.drawText("${r + 1}", xs[0] + widths[0] / 2f, y, cellCenterPaint)
             }
-            
             if (filled != null) {
                 for (col in filled.cells.indices) {
                     val cx = xs[col] + 4f
@@ -434,14 +419,12 @@ object DiaryPdfDrawer {
         val filledRows = mutableListOf<FilledTableRow>()
         for (book in config.books) {
             if (book.isEmpty()) continue
-            
             val authorTitle = when {
                 book.author.isNotBlank() && book.title.isNotBlank() -> "${book.author}, ${book.title}"
                 book.author.isNotBlank() -> book.author
                 book.title.isNotBlank() -> book.title
                 else -> ""
             }
-            
             val cells = listOf(
                 "", 
                 book.dates,
@@ -451,7 +434,6 @@ object DiaryPdfDrawer {
             )
             filledRows.add(FilledTableRow(cells))
         }
-        
         drawTable(
             canvas,
             title = "Список прочитанного",
