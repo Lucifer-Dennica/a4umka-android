@@ -219,16 +219,29 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                 label = { Text("Рукописный") }
                             )
                         }
-                        Text("Шрифт текста на листах", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Text("Шрифт подписей полей", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
-                                selected = config.fieldFont == DiaryFont.SYSTEM,
-                                onClick = { config = config.copy(fieldFont = DiaryFont.SYSTEM) },
+                                selected = config.labelFont == DiaryFont.SYSTEM,
+                                onClick = { config = config.copy(labelFont = DiaryFont.SYSTEM) },
                                 label = { Text("Обычный") }
                             )
                             FilterChip(
-                                selected = config.fieldFont == DiaryFont.CAVEAT,
-                                onClick = { config = config.copy(fieldFont = DiaryFont.CAVEAT) },
+                                selected = config.labelFont == DiaryFont.CAVEAT,
+                                onClick = { config = config.copy(labelFont = DiaryFont.CAVEAT) },
+                                label = { Text("Рукописный") }
+                            )
+                        }
+                        Text("Шрифт заполненных значений", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = config.valueFont == DiaryFont.SYSTEM,
+                                onClick = { config = config.copy(valueFont = DiaryFont.SYSTEM) },
+                                label = { Text("Обычный") }
+                            )
+                            FilterChip(
+                                selected = config.valueFont == DiaryFont.CAVEAT,
+                                onClick = { config = config.copy(valueFont = DiaryFont.CAVEAT) },
                                 label = { Text("Рукописный") }
                             )
                         }
