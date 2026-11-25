@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+
 package com.example.sovenok.ui.screens.reading
 
 import androidx.compose.foundation.BorderStroke
@@ -28,7 +30,6 @@ import com.example.sovenok.util.PdfExporter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DiaryGeneratorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -37,7 +38,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(DiaryConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-    
     val expandedBooks = remember { mutableStateMapOf<Int, Boolean>() }
 
     LaunchedEffect(config) {
@@ -464,7 +464,6 @@ private fun BookForm(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InfoBlock(title: String, body: String) {
     Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
