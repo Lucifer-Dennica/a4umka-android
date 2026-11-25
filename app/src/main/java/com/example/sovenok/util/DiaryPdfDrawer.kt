@@ -220,23 +220,19 @@ object DiaryPdfDrawer {
         if (config.showNewWords) drawField("Новые слова", 1)
 
         // ===== Динамическая нижняя часть =====
-        // Место под оценку прибита ко дну страницы. Всё остальное пространство
-        // между последним полем и оценкой занимает либо рисунок, либо строки письма.
         val ratingReserve = if (config.showRating) 64f else 0f
         val usableBottom = PAGE_HEIGHT - 40f - ratingReserve
 
-        if (config.showDrawing) {
-            // Рисунок растягивается на весь остаток (минимум 90pt)
-            val boxTop = currentY + labelGap + 6f
-            val boxBottom = usableBottom.coerceAtLeast(boxTop + 90f)
-            if (boxTop < usableBottom) {
-                canvas.drawText("Рисунок к книге", MARGIN, currentY + labelGap, labelPaint)
-                val framePaint = Paint().apply {
-                    color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
-                    pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
-                }
-                canvas.drawRoundRect(RectF(MARGIN, boxTop, PAGE_WIDTH - MARGIN, boxBottom), 10f, 10f, framePaint)
+        val boxTop = currentY + labelGap + 6f
+        val drawingFits = config.showDrawing && boxTop + 55f <= usableBottom
+
+        if (drawingFits) {
+            canvas.drawText("Рисунок к книге", MARGIN, currentY + labelGap, labelPaint)
+            val framePaint = Paint().apply {
+                color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
+                pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
             }
+            canvas.drawRoundRect(RectF(MARGIN, boxTop, PAGE_WIDTH - MARGIN, usableBottom), 10f, 10f, framePaint)
         } else {
             // Свободное место заполняем строками для письма
             val writeStep = when (config.ruling) {
@@ -245,7 +241,6 @@ object DiaryPdfDrawer {
                 else -> 25f
             }
             if (config.ruling == DiaryRuling.NONE) {
-                // одна линия внизу свободной зоны
                 val y = usableBottom.coerceAtLeast(currentY + 60f)
                 canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
             } else {
