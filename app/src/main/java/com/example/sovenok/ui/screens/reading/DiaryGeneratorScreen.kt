@@ -313,7 +313,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                     expandedBooks.clear()
                                     scope.launch { snackbarHostState.showSnackbar("Все книги очищены") }
                                 }) {
-                                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp)) // Используем Save как иконку очистки/сброса или можно добавить свою
+                                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(4.dp))
                                     Text("Очистить")
                                 }
@@ -322,7 +322,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                 "Можно ничего не заполнять — тогда напечатается чистый бланк. А можно вписать книги, которые уже прочитаны: они попадут и на страницы, и в список прочитанного.",
                                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
-
                             for (i in 0 until config.bookPagesCount) {
                                 val book = config.books[i]
                                 val expanded = expandedBooks[i] ?: false
@@ -413,96 +412,39 @@ private fun BookForm(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (config.showAuthor) {
-                    OutlinedTextField(
-                        value = book.author,
-                        onValueChange = { onUpdate(book.copy(author = it)) },
-                        label = { Text("Автор") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = book.author, onValueChange = { onUpdate(book.copy(author = it)) }, label = { Text("Автор") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
                 if (config.showGenre) {
-                    OutlinedTextField(
-                        value = book.genre,
-                        onValueChange = { onUpdate(book.copy(genre = it)) },
-                        label = { Text("Жанр") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = book.genre, onValueChange = { onUpdate(book.copy(genre = it)) }, label = { Text("Жанр") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
                 if (config.showDates) {
-                    OutlinedTextField(
-                        value = book.dates,
-                        onValueChange = { onUpdate(book.copy(dates = it)) },
-                        label = { Text("Начал(а) / закончил(а)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = book.dates, onValueChange = { onUpdate(book.copy(dates = it)) }, label = { Text("Начал(а) / закончил(а)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
                 if (config.showCharacters) {
-                    OutlinedTextField(
-                        value = book.characters,
-                        onValueChange = { onUpdate(book.copy(characters = it)) },
-                        label = { Text("Главные герои") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    OutlinedTextField(value = book.characters, onValueChange = { onUpdate(book.copy(characters = it)) }, label = { Text("Главные герои") }, modifier = Modifier.fillMaxWidth())
                 }
                 if (config.showPlot) {
-                    OutlinedTextField(
-                        value = book.plot,
-                        onValueChange = { onUpdate(book.copy(plot = it)) },
-                        label = { Text("О чём эта книга") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    OutlinedTextField(value = book.plot, onValueChange = { onUpdate(book.copy(plot = it)) }, label = { Text("О чём эта книга") }, modifier = Modifier.fillMaxWidth())
                 }
                 if (config.showLesson) {
-                    OutlinedTextField(
-                        value = book.lesson,
-                        onValueChange = { onUpdate(book.copy(lesson = it)) },
-                        label = { Text("Чему научила эта книга") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    OutlinedTextField(value = book.lesson, onValueChange = { onUpdate(book.copy(lesson = it)) }, label = { Text("Чему научила эта книга") }, modifier = Modifier.fillMaxWidth())
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (config.showTitle) {
-                    OutlinedTextField(
-                        value = book.title,
-                        onValueChange = { onUpdate(book.copy(title = it)) },
-                        label = { Text("Название") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = book.title, onValueChange = { onUpdate(book.copy(title = it)) }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
                 if (config.showPages) {
-                    OutlinedTextField(
-                        value = book.pages,
-                        onValueChange = { onUpdate(book.copy(pages = it)) },
-                        label = { Text("Сколько страниц") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = book.pages, onValueChange = { onUpdate(book.copy(pages = it)) }, label = { Text("Сколько страниц") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
                 if (config.showMemorable) {
-                    OutlinedTextField(
-                        value = book.memorable,
-                        onValueChange = { onUpdate(book.copy(memorable = it)) },
-                        label = { Text("Что запомнилось больше всего") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    OutlinedTextField(value = book.memorable, onValueChange = { onUpdate(book.copy(memorable = it)) }, label = { Text("Что запомнилось больше всего") }, modifier = Modifier.fillMaxWidth())
                 }
                 if (config.showNewWords) {
-                    OutlinedTextField(
-                        value = book.newWords,
-                        onValueChange = { onUpdate(book.copy(newWords = it)) },
-                        label = { Text("Новые слова") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = book.newWords, onValueChange = { onUpdate(book.copy(newWords = it)) }, label = { Text("Новые слова") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
             }
         }
-
         if (config.showRating) {
             var ratingExpanded by remember { mutableStateOf(false) }
             val ratingLabels = listOf("не ставим", "1 из 5", "2 из 5", "3 из 5", "4 из 5", "5 из 5")
@@ -526,4 +468,13 @@ private fun BookForm(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InfoBlock(title: String, body: String) {
+    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+    Spacer(Modifier.height(4.dp))
+    Text(body, style = MaterialTheme.typography.bodyMedium)
+    Spacer(Modifier.height(16.dp))
 }
