@@ -202,20 +202,19 @@ object DiaryPdfDrawer {
         // Разлиновка внутри поля: высота поля НЕ меняется, меняются только линии
         fun drawField(label: String, linesCount: Int = 1) {
             currentY += labelGap
+            canvas.drawText(label, MARGIN, currentY, labelPaint)
             val fieldTop = currentY
             val fieldHeight = linesCount * baseStep
-        
-            canvas.drawText(label, MARGIN, fieldTop, labelPaint)
-            val firstLineY = fieldTop + 2f
-        
             when (config.ruling) {
                 DiaryRuling.NONE -> {}
                 DiaryRuling.GRID -> {
-                    var y = firstLineY
+                    // Горизонтальные линии: на границах и внутри поля
+                    var y = fieldTop
                     while (y <= fieldTop + fieldHeight + 0.5f) {
                         canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
                         y += baseStep
                     }
+                    // Вертикальные линии
                     var x = MARGIN + gridStep
                     while (x < PAGE_WIDTH - MARGIN) {
                         canvas.drawLine(x, fieldTop, x, fieldTop + fieldHeight, linePaint)
@@ -226,7 +225,7 @@ object DiaryPdfDrawer {
                     val step = if (config.ruling == DiaryRuling.WIDE) 40f else baseStep
                     val n = (fieldHeight / step).toInt().coerceAtLeast(1)
                     for (i in 1..n) {
-                        val y = firstLineY + step * (i - 1)
+                        val y = fieldTop + fieldHeight * i / n
                         canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
                     }
                 }
