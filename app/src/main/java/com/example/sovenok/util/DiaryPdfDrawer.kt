@@ -195,17 +195,44 @@ object DiaryPdfDrawer {
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE }
 
         val labelGap = 8f
-        val rowStep = 25f
+        val baseStep = 25f   // базовый шаг = обычная линейка
         val fieldGap = 8f
+        val gridStep = 25f   // размер клетки
 
+        // Разлиновка внутри поля: высота поля НЕ меняется, меняются только линии
         fun drawField(label: String, linesCount: Int = 1) {
             currentY += labelGap
             canvas.drawText(label, MARGIN, currentY, labelPaint)
-            for (i in 0 until linesCount) {
-                currentY += rowStep
-                canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, linePaint)
+            val fieldTop = currentY
+            val fieldHeight = linesCount * baseStep
+
+            when (config.ruling) {
+                DiaryRuling.NONE -> {
+                    // пустое место — только метка
+                }
+                DiaryRuling.GRID -> {
+                    // горизонтальные строки + вертикальные = клетка
+                    var y = fieldTop + baseStep
+                    while (y <= fieldTop + fieldHeight + 0.5f) {
+                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                        y += baseStep
+                    }
+                    var x = MARGIN + gridStep
+                    while (x < PAGE_WIDTH - MARGIN) {
+                        canvas.drawLine(x, fieldTop, x, fieldTop + fieldHeight, linePaint)
+                        x += gridStep
+                    }
+                }
+                else -> {
+                    val step = if (config.ruling == DiaryRuling.WIDE) 40f else baseStep
+                    val n = (fieldHeight / step).toInt().coerceAtLeast(1)
+                    for (i in 1..n) {
+                        val y = fieldTop + fieldHeight * i / n
+                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                    }
+                }
             }
-            currentY += fieldGap
+            currentY = fieldTop + fieldHeight + fieldGap
         }
 
         if (config.showAuthor) drawField("Автор")
@@ -234,20 +261,32 @@ object DiaryPdfDrawer {
             }
             canvas.drawRoundRect(RectF(MARGIN, boxTop, PAGE_WIDTH - MARGIN, usableBottom), 10f, 10f, framePaint)
         } else {
-            // Свободное место заполняем строками для письма
-            val writeStep = when (config.ruling) {
-                DiaryRuling.WIDE -> 32f
-                DiaryRuling.GRID -> 20f
-                else -> 25f
-            }
-            if (config.ruling == DiaryRuling.NONE) {
-                val y = usableBottom.coerceAtLeast(currentY + 60f)
-                canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
-            } else {
-                var y = currentY + 10f
-                while (y + writeStep <= usableBottom) {
-                    y += writeStep
-                    canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+            // Свободное место заполняем в зависимости от разлиновки
+            val areaTop = currentY + 10f
+            val areaBottom = usableBottom
+            when (config.ruling) {
+                DiaryRuling.NONE -> {
+                    // без линий — пустое пространство
+                }
+                DiaryRuling.GRID -> {
+                    var y = areaTop + baseStep
+                    while (y <= areaBottom) {
+                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                        y += baseStep
+                    }
+                    var x = MARGIN + gridStep
+                    while (x < PAGE_WIDTH - MARGIN) {
+                        canvas.drawLine(x, areaTop, x, areaBottom, linePaint)
+                        x += gridStep
+                    }
+                }
+                else -> {
+                    val step = if (config.ruling == DiaryRuling.WIDE) 40f else baseStep
+                    var y = areaTop
+                    while (y + step <= areaBottom) {
+                        y += step
+                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                    }
                 }
             }
         }
@@ -341,17 +380,14 @@ object DiaryPdfDrawer {
         val linePaint = Paint().apply {
             isAntiAlias = true; color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE
         }
-        // горизонтальные: верхняя граница шапки, линия под шапкой, между строками, нижняя
         for (r in 0..rows) {
             val y = tableTop + headerHeight + r * rowHeight
             canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
         }
         canvas.drawLine(MARGIN, tableTop, PAGE_WIDTH - MARGIN, tableTop, linePaint)
-        // вертикальные: от шапки до низа
         for (x in xs) {
             canvas.drawLine(x, tableTop, x, tableBottom, linePaint)
         }
-        // внешняя рамка
         canvas.drawRect(RectF(MARGIN, tableTop, PAGE_WIDTH - MARGIN, tableBottom), linePaint)
 
         // --- 3. Текст шапки (с переносом длинных заголовков) ---
