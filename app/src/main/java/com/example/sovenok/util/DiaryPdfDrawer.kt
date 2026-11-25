@@ -336,9 +336,12 @@ object DiaryPdfDrawer {
         val rowHeight = (tableBottom - tableTop - headerHeight) / rows
         val available = PAGE_WIDTH - MARGIN * 2
         val sum = colWidths.sum()
-        val widths = colWidths.map { it / sum * available }
         
-        val xs = mutableListOf(MARGIN)
+        // Явно указываем тип MutableList<Float>, чтобы избежать ошибки 'val' cannot be reassigned
+        val widths: MutableList<Float> = colWidths.map { it / sum * available }.toMutableList()
+        
+        // Явно указываем тип MutableList<Float>
+        val xs: MutableList<Float> = mutableListOf(MARGIN)
         for (w in widths) {
             xs.add(xs.last() + w)
         }
