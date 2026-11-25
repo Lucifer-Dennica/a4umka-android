@@ -6,7 +6,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -333,7 +332,7 @@ object DiaryPdfDrawer {
 
         var currentY = 100f
         val colWidths = floatArrayOf(30f, 80f, 200f, 50f, 60f, 100f)
-        val colX = floatArrayOf(margin)
+        val colX = mutableListOf(margin) // <-- ИСПРАВЛЕНО: mutableListOf вместо floatArrayOf
         for (i in 1 until colWidths.size) {
             colX.add(colX[i - 1] + colWidths[i - 1])
         }
@@ -399,7 +398,7 @@ object DiaryPdfDrawer {
 
         var currentY = 100f
         val colWidths = floatArrayOf(80f, 250f, 100f, 100f)
-        val colX = floatArrayOf(margin)
+        val colX = mutableListOf(margin) // <-- ИСПРАВЛЕНО: mutableListOf вместо floatArrayOf
         for (i in 1 until colWidths.size) {
             colX.add(colX[i - 1] + colWidths[i - 1])
         }
