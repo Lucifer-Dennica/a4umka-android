@@ -359,11 +359,9 @@ object DiaryPdfDrawer {
             val lines = headers[i].split("\n")
             val cx = xs[i] + widths[i] / 2f
             val lineHeight = 12f
-            // ВАЖНО: здесь используется var, чтобы можно было изменять значение в цикле
-            var ty = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
-            for (l in lines) {
-                canvas.drawText(l, cx, ty, headerTextPaint)
-                ty += lineHeight
+            val startY = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
+            lines.forEachIndexed { idx, lineText ->
+                canvas.drawText(lineText, cx, startY + idx * lineHeight, headerTextPaint)
             }
         }
         
