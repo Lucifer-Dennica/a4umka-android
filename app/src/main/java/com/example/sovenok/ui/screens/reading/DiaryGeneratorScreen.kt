@@ -118,7 +118,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -224,7 +223,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -247,7 +245,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
             if (config.pageType == DiaryPageType.SCHOOL) {
                 item {
                     OutlinedCard(
@@ -298,7 +295,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
             if (config.pageType == DiaryPageType.SCHOOL) {
                 item {
                     OutlinedCard(
@@ -356,7 +352,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
@@ -384,7 +379,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
-
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
