@@ -3,6 +3,7 @@ package com.example.sovenok.data
 enum class DiaryPageType { SCHOOL, PICTURES }
 enum class DiaryRuling { STANDARD, WIDE, GRID, NONE }
 enum class DiaryColor { PINK, GREEN, BLUE, ORANGE, BLACK_WHITE }
+enum class DiaryFont { SYSTEM, CAVEAT }
 
 data class DiaryConfig(
     val pageType: DiaryPageType = DiaryPageType.SCHOOL,
@@ -12,14 +13,13 @@ data class DiaryConfig(
     val bookPagesCount: Int = 8,
     val ruling: DiaryRuling = DiaryRuling.STANDARD,
     val color: DiaryColor = DiaryColor.GREEN,
+    val titleFont: DiaryFont = DiaryFont.CAVEAT,
     
-    // Что включить в дневник
     val includeTitlePage: Boolean = true,
     val includeBookList: Boolean = true,
     val includeSpeedTest: Boolean = false,
     val listRowsCount: Int = 14,
-
-    // Поля для школьной страницы
+   
     val showAuthor: Boolean = true,
     val showTitle: Boolean = true,
     val showGenre: Boolean = false,
