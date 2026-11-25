@@ -1,7 +1,7 @@
 package com.example.sovenok.data
 
 enum class DiaryPageType { SCHOOL, PICTURES }
-enum class DiaryRuling { STANDARD, WIDE, GRID, NONE }
+enum class DiaryRuling { STANDARD, WIDE, NONE }
 enum class DiaryColor { GREEN, ORANGE, BLUE, PINK, BLACK_WHITE }
 enum class DiaryFont { SYSTEM, CAVEAT }
 
