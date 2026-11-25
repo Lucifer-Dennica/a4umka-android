@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -20,24 +21,22 @@ import com.example.sovenok.data.DiaryRuling
 object DiaryPdfDrawer {
     const val PAGE_WIDTH = 595f
     const val PAGE_HEIGHT = 842f
+    private const val MARGIN = 40f
+    private const val BOTTOM_LIMIT = PAGE_HEIGHT - 40f
 
     private var cachedCaveat: Typeface? = null
 
-    private fun titleTypeface(context: Context, config: DiaryConfig): Typeface {
-        return when (config.titleFont) {
-            DiaryFont.SYSTEM -> Typeface.DEFAULT_BOLD
-            DiaryFont.CAVEAT -> {
-                if (cachedCaveat == null) {
-                    cachedCaveat = try {
-                        ResourcesCompat.getFont(context, R.font.caveat)
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-                cachedCaveat ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
-            }
+    private fun caveatTypeface(context: Context): Typeface {
+        if (cachedCaveat == null) {
+            cachedCaveat = try {
+                ResourcesCompat.getFont(context, R.font.caveat)
+            } catch (e: Exception) { null }
         }
+        return cachedCaveat ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
     }
+
+    private fun fontFor(context: Context, font: DiaryFont): Typeface =
+        if (font == DiaryFont.CAVEAT) caveatTypeface(context) else Typeface.DEFAULT_BOLD
 
     fun generatePreview(config: DiaryConfig, context: Context): List<Bitmap> {
         val pages = mutableListOf<Bitmap>()
@@ -71,25 +70,25 @@ object DiaryPdfDrawer {
 
     private fun getPageRenderers(config: DiaryConfig, context: Context): List<(Canvas) -> Unit> {
         val renderers = mutableListOf<(Canvas) -> Unit>()
-        val margin = 40f
         val colors = getColors(config.color)
-        val titleTF = titleTypeface(context, config)
+        val titleTF = fontFor(context, config.titleFont)
+        val fieldTF = fontFor(context, config.fieldFont)
 
         if (config.includeTitlePage) {
-            renderers.add { canvas -> drawTitlePage(canvas, config, margin, colors, titleTF) }
+            renderers.add { canvas -> drawTitlePage(canvas, config, colors, titleTF) }
         }
         for (i in 1..config.bookPagesCount) {
             if (config.pageType == DiaryPageType.SCHOOL) {
-                renderers.add { canvas -> drawSchoolBookPage(canvas, config, margin, i, colors, titleTF) }
+                renderers.add { canvas -> drawSchoolBookPage(canvas, config, i, colors, titleTF, fieldTF) }
             } else {
-                renderers.add { canvas -> drawPictureBookPage(canvas, config, margin, i, colors, titleTF) }
+                renderers.add { canvas -> drawPictureBookPage(canvas, config, colors, titleTF) }
             }
         }
         if (config.includeBookList) {
-            renderers.add { canvas -> drawListPage(canvas, config, margin, colors, titleTF) }
+            renderers.add { canvas -> drawListPage(canvas, config, colors, titleTF) }
         }
         if (config.includeSpeedTest) {
-            renderers.add { canvas -> drawSpeedTestPage(canvas, config, margin, colors, titleTF) }
+            renderers.add { canvas -> drawSpeedTestPage(canvas, config, colors, titleTF) }
         }
         return renderers
     }
@@ -101,149 +100,108 @@ object DiaryPdfDrawer {
         val subtitleColor: Int
     )
 
-    private fun getColors(color: DiaryColor): PageColors {
-        return when (color) {
-            DiaryColor.GREEN -> PageColors(
-                textColor = Color.parseColor("#1B5E20"),
-                lineColor = Color.parseColor("#8B7355"),
-                headerBg = Color.parseColor("#C8E6C9"),
-                subtitleColor = Color.parseColor("#8A8A8A")
-            )
-            DiaryColor.ORANGE -> PageColors(
-                textColor = Color.parseColor("#E65100"),
-                lineColor = Color.parseColor("#8B7355"),
-                headerBg = Color.parseColor("#FFE0B2"),
-                subtitleColor = Color.parseColor("#8A8A8A")
-            )
-            DiaryColor.BLUE -> PageColors(
-                textColor = Color.parseColor("#0D47A1"),
-                lineColor = Color.parseColor("#8B7355"),
-                headerBg = Color.parseColor("#BBDEFB"),
-                subtitleColor = Color.parseColor("#8A8A8A")
-            )
-            DiaryColor.PINK -> PageColors(
-                textColor = Color.parseColor("#880E4F"),
-                lineColor = Color.parseColor("#8B7355"),
-                headerBg = Color.parseColor("#F8BBD0"),
-                subtitleColor = Color.parseColor("#8A8A8A")
-            )
-            DiaryColor.BLACK_WHITE -> PageColors(
-                textColor = Color.BLACK,
-                lineColor = Color.DKGRAY,
-                headerBg = Color.LTGRAY,
-                subtitleColor = Color.GRAY
-            )
-        }
+    private fun getColors(color: DiaryColor): PageColors = when (color) {
+        DiaryColor.GREEN -> PageColors(
+            Color.parseColor("#1B5E20"), Color.parseColor("#8B7355"),
+            Color.parseColor("#C8E6C9"), Color.parseColor("#8A8A8A"))
+        DiaryColor.ORANGE -> PageColors(
+            Color.parseColor("#E65100"), Color.parseColor("#8B7355"),
+            Color.parseColor("#FFE0B2"), Color.parseColor("#8A8A8A"))
+        DiaryColor.BLUE -> PageColors(
+            Color.parseColor("#0D47A1"), Color.parseColor("#5C7A99"),
+            Color.parseColor("#B3CDE0"), Color.parseColor("#8A8A8A"))
+        DiaryColor.PINK -> PageColors(
+            Color.parseColor("#880E4F"), Color.parseColor("#8B7355"),
+            Color.parseColor("#F8BBD0"), Color.parseColor("#8A8A8A"))
+        DiaryColor.BLACK_WHITE -> PageColors(
+            Color.BLACK, Color.DKGRAY, Color.LTGRAY, Color.GRAY)
     }
 
-    private fun getBgColor(color: DiaryColor): Int {
-        return when (color) {
-            DiaryColor.PINK -> Color.parseColor("#FFF5F7")
-            DiaryColor.GREEN -> Color.parseColor("#F9FBF9")
-            DiaryColor.BLUE -> Color.parseColor("#F5F9FF")
-            DiaryColor.ORANGE -> Color.parseColor("#FFF9F0")
-            DiaryColor.BLACK_WHITE -> Color.WHITE
-        }
+    private fun getBgColor(color: DiaryColor): Int = when (color) {
+        DiaryColor.PINK -> Color.parseColor("#FFF5F7")
+        DiaryColor.GREEN -> Color.parseColor("#F9FBF9")
+        DiaryColor.BLUE -> Color.parseColor("#F5F8FB")
+        DiaryColor.ORANGE -> Color.parseColor("#FFF9F0")
+        DiaryColor.BLACK_WHITE -> Color.WHITE
     }
 
-    private fun drawTitlePage(canvas: Canvas, config: DiaryConfig, margin: Float, colors: PageColors, titleTF: Typeface) {
-        // Заголовок
+    // ============ ТИТУЛЬНЫЙ ЛИСТ ============
+    private fun drawTitlePage(canvas: Canvas, config: DiaryConfig, colors: PageColors, titleTF: Typeface) {
         val titlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 36f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 36f; color = colors.textColor
+            typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Читательский дневник", PAGE_WIDTH / 2f, 80f, titlePaint)
 
-        // Подзаголовок
         val subtitlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 14f; color = colors.subtitleColor
+            typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("мои книги за этот год", PAGE_WIDTH / 2f, 105f, subtitlePaint)
 
-        // Прямоугольник для рисунка (скруглённые углы, пунктир)
         val rectTop = 200f
-        val rectBottom = PAGE_HEIGHT - 200f
+        val rectBottom = 620f
         val framePaint = Paint().apply {
             color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
             pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
         }
-        val rect = RectF(margin, rectTop, PAGE_WIDTH - margin, rectBottom)
-        canvas.drawRoundRect(rect, 15f, 15f, framePaint)
+        canvas.drawRoundRect(RectF(MARGIN, rectTop, PAGE_WIDTH - MARGIN, rectBottom), 15f, 15f, framePaint)
 
-        // Подпись под прямоугольником
         val hintPaint = Paint().apply {
             isAntiAlias = true; textSize = 14f; color = colors.subtitleColor; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("нарисуй обложку любимой книги", PAGE_WIDTH / 2f, rectBottom + 25f, hintPaint)
 
-        // Поля "Кто читал", "Класс", "Учебный год"
-        val labelPaint = Paint().apply {
-            isAntiAlias = true; textSize = 16f; color = colors.textColor; typeface = titleTF
-        }
-        val valuePaint = Paint().apply {
-            isAntiAlias = true; textSize = 18f; color = colors.textColor; typeface = titleTF
-        }
+        val labelPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = colors.textColor; typeface = titleTF }
+        val valuePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = colors.textColor; typeface = titleTF }
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f }
 
-        var currentY = rectBottom + 70f
-        val labelX = margin
-        val valueX = margin + 130f
-        val lineEndX = PAGE_WIDTH - margin
-
-        // Кто читал
-        canvas.drawText("Кто читал", labelX, currentY, labelPaint)
-        if (config.childName.isNotEmpty()) {
-            canvas.drawText(config.childName, valueX, currentY, valuePaint)
+        var currentY = rectBottom + 75f
+        val valueX = MARGIN + 130f
+        fun field(label: String, value: String) {
+            canvas.drawText(label, MARGIN, currentY, labelPaint)
+            if (value.isNotEmpty()) canvas.drawText(value, valueX, currentY, valuePaint)
+            canvas.drawLine(valueX, currentY + 6f, PAGE_WIDTH - MARGIN, currentY + 6f, linePaint)
+            currentY += 50f
         }
-        canvas.drawLine(valueX, currentY + 5f, lineEndX, currentY + 5f, linePaint)
-        currentY += 50f
-
-        // Класс
-        canvas.drawText("Класс", labelX, currentY, labelPaint)
-        if (config.childGrade.isNotEmpty()) {
-            canvas.drawText(config.childGrade, valueX, currentY, valuePaint)
-        }
-        canvas.drawLine(valueX, currentY + 5f, lineEndX, currentY + 5f, linePaint)
-        currentY += 50f
-
-        // Учебный год
-        canvas.drawText("Учебный год", labelX, currentY, labelPaint)
-        if (config.academicYear.isNotEmpty()) {
-            canvas.drawText(config.academicYear, valueX, currentY, valuePaint)
-        }
-        canvas.drawLine(valueX, currentY + 5f, lineEndX, currentY + 5f, linePaint)
+        field("Кто читал", config.childName)
+        field("Класс", config.childGrade)
+        field("Учебный год", config.academicYear)
     }
 
-    private fun drawSchoolBookPage(canvas: Canvas, config: DiaryConfig, margin: Float, pageNum: Int, colors: PageColors, titleTF: Typeface) {
-        // Заголовок
+    // ============ СТРАНИЦА КНИГИ ============
+    private fun drawSchoolBookPage(
+        canvas: Canvas, config: DiaryConfig, pageNum: Int,
+        colors: PageColors, titleTF: Typeface, fieldTF: Typeface
+    ) {
         val titlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 32f; color = colors.textColor
+            typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Прочитанная книга", PAGE_WIDTH / 2f, 50f, titlePaint)
 
-        // Подзаголовок
         val subtitlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 13f; color = colors.subtitleColor
+            typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("страница $pageNum", PAGE_WIDTH / 2f, 75f, subtitlePaint)
+        canvas.drawText("страница $pageNum", PAGE_WIDTH / 2f, 72f, subtitlePaint)
 
-        var currentY = 110f
-        val labelPaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = colors.textColor; typeface = titleTF
-        }
+        var currentY = 102f
+        val labelPaint = Paint().apply { isAntiAlias = true; textSize = 13f; color = colors.textColor; typeface = fieldTF }
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f }
 
-        // Функция рисования поля: название + одна линия под ним
+        val lineStep = 15f
+        val labelGap = 13f
+        val fieldGap = 13f
+
         fun drawField(label: String, linesCount: Int = 1) {
-            val fieldHeight = linesCount * 30f
-            if (currentY + fieldHeight > PAGE_HEIGHT - 60f) return
-            canvas.drawText(label, margin, currentY, labelPaint)
-            currentY += 20f
-            // Рисуем линии
+            canvas.drawText(label, MARGIN, currentY + labelGap, labelPaint)
+            currentY += labelGap
             for (i in 0 until linesCount) {
-                canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
-                currentY += 30f
+                currentY += lineStep
+                canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, linePaint)
             }
-            currentY += 10f
+            currentY += fieldGap
         }
 
         if (config.showAuthor) drawField("Автор")
@@ -257,182 +215,157 @@ object DiaryPdfDrawer {
         if (config.showLesson) drawField("Чему научила эта книга", 2)
         if (config.showNewWords) drawField("Новые слова", 1)
 
-        // Рисунок к книге (пунктирный прямоугольник со скруглёнными углами)
         if (config.showDrawing) {
-            val drawingHeight = 180f
-            if (currentY + drawingHeight > PAGE_HEIGHT - 60f) return
-            canvas.drawText("Рисунок к книге", margin, currentY, labelPaint)
-            currentY += 15f
+            val drawingHeight = 110f
+            canvas.drawText("Рисунок к книге", MARGIN, currentY + labelGap, labelPaint)
+            currentY += labelGap + 4f
             val framePaint = Paint().apply {
                 color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
                 pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
             }
-            val rect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + drawingHeight)
-            canvas.drawRoundRect(rect, 10f, 10f, framePaint)
-            currentY += drawingHeight + 20f
+            canvas.drawRoundRect(RectF(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY + drawingHeight), 10f, 10f, framePaint)
+            currentY += drawingHeight + fieldGap
         }
 
-        // Моя оценка — 5 контурных звёзд
         if (config.showRating) {
-            if (currentY > PAGE_HEIGHT - 60f) return
-            canvas.drawText("Моя оценка", margin, currentY, labelPaint)
-            currentY += 25f
+            canvas.drawText("Моя оценка", MARGIN, currentY + labelGap, labelPaint)
+            currentY += labelGap + 4f
             val starPaint = Paint().apply {
-                isAntiAlias = true; textSize = 28f; color = colors.lineColor
+                isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 1.5f; color = colors.lineColor
             }
-            val starText = "☆  ☆  ☆  ☆  ☆"
-            canvas.drawText(starText, margin, currentY, starPaint)
+            val starR = 13f
+            val step = 38f
+            var cx = MARGIN + starR
+            for (s in 0 until 5) {
+                drawStarOutline(canvas, cx, currentY + starR + 2f, starR, starPaint)
+                cx += step
+            }
+            val hintPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = colors.subtitleColor }
+            canvas.drawText("раскрась звёзды — от 1 до 5", MARGIN, currentY + starR * 2 + 16f, hintPaint)
         }
     }
 
-    private fun drawPictureBookPage(canvas: Canvas, config: DiaryConfig, margin: Float, pageNum: Int, colors: PageColors, titleTF: Typeface) {
+    private fun drawStarOutline(canvas: Canvas, cx: Float, cy: Float, outerR: Float, paint: Paint) {
+        val path = Path()
+        val innerR = outerR * 0.45f
+        for (i in 0 until 10) {
+            val r = if (i % 2 == 0) outerR else innerR
+            val angle = Math.PI / 2 + i * Math.PI / 5
+            val x = cx + (r * Math.cos(angle)).toFloat()
+            val y = cy - (r * Math.sin(angle)).toFloat()
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        path.close()
+        canvas.drawPath(path, paint)
+    }
+
+    // ============ СТРАНИЦА В КАРТИНКАХ ============
+    private fun drawPictureBookPage(canvas: Canvas, config: DiaryConfig, colors: PageColors, titleTF: Typeface) {
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Моя книга", PAGE_WIDTH / 2f, 50f, titlePaint)
-
-        val framePaint = Paint().apply {
-            color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 2f
-        }
-        val rect = RectF(margin, 80f, PAGE_WIDTH - margin, 500f)
-        canvas.drawRect(rect, framePaint)
-
+        val framePaint = Paint().apply { color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 2f }
+        canvas.drawRect(RectF(MARGIN, 80f, PAGE_WIDTH - MARGIN, 500f), framePaint)
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1.5f }
-        canvas.drawLine(margin, 560f, PAGE_WIDTH - margin, 560f, linePaint)
-        canvas.drawLine(margin, 620f, PAGE_WIDTH - margin, 620f, linePaint)
-
+        canvas.drawLine(MARGIN, 560f, PAGE_WIDTH - MARGIN, 560f, linePaint)
+        canvas.drawLine(MARGIN, 620f, PAGE_WIDTH - MARGIN, 620f, linePaint)
         val ratingPaint = Paint().apply { isAntiAlias = true; textSize = 36f; color = colors.textColor }
-        canvas.drawText("😞   😐   😊", margin, 750f, ratingPaint)
+        canvas.drawText("😞   😐   😊", MARGIN, 750f, ratingPaint)
         val labelPaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = colors.subtitleColor }
-        canvas.drawText("Обведи нужное", margin, 780f, labelPaint)
+        canvas.drawText("Обведи нужное", MARGIN, 780f, labelPaint)
     }
 
-    private fun drawListPage(canvas: Canvas, config: DiaryConfig, margin: Float, colors: PageColors, titleTF: Typeface) {
-        // Заголовок
+    // ============ ОБЩАЯ ОТРИСОВКА ТАБЛИЦЫ ============
+    private fun drawTable(
+        canvas: Canvas, title: String, subtitle: String,
+        headers: List<String>, colWidths: List<Float>, rows: Int,
+        colors: PageColors, titleTF: Typeface, withNumbers: Boolean
+    ) {
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("Список прочитанного", PAGE_WIDTH / 2f, 50f, titlePaint)
-
-        // Подзаголовок
+        canvas.drawText(title, PAGE_WIDTH / 2f, 50f, titlePaint)
         val subtitlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 13f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("мои книги за этот год", PAGE_WIDTH / 2f, 75f, subtitlePaint)
+        canvas.drawText(subtitle, PAGE_WIDTH / 2f, 72f, subtitlePaint)
 
-        // Таблица
-        val headerPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = colors.textColor; typeface = Typeface.DEFAULT_BOLD
-        }
-        val cellPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = colors.textColor; typeface = Typeface.DEFAULT
-        }
-        val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f }
+        val tableTop = 100f
+        val headerHeight = 32f
+        val tableBottom = BOTTOM_LIMIT
+        val rowHeight = (tableBottom - tableTop - headerHeight) / rows
+
+        // ширины колонок подгоняем точно под доступную ширину
+        val available = PAGE_WIDTH - MARGIN * 2
+        val sum = colWidths.sum()
+        val widths = colWidths.map { it / sum * available }
+
+        val xs = mutableListOf(MARGIN)
+        for (w in widths) xs.add(xs.last() + w)
+
         val headerBgPaint = Paint().apply { color = colors.headerBg; style = Paint.Style.FILL }
+        val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f }
+        val headerTextPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = colors.textColor; typeface = Typeface.DEFAULT_BOLD }
+        val cellTextPaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = colors.textColor; typeface = Typeface.DEFAULT }
 
-        var currentY = 100f
-        val colWidths = floatArrayOf(30f, 80f, 200f, 50f, 60f, 100f)
-        val colX = mutableListOf(margin) // <-- ИСПРАВЛЕНО: mutableListOf вместо floatArrayOf
-        for (i in 1 until colWidths.size) {
-            colX.add(colX[i - 1] + colWidths[i - 1])
-        }
+        // Шапка залита
+        canvas.drawRect(RectF(MARGIN, tableTop, PAGE_WIDTH - MARGIN, tableTop + headerHeight), headerBgPaint)
 
-        // Шапка таблицы (залита цветом)
-        val headerHeight = 35f
-        canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + headerHeight), headerBgPaint)
-
-        val headers = listOf("№", "Дата", "Автор и название", "Стр.", "Оценка", "Подпись взрослого")
+        // Заголовки колонок (по центру ячейки)
         for (i in headers.indices) {
-            canvas.drawText(headers[i], colX[i] + 5f, currentY + 22f, headerPaint)
+            val cx = xs[i] + widths[i] / 2f
+            canvas.drawText(headers[i], cx, tableTop + 20f, headerTextPaint.apply { textAlign = Paint.Align.CENTER })
         }
-        currentY += headerHeight
 
-        // Горизонтальная линия под шапкой
-        canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
+        // Горизонтальные линии
+        for (r in 0..rows) {
+            val y = tableTop + headerHeight + r * rowHeight
+            canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+        }
 
-        // Строки таблицы
-        val rowHeight = 35f
-        for (row in 0 until config.listRowsCount) {
-            // Вертикальные линии
-            for (x in colX) {
-                canvas.drawLine(x, currentY, x, currentY + rowHeight, linePaint)
+        // Вертикальные линии — сплошные от шапки до низа
+        for (x in xs) {
+            canvas.drawLine(x, tableTop, x, tableBottom, linePaint)
+        }
+
+        // Внешняя рамка
+        canvas.drawRect(RectF(MARGIN, tableTop, PAGE_WIDTH - MARGIN, tableBottom), linePaint)
+
+        // Номера строк
+        if (withNumbers) {
+            for (r in 0 until rows) {
+                val y = tableTop + headerHeight + r * rowHeight + rowHeight / 2f + 4f
+                canvas.drawText("${r + 1}", xs[0] + widths[0] / 2f, y, cellTextPaint.apply { textAlign = Paint.Align.CENTER })
             }
-            canvas.drawLine(PAGE_WIDTH - margin, currentY, PAGE_WIDTH - margin, currentY + rowHeight, linePaint)
-
-            // Номер строки
-            canvas.drawText("${row + 1}", colX[0] + 10f, currentY + 22f, cellPaint)
-
-            currentY += rowHeight
         }
-
-        // Нижняя линия
-        canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
-        for (x in colX) {
-            canvas.drawLine(x, currentY - rowHeight * config.listRowsCount, x, currentY, linePaint)
-        }
-        canvas.drawLine(PAGE_WIDTH - margin, currentY - rowHeight * config.listRowsCount, PAGE_WIDTH - margin, currentY, linePaint)
     }
 
-    private fun drawSpeedTestPage(canvas: Canvas, config: DiaryConfig, margin: Float, colors: PageColors, titleTF: Typeface) {
-        // Заголовок
-        val titlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
-        }
-        canvas.drawText("Техника чтения", PAGE_WIDTH / 2f, 50f, titlePaint)
+    private fun drawListPage(canvas: Canvas, config: DiaryConfig, colors: PageColors, titleTF: Typeface) {
+        drawTable(
+            canvas,
+            title = "Список прочитанного",
+            subtitle = "мои книги за этот год",
+            headers = listOf("№", "Дата", "Автор и название", "Стр.", "Оценка", "Подпись\nвзрослого"),
+            colWidths = listOf(28f, 75f, 205f, 45f, 55f, 107f),
+            rows = config.listRowsCount,
+            colors = colors,
+            titleTF = titleTF,
+            withNumbers = true
+        )
+    }
 
-        // Подзаголовок
-        val subtitlePaint = Paint().apply {
-            isAntiAlias = true; textSize = 14f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
-        }
-        canvas.drawText("сколько слов в минуту получается сегодня", PAGE_WIDTH / 2f, 75f, subtitlePaint)
-
-        // Таблица
-        val headerPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = colors.textColor; typeface = Typeface.DEFAULT_BOLD
-        }
-        val cellPaint = Paint().apply {
-            isAntiAlias = true; textSize = 12f; color = colors.textColor; typeface = Typeface.DEFAULT
-        }
-        val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f }
-        val headerBgPaint = Paint().apply { color = colors.headerBg; style = Paint.Style.FILL }
-
-        var currentY = 100f
-        val colWidths = floatArrayOf(80f, 250f, 100f, 100f)
-        val colX = mutableListOf(margin) // <-- ИСПРАВЛЕНО: mutableListOf вместо floatArrayOf
-        for (i in 1 until colWidths.size) {
-            colX.add(colX[i - 1] + colWidths[i - 1])
-        }
-
-        // Шапка таблицы
-        val headerHeight = 35f
-        canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + headerHeight), headerBgPaint)
-
-        val headers = listOf("Дата", "Что читал(а)", "слов в минуту", "Отметка взрослого")
-        for (i in headers.indices) {
-            canvas.drawText(headers[i], colX[i] + 5f, currentY + 22f, headerPaint)
-        }
-        currentY += headerHeight
-
-        // Горизонтальная линия под шапкой
-        canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
-
-        // Строки таблицы (12 строк)
-        val rowHeight = 45f
-        for (row in 0 until 12) {
-            // Вертикальные линии
-            for (x in colX) {
-                canvas.drawLine(x, currentY, x, currentY + rowHeight, linePaint)
-            }
-            canvas.drawLine(PAGE_WIDTH - margin, currentY, PAGE_WIDTH - margin, currentY + rowHeight, linePaint)
-
-            currentY += rowHeight
-        }
-
-        // Нижняя линия
-        canvas.drawLine(margin, currentY, PAGE_WIDTH - margin, currentY, linePaint)
-        for (x in colX) {
-            canvas.drawLine(x, currentY - rowHeight * 12, x, currentY, linePaint)
-        }
-        canvas.drawLine(PAGE_WIDTH - margin, currentY - rowHeight * 12, PAGE_WIDTH - margin, currentY, linePaint)
+    private fun drawSpeedTestPage(canvas: Canvas, config: DiaryConfig, colors: PageColors, titleTF: Typeface) {
+        drawTable(
+            canvas,
+            title = "Техника чтения",
+            subtitle = "сколько слов в минуту получается сегодня",
+            headers = listOf("Дата", "Что читал(а)", "слов в минуту", "Отметка\nвзрослого"),
+            colWidths = listOf(80f, 230f, 100f, 105f),
+            rows = 12,
+            colors = colors,
+            titleTF = titleTF,
+            withNumbers = false
+        )
     }
 }
