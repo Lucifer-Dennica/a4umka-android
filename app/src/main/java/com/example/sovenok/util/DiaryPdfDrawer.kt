@@ -12,6 +12,7 @@ import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import androidx.core.content.res.ResourcesCompat
 import com.example.sovenok.R
+import com.example.sovenok.data.DiaryBook
 import com.example.sovenok.data.DiaryColor
 import com.example.sovenok.data.DiaryConfig
 import com.example.sovenok.data.DiaryFont
@@ -195,11 +196,9 @@ object DiaryPdfDrawer {
         fun drawField(label: String, value: String, linesCount: Int = 1) {
             currentY += labelGap
             canvas.drawText(label, MARGIN, currentY, labelPaint)
-            
             if (value.isNotBlank()) {
                 canvas.drawText(value, MARGIN + 4f, currentY + rowStep - 4f, valuePaint)
             }
-            
             for (i in 0 until linesCount) {
                 currentY += rowStep
                 canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, linePaint)
@@ -253,7 +252,6 @@ object DiaryPdfDrawer {
             val step = 38f
             var cx = MARGIN + starR
             val starCy = ratingLabelY + 8f + starR
-
             for (s in 0 until 5) {
                 if (s < book.rating) {
                     drawStarFilled(canvas, cx, starCy, starR, colors.textColor)
@@ -326,7 +324,6 @@ object DiaryPdfDrawer {
             isAntiAlias = true; textSize = 13f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText(subtitle, PAGE_WIDTH / 2f, 72f, subtitlePaint)
-
         val tableTop = 100f
         val headerHeight = 34f
         val tableBottom = BOTTOM_LIMIT
