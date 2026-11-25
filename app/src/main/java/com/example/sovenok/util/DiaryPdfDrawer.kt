@@ -136,13 +136,11 @@ object DiaryPdfDrawer {
             typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Читательский дневник", PAGE_WIDTH / 2f, 80f, titlePaint)
-
         val subtitlePaint = Paint().apply {
             isAntiAlias = true; textSize = 14f; color = colors.subtitleColor
             typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("мои книги за этот год", PAGE_WIDTH / 2f, 105f, subtitlePaint)
-
         val rectTop = 200f
         val rectBottom = 620f
         val framePaint = Paint().apply {
@@ -150,16 +148,13 @@ object DiaryPdfDrawer {
             pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
         }
         canvas.drawRoundRect(RectF(MARGIN, rectTop, PAGE_WIDTH - MARGIN, rectBottom), 15f, 15f, framePaint)
-
         val hintPaint = Paint().apply {
             isAntiAlias = true; textSize = 14f; color = colors.subtitleColor; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("нарисуй обложку любимой книги", PAGE_WIDTH / 2f, rectBottom + 25f, hintPaint)
-
         val labelPaint = Paint().apply { isAntiAlias = true; textSize = 16f; color = colors.textColor; typeface = labelTF }
         val valuePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = colors.textColor; typeface = valueTF }
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE }
-
         var currentY = rectBottom + 75f
         val valueX = MARGIN + 130f
         fun field(label: String, value: String) {
@@ -183,21 +178,17 @@ object DiaryPdfDrawer {
             typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Прочитанная книга", PAGE_WIDTH / 2f, 50f, titlePaint)
-
         val subtitlePaint = Paint().apply {
             isAntiAlias = true; textSize = 13f; color = colors.subtitleColor
             typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("страница $pageNum", PAGE_WIDTH / 2f, 72f, subtitlePaint)
-
         var currentY = 100f
         val labelPaint = Paint().apply { isAntiAlias = true; textSize = 13f; color = colors.textColor; typeface = labelTF }
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE }
-
         val labelGap = 8f
         val baseStep = 25f   // базовый шаг = обычная линейка
         val fieldGap = 8f
-        val gridStep = 25f   // размер клетки
 
         // Разлиновка внутри поля: высота поля НЕ меняется, меняются только линии
         fun drawField(label: String, linesCount: Int = 1) {
@@ -206,20 +197,8 @@ object DiaryPdfDrawer {
             val fieldTop = currentY
             val fieldHeight = linesCount * baseStep
             when (config.ruling) {
-                DiaryRuling.NONE -> {}
-                DiaryRuling.GRID -> {
-                    // Горизонтальные линии: на границах и внутри поля
-                    var y = fieldTop
-                    while (y <= fieldTop + fieldHeight + 0.5f) {
-                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
-                        y += baseStep
-                    }
-                    // Вертикальные линии
-                    var x = MARGIN + gridStep
-                    while (x < PAGE_WIDTH - MARGIN) {
-                        canvas.drawLine(x, fieldTop, x, fieldTop + fieldHeight, linePaint)
-                        x += gridStep
-                    }
+                DiaryRuling.NONE -> {
+                    // пустое место — только метка
                 }
                 else -> {
                     val step = if (config.ruling == DiaryRuling.WIDE) 40f else baseStep
@@ -247,7 +226,6 @@ object DiaryPdfDrawer {
         // ===== Динамическая нижняя часть =====
         val ratingReserve = if (config.showRating) 64f else 0f
         val usableBottom = PAGE_HEIGHT - 40f - ratingReserve
-
         val boxTop = currentY + labelGap + 6f
         val drawingFits = config.showDrawing && boxTop + 55f <= usableBottom
 
@@ -265,18 +243,6 @@ object DiaryPdfDrawer {
             when (config.ruling) {
                 DiaryRuling.NONE -> {
                     // без линий — пустое пространство
-                }
-                DiaryRuling.GRID -> {
-                    var y = areaTop + baseStep
-                    while (y <= areaBottom) {
-                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
-                        y += baseStep
-                    }
-                    var x = MARGIN + gridStep
-                    while (x < PAGE_WIDTH - MARGIN) {
-                        canvas.drawLine(x, areaTop, x, areaBottom, linePaint)
-                        x += gridStep
-                    }
                 }
                 else -> {
                     val step = if (config.ruling == DiaryRuling.WIDE) 40f else baseStep
@@ -347,7 +313,6 @@ object DiaryPdfDrawer {
         colors: PageColors, titleTF: Typeface, withNumbers: Boolean
     ) {
         val rows = rowsIn.coerceAtLeast(1)
-
         val titlePaint = Paint().apply {
             isAntiAlias = true; textSize = 32f; color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
         }
@@ -356,12 +321,10 @@ object DiaryPdfDrawer {
             isAntiAlias = true; textSize = 13f; color = colors.subtitleColor; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText(subtitle, PAGE_WIDTH / 2f, 72f, subtitlePaint)
-
         val tableTop = 100f
         val headerHeight = 34f
         val tableBottom = BOTTOM_LIMIT
         val rowHeight = (tableBottom - tableTop - headerHeight) / rows
-
         val available = PAGE_WIDTH - MARGIN * 2
         val sum = colWidths.sum()
         val widths = colWidths.map { it / sum * available }
