@@ -168,10 +168,10 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                         ExposedDropdownMenuBox(expanded = colorExpanded, onExpandedChange = { colorExpanded = it }) {
                             OutlinedTextField(
                                 value = when(config.color) {
-                                    DiaryColor.PINK -> "Розовый"
                                     DiaryColor.GREEN -> "Зеленый"
-                                    DiaryColor.BLUE -> "Синий"
                                     DiaryColor.ORANGE -> "Оранжевый"
+                                    DiaryColor.BLUE -> "Синий"
+                                    DiaryColor.PINK -> "Розовый"
                                     DiaryColor.BLACK_WHITE -> "Черно-белый"
                                 }, onValueChange = {}, readOnly = true,
                                 label = { Text("Цвет листа") },
@@ -180,10 +180,11 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                             )
                             ExposedDropdownMenu(expanded = colorExpanded, onDismissRequest = { colorExpanded = false }) {
                                 listOf(
-                                    DiaryColor.PINK to "Розовый",
                                     DiaryColor.GREEN to "Зеленый",
-                                    DiaryColor.BLUE to "Синий",
                                     DiaryColor.ORANGE to "Оранжевый",
+                                    DiaryColor.BLUE to "Синий",
+                                    DiaryColor.PINK to "Розовый",
+                                    DiaryColor.BLUE to "Синий",
                                     DiaryColor.BLACK_WHITE to "Черно-белый"
                                 ).forEach { (type, name) ->
                                     DropdownMenuItem(text = { Text(name) }, onClick = { config = config.copy(color = type); colorExpanded = false })
