@@ -10,13 +10,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,8 +37,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
     var config by remember { mutableStateOf(DiaryConfig()) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var previewPages by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-
-    // Состояние раскрытых карточек книг
+    
     val expandedBooks = remember { mutableStateMapOf<Int, Boolean>() }
 
     LaunchedEffect(config) {
@@ -85,7 +84,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // БЛОК: Вид страницы и данные ученика
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -121,7 +119,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // БЛОК: Страницы и оформление
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -228,7 +225,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // БЛОК: Что ещё вложить в дневник
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -252,7 +248,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // БЛОК: Что печатать на странице книги
             if (config.pageType == DiaryPageType.SCHOOL) {
                 item {
                     OutlinedCard(
@@ -261,7 +256,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     ) {
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Что печатать на странице книги", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            Text("Снятые галочки места не занимают — оставшиеся поля растянутся на весь лист.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 val fields = listOf(
                                     "Автор" to config.showAuthor,
@@ -305,7 +299,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // БЛОК: Книги
             if (config.pageType == DiaryPageType.SCHOOL) {
                 item {
                     OutlinedCard(
@@ -320,7 +313,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                     expandedBooks.clear()
                                     scope.launch { snackbarHostState.showSnackbar("Все книги очищены") }
                                 }) {
-                                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp)) // Используем Save как иконку очистки/сброса или можно добавить свою
                                     Spacer(Modifier.width(4.dp))
                                     Text("Очистить")
                                 }
@@ -330,7 +323,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                 fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
 
-                            // Аккордеоны книг
                             for (i in 0 until config.bookPagesCount) {
                                 val book = config.books[i]
                                 val expanded = expandedBooks[i] ?: false
@@ -355,7 +347,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                                             BookForm(
                                                 book = book,
                                                 config = config,
-                                                onUpdate = { updateBook(i, it) }
+                                                onUpdate = { newBook -> updateBook(i) { newBook } }
                                             )
                                         }
                                     }
@@ -366,7 +358,6 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
 
-            // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
@@ -419,7 +410,6 @@ private fun BookForm(
     onUpdate: (DiaryBook) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // Двухколоночная сетка полей
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (config.showAuthor) {
@@ -513,7 +503,6 @@ private fun BookForm(
             }
         }
 
-        // Оценка — всегда в конце, если включена галочка
         if (config.showRating) {
             var ratingExpanded by remember { mutableStateOf(false) }
             val ratingLabels = listOf("не ставим", "1 из 5", "2 из 5", "3 из 5", "4 из 5", "5 из 5")
