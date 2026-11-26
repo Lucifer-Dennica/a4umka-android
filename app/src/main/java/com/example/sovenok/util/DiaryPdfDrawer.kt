@@ -132,7 +132,6 @@ object DiaryPdfDrawer {
         DiaryColor.BLACK_WHITE -> Color.WHITE
     }
 
-    // ============ ТИТУЛЬНЫЙ ЛИСТ ============
     private fun drawTitlePage(
         canvas: Canvas, config: DiaryConfig, colors: PageColors,
         titleTF: Typeface, labelTF: Typeface, valueTF: Typeface
@@ -174,7 +173,6 @@ object DiaryPdfDrawer {
         field("Учебный год", config.academicYear)
     }
 
-    // ============ СТРАНИЦА КНИГИ (ШКОЛЬНАЯ) ============
     private fun drawSchoolBookPage(
         canvas: Canvas, config: DiaryConfig, pageNum: Int, book: DiaryBook,
         colors: PageColors, titleTF: Typeface, labelTF: Typeface, valueTF: Typeface
@@ -292,7 +290,6 @@ object DiaryPdfDrawer {
         return path
     }
 
-    // ============ СТРАНИЦА В КАРТИНКАХ (НОВЫЙ МАКЕТ) ============
     private fun drawPictureBookPage(
         canvas: Canvas, config: DiaryConfig, pageNum: Int, book: DiaryBook,
         colors: PageColors, titleTF: Typeface, labelTF: Typeface, valueTF: Typeface
@@ -307,7 +304,6 @@ object DiaryPdfDrawer {
             typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("страница $pageNum", PAGE_WIDTH / 2f, 75f, subtitlePaint)
-
         val labelPaint = Paint().apply { isAntiAlias = true; textSize = textSizeFor(config.labelFont, 14f); color = colors.textColor; typeface = labelTF }
         val valuePaint = Paint().apply { isAntiAlias = true; textSize = textSizeFor(config.valueFont, 16f); color = colors.textColor; typeface = valueTF }
         val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE }
@@ -315,10 +311,7 @@ object DiaryPdfDrawer {
             color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
             pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
         }
-
         var currentY = 110f
-
-        // "Книга называется" + одна линия
         canvas.drawText("Книга называется", MARGIN, currentY, labelPaint)
         currentY += 18f
         if (book.title.isNotBlank()) {
@@ -326,16 +319,12 @@ object DiaryPdfDrawer {
         }
         canvas.drawLine(MARGIN, currentY + 20f, PAGE_WIDTH - MARGIN, currentY + 20f, linePaint)
         currentY += 40f
-
-        // "Нарисуй, что запомнилось" + большой пунктирный прямоугольник
         canvas.drawText("Нарисуй, что запомнилось", MARGIN, currentY, labelPaint)
         currentY += 10f
         val drawingTop = currentY
         val drawingBottom = drawingTop + 340f
         canvas.drawRoundRect(RectF(MARGIN, drawingTop, PAGE_WIDTH - MARGIN, drawingBottom), 10f, 10f, framePaint)
         currentY = drawingBottom + 20f
-
-        // "Про что книга" + значение + 7 строк
         canvas.drawText("Про что книга", MARGIN, currentY, labelPaint)
         currentY += 18f
         if (book.plot.isNotBlank()) {
@@ -347,19 +336,17 @@ object DiaryPdfDrawer {
             canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, linePaint)
         }
         currentY += 30f
-
-        // "Понравилась книга? Обведи ответ" + 3 контурных смайла
         canvas.drawText("Понравилась книга? Обведи ответ", MARGIN, currentY, labelPaint)
         currentY += 30f
         val smileyR = 22f
         val smileyStep = 70f
-        var smileyCx = MARGIN + smileyR + 10f
         val smileyCy = currentY + smileyR
-        drawSmiley(canvas, smileyCx, smileyCy, smileyR, colors.lineColor, SmileyType.HAPPY)
-        smileyCx += smileyStep
-        drawSmiley(canvas, smileyCx, smileyCy, smileyR, colors.lineColor, SmileyType.NEUTRAL)
-        smileyCx += smileyStep
-        drawSmiley(canvas, smileyCx, smileyCy, smileyR, colors.lineColor, SmileyType.SAD)
+        val smileyCx1 = MARGIN + smileyR + 10f
+        val smileyCx2 = smileyCx1 + smileyStep
+        val smileyCx3 = smileyCx2 + smileyStep
+        drawSmiley(canvas, smileyCx1, smileyCy, smileyR, colors.lineColor, SmileyType.HAPPY)
+        drawSmiley(canvas, smileyCx2, smileyCy, smileyR, colors.lineColor, SmileyType.NEUTRAL)
+        drawSmiley(canvas, smileyCx3, smileyCy, smileyR, colors.lineColor, SmileyType.SAD)
     }
 
     private enum class SmileyType { HAPPY, NEUTRAL, SAD }
@@ -368,15 +355,12 @@ object DiaryPdfDrawer {
         val paint = Paint().apply {
             isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 1.5f; color = color
         }
-        // Круг
         canvas.drawCircle(cx, cy, r, paint)
-        // Глаза
         val eyeR = r * 0.12f
         val eyeY = cy - r * 0.25f
         val eyeOffsetX = r * 0.35f
         canvas.drawCircle(cx - eyeOffsetX, eyeY, eyeR, paint)
         canvas.drawCircle(cx + eyeOffsetX, eyeY, eyeR, paint)
-        // Рот
         val mouthPaint = Paint().apply {
             isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 1.5f; color = color
         }
@@ -395,7 +379,6 @@ object DiaryPdfDrawer {
         }
     }
 
-    // ============ ТАБЛИЦА ============
     private fun drawTable(
         canvas: Canvas, title: String, subtitle: String,
         headers: List<String>, colWidths: List<Float>, rowsIn: Int,
