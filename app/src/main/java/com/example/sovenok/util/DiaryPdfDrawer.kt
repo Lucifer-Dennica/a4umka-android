@@ -349,15 +349,20 @@ object DiaryPdfDrawer {
             typeface = Typeface.DEFAULT_BOLD
             textAlign = Paint.Align.CENTER
         }
-        headers.forEachIndexed { hIdx, headerText ->
+        var hIdx = 0
+        while (hIdx < headers.size) {
+            val headerText = headers[hIdx]
             val lines = headerText.split("\n")
             val centerX = xs[hIdx] + widths[hIdx] / 2f
             val lineHeight = 12f
             val baseY = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
-            lines.forEachIndexed { lIdx, lineText ->
+            var lIdx = 0
+            while (lIdx < lines.size) {
                 val drawY = baseY + lIdx * lineHeight
-                canvas.drawText(lineText, centerX, drawY, headerTextPaint)
+                canvas.drawText(lines[lIdx], centerX, drawY, headerTextPaint)
+                lIdx++
             }
+            hIdx++
         }
         val cellTextPaint = Paint().apply {
             isAntiAlias = true; textSize = 12f; color = colors.textColor
