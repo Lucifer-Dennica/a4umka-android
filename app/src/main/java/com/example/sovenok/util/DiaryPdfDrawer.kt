@@ -196,11 +196,22 @@ object DiaryPdfDrawer {
             if (value.isNotBlank()) {
                 canvas.drawText(value, MARGIN + 4f, currentY + rowStep - 4f, valuePaint)
             }
-            for (i in 0 until linesCount) {
-                currentY += rowStep
-                canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, linePaint)
+            val fieldTop = currentY
+            val fieldHeight = linesCount * rowStep
+            when (config.ruling) {
+                DiaryRuling.NONE -> {
+                    // без линий — пустое место
+                }
+                else -> {
+                    val step = if (config.ruling == DiaryRuling.WIDE) 40f else rowStep
+                    val n = (fieldHeight / step).toInt().coerceAtLeast(1)
+                    for (i in 1..n) {
+                        val y = fieldTop + fieldHeight * i / n
+                        canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, linePaint)
+                    }
+                }
             }
-            currentY += fieldGap
+            currentY = fieldTop + fieldHeight + fieldGap
         }
         if (config.showAuthor) drawField("Автор", book.author)
         if (config.showTitle) drawField("Название", book.title)
