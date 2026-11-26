@@ -391,14 +391,83 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
 
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
-                    Text("Читательский дневник", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Читательский дневник — генератор для печати", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Читательский дневник задают почти в каждой школе. Этот генератор устроен иначе — вы собираете дневник под своего ребёнка и распечатываете его целиком на A4.\n\n" +
-                        "Вы можете выбрать разлиновку (обычная, широкая, без линий) и цвет листа (розовый, зеленый, синий, оранжевый, ч/б).",
-                        style = MaterialTheme.typography.bodyLarge
+                        "Читательский дневник задают почти в каждой школе: летом — обязательно, в течение года — как привычку. Готовые бланки в интернете есть, но они чужие: то полей слишком много для первоклассника, то линейка мелкая, то на странице спрашивают «главную мысль произведения» у ребёнка, который только-только читает сам. Это приложение устроено иначе — вы собираете дневник под своего ребёнка и распечатываете его целиком на A4: титульный лист, страницы для книг, список прочитанного и лист техники чтения. Всё бесплатно и без регистрации.",
+                        style = MaterialTheme.typography.bodyMedium
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Что это такое и в чём польза", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Читательский дневник — это тетрадь, где после каждой книги ребёнок записывает: что читал, про что книга, кто главные герои, что запомнилось. Смысл не в отчётности, а в том, что прочитанное проговаривается ещё раз и остаётся. Пересказать своими словами и записать хотя бы строчку — это и есть работа с текстом, ради которой дневник и придумали.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• понимание прочитанного — ребёнок вспоминает и формулирует сам", style = MaterialTheme.typography.bodySmall)
+                    Text("• связная речь: назвать героев, сказать, про что книга", style = MaterialTheme.typography.bodySmall)
+                    Text("• навык письма и аккуратность — строки на листе разлинованы", style = MaterialTheme.typography.bodySmall)
+                    Text("• привычка читать регулярно: заполненные страницы видно, и это радует", style = MaterialTheme.typography.bodySmall)
+                    Text("• внимание к деталям — что именно запомнилось больше всего", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Для какого возраста", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("5 лет. Читает взрослый, ребёнок отвечает и рисует. Берите вид «Страница в картинках»: большая рамка для рисунка, две крупные строки и оценка — три лица, одно надо обвести. Писать почти не нужно, а дневник уже ведётся.", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("6–7 лет и первый класс. Тот же вид, но добавьте название книги и широкую линейку. Ребёнок пишет пару слов сам, остальное — рисунком. Здесь важно не требовать много: две строки, написанные самостоятельно, ценнее страницы под диктовку.", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("2–4 класс. Школьная страница со всеми полями: автор, название, жанр, сколько страниц, даты, главные герои, о чём книга, что запомнилось, чему научила, новые слова. Линейку ставьте обычную, число страниц — по количеству книг в списке на лето.", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Как пользоваться приложением", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Всё делается на одном экране. Выберите вид страницы книги, укажите, сколько таких страниц нужно (от 1 до 16), отметьте, что ещё вложить в дневник, — и нажмите «Сохранить в PDF». Комплект откроется одним документом: печатайте целиком или сохраняйте файл. Ничего не заполняя, вы получите чистый бланк — ребёнок впишет всё от руки сам.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Из чего собирается комплект", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• Титульный лист — имя, класс, учебный год и рамка, чтобы нарисовать обложку любимой книги", style = MaterialTheme.typography.bodySmall)
+                    Text("• Школьная страница книги — до двенадцати полей на выбор, лишние снимаются галочкой, оставшиеся растягиваются на весь лист", style = MaterialTheme.typography.bodySmall)
+                    Text("• Страница в картинках — для тех, кто читает по слогам: рисунок на пол-листа, строки крупно, оценка смайликом", style = MaterialTheme.typography.bodySmall)
+                    Text("• Список прочитанного — таблица на 8–18 строк: дата, автор и название, страниц, оценка, подпись взрослого", style = MaterialTheme.typography.bodySmall)
+                    Text("• Лист техники чтения — двенадцать замеров: дата, что читал, слов в минуту, отметка взрослого", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Что можно настроить", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• поля страницы — печатать только то, что нужно вашему ребёнку", style = MaterialTheme.typography.bodySmall)
+                    Text("• разлиновку — обычная линейка, широкая для первого класса или без линий", style = MaterialTheme.typography.bodySmall)
+                    Text("• цвет листа — четыре цветных варианта и чёрно-белый для экономии тонера", style = MaterialTheme.typography.bodySmall)
+                    Text("• количество страниц — от одного листа до дневника на шестнадцать книг", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Какой навык развивает", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Главный — умение говорить о прочитанном. Ребёнок, который может назвать героев и пересказать сюжет в трёх фразах, понял книгу; тот, кто прочитал вслух без запинки, но не может сказать про что, — ещё нет. Дневник каждый раз задаёт одни и те же вопросы, и постепенно ребёнок начинает задавать их себе сам, ещё пока читает. Это и есть осознанное чтение.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Подготовка к школе", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("В первом классе читательский дневник заводят почти сразу, и для ребёнка это первая работа «в свободной форме»: никто не подсказывает, что писать. Если дневник в картинках вёлся ещё до школы, задание перестаёт быть страшным — форма уже знакома, меняется только объём письма. Заодно тренируется то, что в школе проверяют отдельно: техника чтения. Лист замеров показывает рост в цифрах, и это мотивирует лучше уговоров.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Советы родителям", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• заполняйте страницу сразу после книги, пока впечатление свежее", style = MaterialTheme.typography.bodySmall)
+                    Text("• не требуйте всех полей — две-три строки от ребёнка лучше, чем целая страница под вашу диктовку", style = MaterialTheme.typography.bodySmall)
+                    Text("• рисунок — полноправная часть дневника, а не украшение: он показывает, что запомнилось", style = MaterialTheme.typography.bodySmall)
+                    Text("• для дошкольника пишите вы, а ребёнок диктует — это тоже ведение дневника", style = MaterialTheme.typography.bodySmall)
+                    Text("• печатайте комплект сразу на несколько книг и сшивайте скрепкой: дневник, который лежит целиком, заполняется охотнее", style = MaterialTheme.typography.bodySmall)
+                    Text("• замеры техники чтения делайте раз в неделю, не чаще — иначе роста не видно и становится обидно", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Где использовать", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• летом — по списку литературы, заданному на каникулы", style = MaterialTheme.typography.bodySmall)
+                    Text("• в течение учебного года как домашнюю привычку", style = MaterialTheme.typography.bodySmall)
+                    Text("• в детском саду и подготовительной группе — вид в картинках", style = MaterialTheme.typography.bodySmall)
+                    Text("• в дороге и на даче: комплект листов не требует ни интернета, ни устройства", style = MaterialTheme.typography.bodySmall)
+                    Text("• в библиотеке и кружке чтения — как общий бланк на группу", style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
