@@ -343,16 +343,20 @@ object DiaryPdfDrawer {
         }
         canvas.drawRect(RectF(MARGIN, tableTop, PAGE_WIDTH - MARGIN, tableBottom), linePaint)
         val headerTextPaint = Paint().apply {
-            isAntiAlias = true; textSize = 11f; color = colors.textColor
-            typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+            textSize = 11f
+            color = colors.textColor
+            typeface = Typeface.DEFAULT_BOLD
+            textAlign = Paint.Align.CENTER
         }
-        headers.forEachIndexed { headerIndex, headerText ->
+        headers.forEachIndexed { hIdx, headerText ->
             val lines = headerText.split("\n")
-            val cx = xs[headerIndex] + widths[headerIndex] / 2f
+            val centerX = xs[hIdx] + widths[hIdx] / 2f
             val lineHeight = 12f
-            val startY = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
-            lines.forEachIndexed { lineIndex, lineText ->
-                canvas.drawText(lineText, cx, startY + lineIndex * lineHeight, headerTextPaint)
+            val baseY = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
+            lines.forEachIndexed { lIdx, lineText ->
+                val drawY = baseY + lIdx * lineHeight
+                canvas.drawText(lineText, centerX, drawY, headerTextPaint)
             }
         }
         val cellTextPaint = Paint().apply {
