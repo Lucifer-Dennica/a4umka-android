@@ -375,49 +375,24 @@ object DiaryPdfDrawer {
         colors: PageColors, titleTF: Typeface, labelTF: Typeface, valueTF: Typeface
     ) {
         val titlePaint = Paint().apply {
-            isAntiAlias = true
-            textSize = textSizeFor(config.titleFont, 32f)
-            this.color = colors.textColor
-            typeface = titleTF
-            textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = textSizeFor(config.titleFont, 32f); color = colors.textColor
+            typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("Книга, которую я прочитал(а)", PAGE_WIDTH / 2f, 50f, titlePaint)
-
         val subtitlePaint = Paint().apply {
-            isAntiAlias = true
-            textSize = 13f
-            this.color = colors.subtitleColor
-            typeface = Typeface.DEFAULT
-            textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = 13f; color = colors.subtitleColor
+            typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
         }
         canvas.drawText("страница $pageNum", PAGE_WIDTH / 2f, 75f, subtitlePaint)
-
-        val labelPaint = Paint().apply {
-            isAntiAlias = true
-            textSize = textSizeFor(config.labelFont, 14f)
-            this.color = colors.textColor
-            typeface = labelTF
-        }
-        val valuePaint = Paint().apply {
-            isAntiAlias = true
-            textSize = textSizeFor(config.valueFont, 16f)
-            this.color = colors.textColor
-            typeface = valueTF
-        }
-        val linePaint = Paint().apply {
-            this.color = colors.lineColor
-            strokeWidth = 1f
-            style = Paint.Style.STROKE
-        }
+        val labelPaint = Paint().apply { isAntiAlias = true; textSize = textSizeFor(config.labelFont, 14f); color = colors.textColor; typeface = labelTF }
+        val valuePaint = Paint().apply { isAntiAlias = true; textSize = textSizeFor(config.valueFont, 16f); color = colors.textColor; typeface = valueTF }
+        val linePaint = Paint().apply { color = colors.lineColor; strokeWidth = 1f; style = Paint.Style.STROKE }
         val framePaint = Paint().apply {
-            this.color = colors.lineColor
-            style = Paint.Style.STROKE
-            strokeWidth = 1.5f
+            color = colors.lineColor; style = Paint.Style.STROKE; strokeWidth = 1.5f
             pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
         }
 
         var currentY = 110f
-
         canvas.drawText("Книга называется", MARGIN, currentY, labelPaint)
         currentY += 18f
         if (book.title.isNotBlank()) {
@@ -429,7 +404,7 @@ object DiaryPdfDrawer {
         canvas.drawText("Нарисуй, что запомнилось", MARGIN, currentY, labelPaint)
         currentY += 10f
         val drawingTop = currentY
-        val drawingBottom = drawingTop + 340f
+        val drawingBottom = drawingTop + 300f          
         canvas.drawRoundRect(RectF(MARGIN, drawingTop, PAGE_WIDTH - MARGIN, drawingBottom), 10f, 10f, framePaint)
         currentY = drawingBottom + 20f
 
@@ -438,18 +413,19 @@ object DiaryPdfDrawer {
         if (book.plot.isNotBlank()) {
             canvas.drawText(book.plot, MARGIN + 4f, currentY + 14f, valuePaint)
         }
-        val plotLineStep = 28f
-        for (i in 0 until 7) {
+        val plotLineStep = 26f                          
+        for (i in 0 until 6) {                          
             currentY += plotLineStep
             canvas.drawLine(MARGIN, currentY, PAGE_WIDTH - MARGIN, currentY, linePaint)
         }
-        currentY += 30f
-
-        canvas.drawText("Понравилась книга? Обведи ответ", MARGIN, currentY, labelPaint)
-        currentY += 30f
+        
         val smileyR = 22f
+        val smileyBottom = BOTTOM_LIMIT - 10f          
+        val smileyCy = smileyBottom - smileyR           
+        val smileyLabelY = smileyCy - smileyR - 10f     
+        canvas.drawText("Понравилась книга? Обведи ответ", MARGIN, smileyLabelY, labelPaint)
+
         val smileyStep = 70f
-        val smileyCy = currentY + smileyR
         val smileyCx1 = MARGIN + smileyR + 10f
         val smileyCx2 = smileyCx1 + smileyStep
         val smileyCx3 = smileyCx2 + smileyStep
