@@ -36,6 +36,9 @@ object DiaryPdfDrawer {
         return cachedCaveat ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
     }
 
+    private fun fontFor(context: Context, font: DiaryFont): Typeface =
+        if (font == DiaryFont.CAVEAT) caveatTypeface(context) else Typeface.DEFAULT_BOLD
+
     private fun textSizeFor(font: DiaryFont, baseSize: Float): Float =
         if (font == DiaryFont.CAVEAT) baseSize * 1.2f else baseSize
 
@@ -260,14 +263,14 @@ object DiaryPdfDrawer {
 
     private fun drawStarOutline(canvas: Canvas, cx: Float, cy: Float, outerR: Float, color: Int) {
         val paint = Paint().apply {
-            isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 1.5f; this.color = color
+            isAntiAlias = true; style = Paint.Style.STROKE; strokeWidth = 1.5f; color = color
         }
         canvas.drawPath(starPath(cx, cy, outerR), paint)
     }
 
     private fun drawStarFilled(canvas: Canvas, cx: Float, cy: Float, outerR: Float, color: Int) {
         val paint = Paint().apply {
-            isAntiAlias = true; style = Paint.Style.FILL; this.color = color
+            isAntiAlias = true; style = Paint.Style.FILL; color = color
         }
         canvas.drawPath(starPath(cx, cy, outerR), paint)
     }
@@ -310,7 +313,7 @@ object DiaryPdfDrawer {
     ) {
         val rows = rowsIn.coerceAtLeast(1)
         val titlePaint = Paint().apply {
-            isAntiAlias = true; textSize = textSizeFor(config.titleFont, 32f); color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
+            isAntiAlias = true; textSize = textSizeFor(DiaryFont.CAVEAT, 32f); color = colors.textColor; typeface = titleTF; textAlign = Paint.Align.CENTER
         }
         canvas.drawText(title, PAGE_WIDTH / 2f, 50f, titlePaint)
         val subtitlePaint = Paint().apply {
@@ -350,10 +353,9 @@ object DiaryPdfDrawer {
             val lines = headers[i].split("\n")
             val cx = xs[i] + widths[i] / 2f
             val lineHeight = 12f
-            var ty = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
-            for (l in lines) {
-                canvas.drawText(l, cx, ty, headerTextPaint)
-                ty += lineHeight
+            val startY = tableTop + headerHeight / 2f - (lines.size - 1) * lineHeight / 2f + 4f
+            lines.forEachIndexed { idx, lineText ->
+                canvas.drawText(lineText, cx, startY + idx * lineHeight, headerTextPaint)
             }
         }
         val cellTextPaint = Paint().apply {
