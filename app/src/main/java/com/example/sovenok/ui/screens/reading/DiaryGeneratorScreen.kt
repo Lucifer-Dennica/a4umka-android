@@ -83,6 +83,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // БЛОК: Вид страницы и данные ученика
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -117,6 +118,8 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
+
+            // БЛОК: Страницы и оформление
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -222,6 +225,8 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
+
+            // БЛОК: Что ещё вложить в дневник
             item {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -244,6 +249,8 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
+
+            // БЛОК: Что печатать на странице книги (ТОЛЬКО для школьного типа)
             if (config.pageType == DiaryPageType.SCHOOL) {
                 item {
                     OutlinedCard(
@@ -294,56 +301,57 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
-            if (config.pageType == DiaryPageType.SCHOOL) {
-                item {
-                    OutlinedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Книги", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                TextButton(onClick = {
-                                    config = config.copy(books = List(16) { DiaryBook() })
-                                    expandedBooks.clear()
-                                    scope.launch { snackbarHostState.showSnackbar("Все книги очищены") }
-                                }) {
-                                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("Очистить")
-                                }
+
+            // БЛОК: Книги (для обоих режимов)
+            item {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Книги", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            TextButton(onClick = {
+                                config = config.copy(books = List(16) { DiaryBook() })
+                                expandedBooks.clear()
+                                scope.launch { snackbarHostState.showSnackbar("Все книги очищены") }
+                            }) {
+                                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Очистить")
                             }
-                            Text(
-                                "Можно ничего не заполнять — тогда напечатается чистый бланк. А можно вписать книги, которые уже прочитаны: они попадут и на страницы, и в список прочитанного.",
-                                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
-                            for (i in 0 until config.bookPagesCount) {
-                                val book = config.books[i]
-                                val expanded = expandedBooks[i] ?: false
-                                OutlinedCard(
-                                    onClick = { expandedBooks[i] = !expanded },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Default.ChevronRight,
-                                                contentDescription = null,
-                                                modifier = Modifier.rotate(if (expanded) 90f else 0f)
-                                            )
-                                            Spacer(Modifier.width(8.dp))
-                                            Text("Книга ${i + 1}", fontWeight = FontWeight.Bold)
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(book.statusText(), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                                        }
-                                        if (expanded) {
-                                            Spacer(Modifier.height(12.dp))
-                                            BookForm(
-                                                book = book,
-                                                config = config,
-                                                onUpdate = { newBook -> updateBook(i) { newBook } }
-                                            )
-                                        }
+                        }
+                        Text(
+                            "Можно ничего не заполнять — тогда напечатается чистый бланк. А можно вписать книги, которые уже прочитаны: они попадут и на страницы, и в список прочитанного.",
+                            fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                        for (i in 0 until config.bookPagesCount) {
+                            val book = config.books[i]
+                            val expanded = expandedBooks[i] ?: false
+                            OutlinedCard(
+                                onClick = { expandedBooks[i] = !expanded },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.ChevronRight,
+                                            contentDescription = null,
+                                            modifier = Modifier.rotate(if (expanded) 90f else 0f)
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Книга ${i + 1}", fontWeight = FontWeight.Bold)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(book.statusText(), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                    }
+                                    if (expanded) {
+                                        Spacer(Modifier.height(12.dp))
+                                        BookForm(
+                                            book = book,
+                                            config = config,
+                                            isPicturesMode = (config.pageType == DiaryPageType.PICTURES),
+                                            onUpdate = { newBook -> updateBook(i) { newBook } }
+                                        )
                                     }
                                 }
                             }
@@ -351,6 +359,8 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                     }
                 }
             }
+
+            // ПРЕДПРОСМОТР
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Предпросмотр (4K):", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
@@ -378,6 +388,7 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
                 }
             }
         }
+
         if (showInfoSheet) {
             ModalBottomSheet(onDismissRequest = { showInfoSheet = false }) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp).verticalScroll(rememberScrollState())) {
@@ -400,119 +411,82 @@ fun DiaryGeneratorScreen(onBack: () -> Unit) {
 private fun BookForm(
     book: DiaryBook,
     config: DiaryConfig,
+    isPicturesMode: Boolean,
     onUpdate: (DiaryBook) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (config.showAuthor) {
-                    OutlinedTextField(
-                        value = book.author,
-                        onValueChange = { onUpdate(book.copy(author = it)) },
-                        label = { Text("Автор") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+        if (isPicturesMode) {
+            // Режим "В картинках" — только два поля, без оценки
+            OutlinedTextField(
+                value = book.title,
+                onValueChange = { onUpdate(book.copy(title = it)) },
+                label = { Text("Книга называется") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = book.plot,
+                onValueChange = { onUpdate(book.copy(plot = it)) },
+                label = { Text("Про что книга") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            // Режим "Школьная" — полная форма по галочкам
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (config.showAuthor) {
+                        OutlinedTextField(value = book.author, onValueChange = { onUpdate(book.copy(author = it)) }, label = { Text("Автор") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    }
+                    if (config.showGenre) {
+                        OutlinedTextField(value = book.genre, onValueChange = { onUpdate(book.copy(genre = it)) }, label = { Text("Жанр") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    }
+                    if (config.showDates) {
+                        OutlinedTextField(value = book.dates, onValueChange = { onUpdate(book.copy(dates = it)) }, label = { Text("Начал(а) / закончил(а)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    }
+                    if (config.showCharacters) {
+                        OutlinedTextField(value = book.characters, onValueChange = { onUpdate(book.copy(characters = it)) }, label = { Text("Главные герои") }, modifier = Modifier.fillMaxWidth())
+                    }
+                    if (config.showPlot) {
+                        OutlinedTextField(value = book.plot, onValueChange = { onUpdate(book.copy(plot = it)) }, label = { Text("О чём эта книга") }, modifier = Modifier.fillMaxWidth())
+                    }
+                    if (config.showLesson) {
+                        OutlinedTextField(value = book.lesson, onValueChange = { onUpdate(book.copy(lesson = it)) }, label = { Text("Чему научила эта книга") }, modifier = Modifier.fillMaxWidth())
+                    }
                 }
-                if (config.showGenre) {
-                    OutlinedTextField(
-                        value = book.genre,
-                        onValueChange = { onUpdate(book.copy(genre = it)) },
-                        label = { Text("Жанр") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-                if (config.showDates) {
-                    OutlinedTextField(
-                        value = book.dates,
-                        onValueChange = { onUpdate(book.copy(dates = it)) },
-                        label = { Text("Начал(а) / закончил(а)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-                if (config.showCharacters) {
-                    OutlinedTextField(
-                        value = book.characters,
-                        onValueChange = { onUpdate(book.copy(characters = it)) },
-                        label = { Text("Главные герои") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (config.showPlot) {
-                    OutlinedTextField(
-                        value = book.plot,
-                        onValueChange = { onUpdate(book.copy(plot = it)) },
-                        label = { Text("О чём эта книга") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (config.showLesson) {
-                    OutlinedTextField(
-                        value = book.lesson,
-                        onValueChange = { onUpdate(book.copy(lesson = it)) },
-                        label = { Text("Чему научила эта книга") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (config.showTitle) {
-                    OutlinedTextField(
-                        value = book.title,
-                        onValueChange = { onUpdate(book.copy(title = it)) },
-                        label = { Text("Название") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-                if (config.showPages) {
-                    OutlinedTextField(
-                        value = book.pages,
-                        onValueChange = { onUpdate(book.copy(pages = it)) },
-                        label = { Text("Сколько страниц") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-                if (config.showMemorable) {
-                    OutlinedTextField(
-                        value = book.memorable,
-                        onValueChange = { onUpdate(book.copy(memorable = it)) },
-                        label = { Text("Что запомнилось больше всего") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (config.showNewWords) {
-                    OutlinedTextField(
-                        value = book.newWords,
-                        onValueChange = { onUpdate(book.copy(newWords = it)) },
-                        label = { Text("Новые слова") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (config.showTitle) {
+                        OutlinedTextField(value = book.title, onValueChange = { onUpdate(book.copy(title = it)) }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    }
+                    if (config.showPages) {
+                        OutlinedTextField(value = book.pages, onValueChange = { onUpdate(book.copy(pages = it)) }, label = { Text("Сколько страниц") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    }
+                    if (config.showMemorable) {
+                        OutlinedTextField(value = book.memorable, onValueChange = { onUpdate(book.copy(memorable = it)) }, label = { Text("Что запомнилось больше всего") }, modifier = Modifier.fillMaxWidth())
+                    }
+                    if (config.showNewWords) {
+                        OutlinedTextField(value = book.newWords, onValueChange = { onUpdate(book.copy(newWords = it)) }, label = { Text("Новые слова") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    }
                 }
             }
-        }
-        if (config.showRating) {
-            var ratingExpanded by remember { mutableStateOf(false) }
-            val ratingLabels = listOf("не ставим", "1 из 5", "2 из 5", "3 из 5", "4 из 5", "5 из 5")
-            ExposedDropdownMenuBox(expanded = ratingExpanded, onExpandedChange = { ratingExpanded = it }) {
-                OutlinedTextField(
-                    value = ratingLabels[book.rating],
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Оценка (звёзд из пяти)") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ratingExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(expanded = ratingExpanded, onDismissRequest = { ratingExpanded = false }) {
-                    ratingLabels.forEachIndexed { index, label ->
-                        DropdownMenuItem(
-                            text = { Text(label) },
-                            onClick = { onUpdate(book.copy(rating = index)); ratingExpanded = false }
-                        )
+            if (config.showRating) {
+                var ratingExpanded by remember { mutableStateOf(false) }
+                val ratingLabels = listOf("не ставим", "1 из 5", "2 из 5", "3 из 5", "4 из 5", "5 из 5")
+                ExposedDropdownMenuBox(expanded = ratingExpanded, onExpandedChange = { ratingExpanded = it }) {
+                    OutlinedTextField(
+                        value = ratingLabels[book.rating],
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Оценка (звёзд из пяти)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ratingExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = ratingExpanded, onDismissRequest = { ratingExpanded = false }) {
+                        ratingLabels.forEachIndexed { index, label ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = { onUpdate(book.copy(rating = index)); ratingExpanded = false }
+                            )
+                        }
                     }
                 }
             }
