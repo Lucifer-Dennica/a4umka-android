@@ -406,36 +406,92 @@ private fun BookForm(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (config.showAuthor) {
-                    OutlinedTextField(value = book.author, onValueChange = { onUpdate(book.copy(author = it)) }, label = { Text("Автор") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(
+                        value = book.author,
+                        onValueChange = { onUpdate(book.copy(author = it)) },
+                        label = { Text("Автор") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
                 if (config.showGenre) {
-                    OutlinedTextField(value = book.genre, onValueChange = { onUpdate(book.copy(genre = it)) }, label = { Text("Жанр") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(
+                        value = book.genre,
+                        onValueChange = { onUpdate(book.copy(genre = it)) },
+                        label = { Text("Жанр") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
                 if (config.showDates) {
-                    OutlinedTextField(value = book.dates, onValueChange = { onUpdate(book.copy(dates = it)) }, label = { Text("Начал(а) / закончил(а)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(
+                        value = book.dates,
+                        onValueChange = { onUpdate(book.copy(dates = it)) },
+                        label = { Text("Начал(а) / закончил(а)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
                 if (config.showCharacters) {
-                    OutlinedTextField(value = book.characters, onValueChange = { onUpdate(book.copy(characters = it)) }, label = { Text("Главные герои") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(
+                        value = book.characters,
+                        onValueChange = { onUpdate(book.copy(characters = it)) },
+                        label = { Text("Главные герои") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 if (config.showPlot) {
-                    OutlinedTextField(value = book.plot, onValueChange = { onUpdate(book.copy(plot = it)) }, label = { Text("О чём эта книга") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(
+                        value = book.plot,
+                        onValueChange = { onUpdate(book.copy(plot = it)) },
+                        label = { Text("О чём эта книга") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 if (config.showLesson) {
-                    OutlinedTextField(value = book.lesson, onValueChange = { onUpdate(book.copy(lesson = it)) }, label = { Text("Чему научила эта книга") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(
+                        value = book.lesson,
+                        onValueChange = { onUpdate(book.copy(lesson = it)) },
+                        label = { Text("Чему научила эта книга") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (config.showTitle) {
-                    OutlinedTextField(value = book.title, onValueChange = { onUpdate(book.copy(title = it)) }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(
+                        value = book.title,
+                        onValueChange = { onUpdate(book.copy(title = it)) },
+                        label = { Text("Название") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
                 if (config.showPages) {
-                    OutlinedTextField(value = book.pages, onValueChange = { onUpdate(book.copy(pages = it)) }, label = { Text("Сколько страниц") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(
+                        value = book.pages,
+                        onValueChange = { onUpdate(book.copy(pages = it)) },
+                        label = { Text("Сколько страниц") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
                 if (config.showMemorable) {
-                    OutlinedTextField(value = book.memorable, onValueChange = { onUpdate(book.copy(memorable = it)) }, label = { Text("Что запомнилось больше всего") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(
+                        value = book.memorable,
+                        onValueChange = { onUpdate(book.copy(memorable = it)) },
+                        label = { Text("Что запомнилось больше всего") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 if (config.showNewWords) {
-                    OutlinedTextField(value = book.newWords, onValueChange = { onUpdate(book.copy(newWords = it)) }, label = { Text("Новые слова") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(
+                        value = book.newWords,
+                        onValueChange = { onUpdate(book.copy(newWords = it)) },
+                        label = { Text("Новые слова") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
             }
         }
