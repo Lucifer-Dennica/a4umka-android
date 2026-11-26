@@ -433,7 +433,7 @@ object DiaryPdfDrawer {
             colors = colors,
             titleTF = titleTF,
             withNumbers = true,
-            filledRows = filledRows
+            filledRows = filledRows,
             titleFont = config.titleFont
         )
     }
@@ -453,7 +453,7 @@ object DiaryPdfDrawer {
             rowsIn = 12,
             colors = colors,
             titleTF = titleTF,
-            withNumbers = false
+            withNumbers = false,
             titleFont = config.titleFont
         )
     }
