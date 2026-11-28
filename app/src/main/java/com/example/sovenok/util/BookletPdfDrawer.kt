@@ -214,7 +214,11 @@ object BookletPdfDrawer {
             if (page.showLines) {
                 when (config.ruling) {
                     BookletRuling.LINE_8MM -> {
-                        val linesCount = if (page.prompt != null || page.title != null) 3 else 4
+                        val linesCount = when {
+                            page.prompt != null -> 2  
+                            page.title != null -> 3   
+                            else -> 4                 
+                        }
                         val step = 8f * 2.83f
                         for (i in 0 until linesCount) {
                             curY += step
@@ -222,7 +226,11 @@ object BookletPdfDrawer {
                         }
                     }
                     BookletRuling.WIDE_10MM -> {
-                        val linesCount = if (page.prompt != null || page.title != null) 2 else 3
+                        val linesCount = when {
+                            page.prompt != null -> 1  
+                            page.title != null -> 2   
+                            else -> 3                 
+                        }
                         val step = 10f * 2.83f
                         for (i in 0 until linesCount) {
                             curY += step
