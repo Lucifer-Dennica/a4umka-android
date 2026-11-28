@@ -141,27 +141,24 @@ object BookletPdfDrawer {
             val authorStr = if (config.author.isNotBlank()) config.author else "Автор:"
             canvas.drawText(authorStr, centerX, bottom - 20f, bodyPaint)
             canvas.drawLine(left + 20f, bottom - 10f, right - 20f, bottom - 10f, linePaint)
-        } else if (page.isEnd) {
-            // Если есть ответы на загадки — рисуем таблицу сверху
-            if (page.riddleAnswers != null) {
-                val tableTitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
-                canvas.drawText("Ответы на загадки:", centerX, startY + 25f, tableTitlePaint)
-                
-                val tableTop = startY + 35f
-                val tableBottom = startY + cellH / 2f - 30f
-                val rowHeight = (tableBottom - tableTop) / page.riddleAnswers.size
-                
-                val answerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.LEFT }
-                for (i in page.riddleAnswers.indices) {
-                    val y = tableTop + i * rowHeight + rowHeight / 2f + 3f
-                    canvas.drawText("${i + 1}. ${page.riddleAnswers[i]}", left + 10f, y, answerPaint)
+            } else if (page.isEnd) {
+                // Если есть ответы на загадки — рисуем таблицу по центру
+                if (page.riddleAnswers != null) {
+                    val tableTitlePaint = Paint().apply { isAntiAlias = true; textSize = 12f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+                    canvas.drawText("Ответы на загадки:", centerX, startY + 25f, tableTitlePaint)
+                    val tableTop = startY + 35f
+                    val tableBottom = startY + cellH / 2f - 30f
+                    val rowHeight = (tableBottom - tableTop) / page.riddleAnswers.size
+                    val answerPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
+                    for (i in page.riddleAnswers.indices) {
+                        val y = tableTop + i * rowHeight + rowHeight / 2f + 3f
+                        canvas.drawText("${i + 1}. ${page.riddleAnswers[i]}", centerX, y, answerPaint)
+                    }
+                    // "Конец" снизу
+                    canvas.drawText("Конец", centerX, startY + cellH / 2f + 20f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
+                } else {
+                    canvas.drawText("Конец", centerX, startY + cellH / 2f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
                 }
-                
-                // "Конец" снизу
-                canvas.drawText("Конец", centerX, startY + cellH / 2f + 20f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
-            } else {
-                canvas.drawText("Конец", centerX, startY + cellH / 2f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
-            }
         } else {
             var curY = top + 20f
             
