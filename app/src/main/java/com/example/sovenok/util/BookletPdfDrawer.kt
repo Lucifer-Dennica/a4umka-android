@@ -158,7 +158,7 @@ object BookletPdfDrawer {
                     isAntiAlias = true
                     textSize = 10f
                     color = Color.GRAY
-                    typeface = Typeface.DEFAULT_ITALIC
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
                     textAlign = Paint.Align.CENTER
                 }
                 canvas.drawText("Отгадка: ${page.endAnswer}", centerX, startY + cellH / 2f - 20f, answerPaint)
@@ -174,7 +174,7 @@ object BookletPdfDrawer {
                     isAntiAlias = true
                     textSize = 10f
                     color = Color.GRAY
-                    typeface = Typeface.DEFAULT_ITALIC
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
                     textAlign = Paint.Align.LEFT
                 }
                 canvas.drawText("Отгадка: ${page.previousAnswer}", left, curY, answerPaint)
