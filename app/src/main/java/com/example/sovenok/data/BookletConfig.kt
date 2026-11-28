@@ -15,7 +15,6 @@ data class BookletConfig(
     val ruling: BookletRuling = BookletRuling.LINE_8MM,
     val showFoldLines: Boolean = true,
     val isBlackAndWhite: Boolean = false,
-    val titleFont: BookletFont = BookletFont.SYSTEM
     val showDrawing: Boolean = true,
     val drawingOffPages: String = "",
     val titleFont: BookletFont = BookletFont.SYSTEM,
@@ -125,7 +124,7 @@ object BookletData {
                             prompt = riddle.first,
                             previousAnswer = selected[i - 1].second,
                             showLines = true,
-                            showDrawingBox = false
+                            showDrawingBox = true
                         ))
                     }
                 }
