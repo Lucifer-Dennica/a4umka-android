@@ -15,8 +15,10 @@ data class BookletConfig(
 )
 
 data class PageContent(
-    val title: String? = null, // Заголовок страницы (например, "Меня зовут")
-    val prompt: String? = null, // Текст загадки или подсказка
+    val title: String? = null,
+    val prompt: String? = null,
+    val previousAnswer: String? = null, // Ответ на предыдущую загадку (рисуется серым)
+    val endAnswer: String? = null, // Ответ на последнюю загадку (для страницы "Конец")
     val isCover: Boolean = false,
     val isEnd: Boolean = false,
     val showLines: Boolean = true,
@@ -24,7 +26,6 @@ data class PageContent(
 )
 
 object BookletData {
-    // Дефолтные названия обложек для каждой темы
     val defaultTitles = mapOf(
         BookletType.STORY to "Моя сказка",
         BookletType.ABOUT_ME to "Всё обо мне",
@@ -60,19 +61,42 @@ object BookletData {
                 titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
             }
             BookletType.RIDDLES -> {
-                // Пока заглушка, логику отрисовки ответов сделаем на Шаге 4
-                val riddles = listOf(
-                    "Рыжая, с пушистым хвостом, живёт в лесу, а кур считает лучше всех.",
-                    "Не котёнок, а мурлычет, любит рыбу и тепло.",
-                    "Зимой лежит, весной бежит, а летом его не найдёшь.",
-                    "Днём светит, греет, а ночью спать уходит.",
-                    "Сам деревянный, а голова железная, гвозди забивает.",
-                    "Без крыльев летит, без ног бежит, без рук рисует на стекле."
+                val allRiddles = listOf(
+                    "Рыжая, с пушистым хвостом, живёт в лесу, а кур считает лучше всех." to "лиса",
+                    "Не котёнок, а мурлычет, любит рыбу и тепло." to "кот",
+                    "Зимой лежит, весной бежит, а летом его не найдёшь." to "снег",
+                    "Днём светит, греет, а ночью спать уходит." to "солнце",
+                    "Сам деревянный, а голова железная, гвозди забивает." to "молоток",
+                    "Без крыльев летит, без ног бежит, без рук рисует на стекле." to "мороз",
+                    "Не портной, а всю жизнь с иголками ходит." to "ёж",
+                    "Зимой спит, летом ульи ворошит." to "медведь",
+                    "Хвост пушистый, мех золотистый." to "лиса",
+                    "Кто зимой холодной ходит злой, голодный?" to "волк",
+                    "Белый, да не сахар, ног нет, да идёт." to "снег",
+                    "Красная девица сидит в темнице, а коса на улице." to "морковь",
+                    "Стоит в лесу кудряшка — белая рубашка, сердечко золотое." to "ромашка",
+                    "Сидит дед во сто шуб одет." to "лук",
+                    "Висит груша — нельзя скушать." to "лампочка"
                 )
-                riddles.forEach { pages.add(PageContent(prompt = it, showLines = false, showDrawingBox = false)) }
+                val selected = allRiddles.shuffled().take(6)
+                
+                for (i in selected.indices) {
+                    if (i == 0) {
+                        pages.add(PageContent(prompt = selected[i].first, showLines = false, showDrawingBox = false))
+                    } else {
+                        pages.add(PageContent(
+                            prompt = selected[i].first,
+                            previousAnswer = selected[i - 1].second,
+                            showLines = false,
+                            showDrawingBox = false
+                        ))
+                    }
+                }
+                // Последняя страница "Конец" будет иметь ответ на 6-ю загадку
+                pages.add(PageContent(isEnd = true, showLines = false, showDrawingBox = true, endAnswer = selected.last().second))
+                return pages
             }
             BookletType.BLANK -> {
-                // Чистая: без заголовков, поле рисунка будет поднято вверх (логика в PdfDrawer)
                 for (i in 1..6) pages.add(PageContent(showLines = true, showDrawingBox = true))
             }
         }
