@@ -1,6 +1,6 @@
 package com.example.sovenok.data
 
-enum class BookletType { STORY, ABOUT_ME, FAMILY, GRANDMA, RIDDLES, BLANK }
+enum class BookletType { STORY, ABOUT_ME, FAMILY, GRANDMA, GRANDPA, RIDDLES, BLANK }
 enum class BookletRuling { LINE_8MM, WIDE_10MM, GRID_5MM, NONE }
 enum class BookletCharacter { NONE, BOY, GIRL }
 
@@ -15,8 +15,8 @@ data class BookletConfig(
 )
 
 data class PageContent(
-    val title: String? = null,
-    val prompt: String? = null,
+    val title: String? = null, // Заголовок страницы (например, "Меня зовут")
+    val prompt: String? = null, // Текст загадки или подсказка
     val isCover: Boolean = false,
     val isEnd: Boolean = false,
     val showLines: Boolean = true,
@@ -24,41 +24,59 @@ data class PageContent(
 )
 
 object BookletData {
+    // Дефолтные названия обложек для каждой темы
+    val defaultTitles = mapOf(
+        BookletType.STORY to "Моя сказка",
+        BookletType.ABOUT_ME to "Всё обо мне",
+        BookletType.FAMILY to "Моя семья",
+        BookletType.GRANDMA to "Для бабушки",
+        BookletType.GRANDPA to "Подарок дедушке",
+        BookletType.RIDDLES to "Загадки",
+        BookletType.BLANK to "Моя книжка"
+    )
+
     fun getPages(config: BookletConfig): List<PageContent> {
         val pages = mutableListOf<PageContent>()
         pages.add(PageContent(isCover = true, showLines = false, showDrawingBox = true))
 
         when (config.type) {
-            BookletType.STORY, BookletType.BLANK -> {
+            BookletType.STORY -> {
                 for (i in 1..6) pages.add(PageContent(showLines = true, showDrawingBox = true))
             }
             BookletType.ABOUT_ME -> {
-                val prompts = listOf("Меня зовут...", "Моя семья...", "Мой день...", "Мои друзья...", "Мои любимые игры...", "Что я умею...")
-                prompts.forEach { pages.add(PageContent(prompt = it)) }
+                val titles = listOf("Меня зовут", "Моя семья", "Что я люблю есть", "Мой день", "Моя любимая игра", "Кем я стану")
+                titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
             }
             BookletType.FAMILY -> {
-                val prompts = listOf("Моя мама...", "Мой папа...", "Мои бабушка и дедушка...", "Мы вместе...", "Наш дом...", "Наши традиции...")
-                prompts.forEach { pages.add(PageContent(prompt = it)) }
+                val titles = listOf("Это я", "Моя мама", "Мой папа", "Вместе мы любим", "Наше любимое место", "За что я люблю семью")
+                titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
             }
             BookletType.GRANDMA -> {
-                val prompts = listOf("Дорогая бабушка...", "Я помню, как мы...", "Я люблю, когда ты...", "Спасибо тебе за...", "Мое пожелание...", "Твой подарок...")
-                prompts.forEach { pages.add(PageContent(prompt = it)) }
+                val titles = listOf("Моя бабушка", "За что я её люблю", "Мы вместе играем", "Её любимое блюдо", "Мой подарок", "Я желаю бабушке")
+                titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
+            }
+            BookletType.GRANDPA -> {
+                val titles = listOf("Мой дедушка", "За что я его люблю", "Мы вместе играем", "Его любимое блюдо", "Мой подарок", "Я желаю дедушке")
+                titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
             }
             BookletType.RIDDLES -> {
+                // Пока заглушка, логику отрисовки ответов сделаем на Шаге 4
                 val riddles = listOf(
-                    "Не портной, а всю жизнь с иголками ходит. (Ёж)" to "Ёж",
-                    "Зимой спит, летом ульи ворошит. (Медведь)" to "Медведь",
-                    "Хвост пушистый, мех золотистый. (Лиса)" to "Лиса",
-                    "Кто зимой холодной ходит злой, голодный? (Волк)" to "Волк",
-                    "Белый, да не сахар, ног нет, да идёт. (Снег)" to "Снег",
-                    "Красная девица сидит в темнице, а коса на улице. (Морковь)" to "Морковь"
+                    "Рыжая, с пушистым хвостом, живёт в лесу, а кур считает лучше всех.",
+                    "Не котёнок, а мурлычет, любит рыбу и тепло.",
+                    "Зимой лежит, весной бежит, а летом его не найдёшь.",
+                    "Днём светит, греет, а ночью спать уходит.",
+                    "Сам деревянный, а голова железная, гвозди забивает.",
+                    "Без крыльев летит, без ног бежит, без рук рисует на стекле."
                 )
-                for (i in 0 until 3) {
-                    pages.add(PageContent(prompt = riddles[i].first, showLines = false, showDrawingBox = false))
-                    pages.add(PageContent(title = "Отгадка: ${riddles[i].second}", showLines = false, showDrawingBox = true))
-                }
+                riddles.forEach { pages.add(PageContent(prompt = it, showLines = false, showDrawingBox = false)) }
+            }
+            BookletType.BLANK -> {
+                // Чистая: без заголовков, поле рисунка будет поднято вверх (логика в PdfDrawer)
+                for (i in 1..6) pages.add(PageContent(showLines = true, showDrawingBox = true))
             }
         }
+
         pages.add(PageContent(isEnd = true, showLines = false, showDrawingBox = true))
         return pages
     }
