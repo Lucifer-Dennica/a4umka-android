@@ -10,6 +10,8 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import androidx.core.content.res.ResourcesCompat
+import com.example.sovenok.R
 import com.example.sovenok.data.*
 
 object BookletPdfDrawer {
@@ -17,8 +19,24 @@ object BookletPdfDrawer {
     const val PAGE_HEIGHT = 595f
     private const val INSTRUCTION_HEIGHT = 30f
     private val bitmapCache = mutableMapOf<String, Bitmap?>()
+    private var cachedCaveat: Typeface? = null
 
     fun clearCache() { bitmapCache.clear() }
+
+    private fun caveatTypeface(context: Context): Typeface {
+        if (cachedCaveat == null) {
+            cachedCaveat = try {
+                ResourcesCompat.getFont(context, R.font.caveat)
+            } catch (e: Exception) { null }
+        }
+        return cachedCaveat ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
+    }
+
+    private fun titleTypeface(context: Context, font: BookletFont): Typeface =
+        if (font == BookletFont.CAVEAT) caveatTypeface(context) else Typeface.DEFAULT_BOLD
+
+    private fun ts(font: BookletFont, baseSize: Float): Float =
+        if (font == BookletFont.CAVEAT) baseSize * 1.15f else baseSize
 
     fun generatePreview(config: BookletConfig, context: Context): List<Bitmap> {
         val scale = 1f
@@ -95,12 +113,13 @@ object BookletPdfDrawer {
         val height = bottom - top
         val centerX = left + width / 2f
         val isBW = config.isBlackAndWhite
+        val tf = titleTypeface(context, config.titleFont)
         val titlePaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
         val linePaint = Paint().apply { color = lineColor; strokeWidth = 1f }
 
         if (page.isCover) {
-            val coverTitlePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
+            val coverTitlePaint = Paint().apply { isAntiAlias = true; textSize = ts(config.titleFont, 18f); color = mainColor; typeface = tf; textAlign = Paint.Align.CENTER }
             canvas.drawText("МОЯ ПЕРВАЯ КНИГА", centerX, top + 20f, Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.GRAY; textAlign = Paint.Align.CENTER })
             val titleStr = if (config.title.isNotBlank()) config.title else "Моя книжка"
             val words = titleStr.split(" ")
@@ -152,9 +171,9 @@ object BookletPdfDrawer {
                     val y = tableTop + i * rowHeight + rowHeight / 2f + 3f
                     canvas.drawText("${i + 1}. ${page.riddleAnswers[i]}", centerX, y, answerPaint)
                 }
-                canvas.drawText("Конец", centerX, startY + cellH / 2f + 20f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
+                canvas.drawText("Конец", centerX, startY + cellH / 2f + 20f, Paint().apply { isAntiAlias = true; textSize = ts(config.titleFont, 20f); color = mainColor; typeface = tf; textAlign = Paint.Align.CENTER })
             } else {
-                canvas.drawText("Конец", centerX, startY + cellH / 2f, Paint().apply { isAntiAlias = true; textSize = 20f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER })
+                canvas.drawText("Конец", centerX, startY + cellH / 2f, Paint().apply { isAntiAlias = true; textSize = ts(config.titleFont, 20f); color = mainColor; typeface = tf; textAlign = Paint.Align.CENTER })
             }
         } else {
             var curY = top + 20f
