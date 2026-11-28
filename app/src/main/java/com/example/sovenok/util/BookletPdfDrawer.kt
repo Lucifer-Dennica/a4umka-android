@@ -195,6 +195,34 @@ object BookletPdfDrawer {
             }
             
             if (page.showLines) {
+            if (page.fullPageLines) {
+                val step = when (config.ruling) {
+                    BookletRuling.LINE_8MM -> 8f * 2.83f
+                    BookletRuling.WIDE_10MM -> 10f * 2.83f
+                    BookletRuling.GRID_5MM -> 5f * 2.83f
+                    BookletRuling.NONE -> 0f
+                }
+                if (step > 0f) {
+                    if (config.ruling == BookletRuling.GRID_5MM) {
+                        var y = curY
+                        while (y + step <= bottom - 12f) {
+                            canvas.drawLine(left, y, right, y, linePaint)
+                            var x = left
+                            while (x <= right) {
+                                canvas.drawLine(x, y, x, y + step, linePaint)
+                                x += step
+                            }
+                            y += step
+                        }
+                    } else {
+                        var y = curY
+                        while (y + step <= bottom - 12f) {
+                            y += step
+                            canvas.drawLine(left, y, right, y, linePaint)
+                        }
+                    }
+                }
+            } else {
                 when (config.ruling) {
                     BookletRuling.LINE_8MM -> {
                         val linesCount = if (page.prompt != null || page.title != null) 3 else 4
@@ -225,7 +253,6 @@ object BookletPdfDrawer {
                             canvas.drawLine(x, gridTop, x, bottom, linePaint)
                             x += step
                         }
-                        curY = bottom
                     }
                     BookletRuling.NONE -> {}
                 }
