@@ -196,25 +196,45 @@ object BookletPdfDrawer {
                 canvas.drawRect(boxRect, boxPaint)
                 curY += boxHeight + 15f
             }
-
+            
             if (page.showLines) {
-                val step = when (config.ruling) {
-                    BookletRuling.LINE_8MM -> 8f * 2.83f
-                    BookletRuling.WIDE_10MM -> 10f * 2.83f
-                    BookletRuling.GRID_5MM -> 5f * 2.83f
-                    else -> 0f
-                }
-                if (step > 0f) {
-                    while (curY < bottom - 10f) {
-                        canvas.drawLine(left, curY, right, curY, linePaint)
-                        if (config.ruling == BookletRuling.GRID_5MM) {
-                            var x = left
-                            while (x < right) {
-                                canvas.drawLine(x, curY, x, curY + step, linePaint)
-                                x += step
-                            }
+                when (config.ruling) {
+                    BookletRuling.LINE_8MM -> {
+                        // 4 линии для "Своя сказка", 3 линии для тем с заголовками
+                        val linesCount = if (page.prompt != null || page.title != null) 3 else 4
+                        val step = 8f * 2.83f
+                        for (i in 0 until linesCount) {
+                            curY += step
+                            canvas.drawLine(left, curY, right, curY, linePaint)
                         }
-                        curY += step
+                    }
+                    BookletRuling.WIDE_10MM -> {
+                        // 3 линии для "Своя сказка", 2 линии для тем с заголовками
+                        val linesCount = if (page.prompt != null || page.title != null) 2 else 3
+                        val step = 10f * 2.83f
+                        for (i in 0 until linesCount) {
+                            curY += step
+                            canvas.drawLine(left, curY, right, curY, linePaint)
+                        }
+                    }
+                    BookletRuling.GRID_5MM -> {
+                        // Сетка в нижней части листа
+                        val step = 5f * 2.83f
+                        val gridTop = bottom - step * 8  // 8 строк клетки
+                        var y = gridTop
+                        while (y <= bottom) {
+                            canvas.drawLine(left, y, right, y, linePaint)
+                            y += step
+                        }
+                        var x = left
+                        while (x <= right) {
+                            canvas.drawLine(x, gridTop, x, bottom, linePaint)
+                            x += step
+                        }
+                        curY = bottom
+                    }
+                    BookletRuling.NONE -> {
+                        // Без линий — ничего не рисуем
                     }
                 }
             }
