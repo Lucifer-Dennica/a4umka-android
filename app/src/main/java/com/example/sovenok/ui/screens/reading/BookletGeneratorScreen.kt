@@ -106,24 +106,33 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                                 BookletType.FAMILY to "Моя семья",
                                 BookletType.GRANDMA to "Бабушке",
                                 BookletType.GRANDPA to "Дедушке",
+                                BookletType.FRIENDS to "Друзья",
+                                BookletType.DREAMS to "Мечты",
                                 BookletType.RIDDLES to "Загадки",
                                 BookletType.BLANK to "Чистая"
                             ).forEach { (type, name) ->
                                 FilterChip(
                                     selected = config.type == type,
                                     onClick = {
-                                        // Если текущее название совпадает со старым дефолтом — меняем на новый дефолт
                                         val currentDefault = BookletData.defaultTitles[config.type]
                                         val newDefault = BookletData.defaultTitles[type]
                                         val newTitle = if (config.title == currentDefault || config.title == "Моя сказка") {
                                             newDefault ?: config.title
                                         } else {
-                                            config.title // Пользователь уже вписал своё — не трогаем
+                                            config.title
                                         }
                                         config = config.copy(type = type, title = newTitle)
                                     },
                                     label = { Text(name) }
                                 )
+                            }
+                        }
+                        if (config.type == BookletType.RIDDLES) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(onClick = {
+                                config = config.copy(riddleSeed = config.riddleSeed + 1)
+                            }) {
+                                Text("🎲  Новые загадки")
                             }
                         }
                     }
@@ -192,6 +201,32 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                             FilterChip(selected = config.ruling == BookletRuling.GRID_5MM, onClick = { config = config.copy(ruling = BookletRuling.GRID_5MM) }, label = { Text("Клетка 5 мм") })
                             FilterChip(selected = config.ruling == BookletRuling.NONE, onClick = { config = config.copy(ruling = BookletRuling.NONE) }, label = { Text("Без линий") })
                         }
+
+                        Text("Шрифт заголовков", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(selected = config.titleFont == BookletFont.SYSTEM, onClick = { config = config.copy(titleFont = BookletFont.SYSTEM) }, label = { Text("Обычный") })
+                            FilterChip(selected = config.titleFont == BookletFont.CAVEAT, onClick = { config = config.copy(titleFont = BookletFont.CAVEAT) }, label = { Text("Рукописный") })
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = config.showDrawing, onCheckedChange = { config = config.copy(showDrawing = it) })
+                            Column {
+                                Text("Место для рисунка", fontWeight = FontWeight.Bold)
+                                Text("Если выключить — строки займут весь лист", fontSize = 12.sp)
+                            }
+                        }
+
+                        if (config.showDrawing) {
+                            OutlinedTextField(
+                                value = config.drawingOffPages,
+                                onValueChange = { config = config.copy(drawingOffPages = it) },
+                                label = { Text("Номера страниц без рисунка") },
+                                placeholder = { Text("например: 3, 5") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                        }
+
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(checked = config.showFoldLines, onCheckedChange = { config = config.copy(showFoldLines = it) })
                             Column {
