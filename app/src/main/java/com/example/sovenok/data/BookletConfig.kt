@@ -79,20 +79,18 @@ object BookletData {
                     "Висит груша — нельзя скушать." to "лампочка"
                 )
                 val selected = allRiddles.shuffled().take(6)
-                
                 for (i in selected.indices) {
                     if (i == 0) {
-                        pages.add(PageContent(prompt = selected[i].first, showLines = false, showDrawingBox = false))
+                        pages.add(PageContent(prompt = selected[i].first, showLines = true, showDrawingBox = true))
                     } else {
                         pages.add(PageContent(
                             prompt = selected[i].first,
                             previousAnswer = selected[i - 1].second,
-                            showLines = false,
-                            showDrawingBox = false
+                            showLines = true,
+                            showDrawingBox = true
                         ))
                     }
                 }
-                // Последняя страница "Конец" будет иметь ответ на 6-ю загадку
                 pages.add(PageContent(isEnd = true, showLines = false, showDrawingBox = true, endAnswer = selected.last().second))
                 return pages
             }
