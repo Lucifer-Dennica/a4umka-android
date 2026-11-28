@@ -105,12 +105,23 @@ fun BookletGeneratorScreen(onBack: () -> Unit) {
                                 BookletType.ABOUT_ME to "Про меня",
                                 BookletType.FAMILY to "Моя семья",
                                 BookletType.GRANDMA to "Бабушке",
+                                BookletType.GRANDPA to "Дедушке",
                                 BookletType.RIDDLES to "Загадки",
                                 BookletType.BLANK to "Чистая"
                             ).forEach { (type, name) ->
                                 FilterChip(
                                     selected = config.type == type,
-                                    onClick = { config = config.copy(type = type) },
+                                    onClick = {
+                                        // Если текущее название совпадает со старым дефолтом — меняем на новый дефолт
+                                        val currentDefault = BookletData.defaultTitles[config.type]
+                                        val newDefault = BookletData.defaultTitles[type]
+                                        val newTitle = if (config.title == currentDefault || config.title == "Моя сказка") {
+                                            newDefault ?: config.title
+                                        } else {
+                                            config.title // Пользователь уже вписал своё — не трогаем
+                                        }
+                                        config = config.copy(type = type, title = newTitle)
+                                    },
                                     label = { Text(name) }
                                 )
                             }
