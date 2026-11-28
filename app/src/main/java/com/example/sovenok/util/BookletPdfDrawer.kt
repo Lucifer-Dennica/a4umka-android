@@ -227,7 +227,7 @@ object BookletPdfDrawer {
                 isAntiAlias = true; textSize = 10f; color = Color.GRAY;
                 typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER
             }
-            canvas.drawText("$pageNum", centerX, bottom - 5f, pageNumPaint)
+            canvas.drawText("$pageNum", centerX, bottom - 3f, pageNumPaint)
         }
 
         canvas.restore()
