@@ -1,8 +1,11 @@
 package com.example.sovenok.data
 
-enum class BookletType { STORY, ABOUT_ME, FAMILY, GRANDMA, GRANDPA, RIDDLES, BLANK }
+import kotlin.random.Random
+
+enum class BookletType { STORY, ABOUT_ME, FAMILY, GRANDMA, GRANDPA, FRIENDS, DREAMS, RIDDLES, BLANK }
 enum class BookletRuling { LINE_8MM, WIDE_10MM, GRID_5MM, NONE }
 enum class BookletCharacter { NONE, BOY, GIRL }
+enum class BookletFont { SYSTEM, CAVEAT }
 
 data class BookletConfig(
     val type: BookletType = BookletType.STORY,
@@ -11,17 +14,24 @@ data class BookletConfig(
     val character: BookletCharacter = BookletCharacter.GIRL,
     val ruling: BookletRuling = BookletRuling.LINE_8MM,
     val showFoldLines: Boolean = true,
-    val isBlackAndWhite: Boolean = false
+    val isBlackAndWhite: Boolean = false,
+    val showDrawing: Boolean = true,
+    val drawingOffPages: String = "",
+    val titleFont: BookletFont = BookletFont.SYSTEM,
+    val riddleSeed: Int = 0
 )
 
 data class PageContent(
     val title: String? = null,
     val prompt: String? = null,
+    val previousAnswer: String? = null,
+    val endAnswer: String? = null,
+    val riddleAnswers: List<String>? = null,
     val isCover: Boolean = false,
     val isEnd: Boolean = false,
     val showLines: Boolean = true,
     val showDrawingBox: Boolean = true,
-    val riddleAnswers: List<String>? = null // Список ответов для таблицы на последнем листе
+    val fullPageLines: Boolean = false
 )
 
 object BookletData {
@@ -31,9 +41,28 @@ object BookletData {
         BookletType.FAMILY to "Моя семья",
         BookletType.GRANDMA to "Для бабушки",
         BookletType.GRANDPA to "Подарок дедушке",
+        BookletType.FRIENDS to "Мои друзья",
+        BookletType.DREAMS to "Мои мечты",
         BookletType.RIDDLES to "Загадки",
         BookletType.BLANK to "Моя книжка"
     )
+
+    private fun applyDrawingRules(pages: MutableList<PageContent>, config: BookletConfig): List<PageContent> {
+        val offPages = config.drawingOffPages
+            .split(",", ";", " ")
+            .mapNotNull { it.trim().toIntOrNull() }
+            .toSet()
+        for (idx in pages.indices) {
+            val p = pages[idx]
+            if (p.isCover || p.isEnd) continue
+            val pageNum = idx + 1
+            val mustHide = !config.showDrawing || (pageNum in offPages && p.showDrawingBox)
+            if (mustHide && p.showDrawingBox) {
+                pages[idx] = p.copy(showDrawingBox = false, fullPageLines = true)
+            }
+        }
+        return pages
+    }
 
     fun getPages(config: BookletConfig): List<PageContent> {
         val pages = mutableListOf<PageContent>()
@@ -59,6 +88,14 @@ object BookletData {
                 val titles = listOf("Мой дедушка", "За что я его люблю", "Мы вместе играем", "Его любимое блюдо", "Мой подарок", "Я желаю дедушке")
                 titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
             }
+            BookletType.FRIENDS -> {
+                val titles = listOf("Мой лучший друг", "Как мы познакомились", "Во что мы играем", "Что любим вместе", "Я хочу ему пожелать", "Наш секрет")
+                titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
+            }
+            BookletType.DREAMS -> {
+                val titles = listOf("Кем я хочу стать", "Где я хочу побывать", "Чему хочу научиться", "Мой питомец мечты", "Что я подарю миру", "Когда я вырасту")
+                titles.forEach { pages.add(PageContent(title = it, showLines = true, showDrawingBox = true)) }
+            }
             BookletType.RIDDLES -> {
                 val allRiddles = listOf(
                     "Рыжая, с пушистым хвостом, живёт в лесу, а кур считает лучше всех." to "лиса",
@@ -69,31 +106,33 @@ object BookletData {
                     "Без крыльев летит, без ног бежит, без рук рисует на стекле." to "мороз",
                     "Не портной, а всю жизнь с иголками ходит." to "ёж",
                     "Зимой спит, летом ульи ворошит." to "медведь",
-                    "Хвост пушистый, мех золотистый." to "лиса",
                     "Кто зимой холодной ходит злой, голодный?" to "волк",
-                    "Белый, да не сахар, ног нет, да идёт." to "снег",
                     "Красная девица сидит в темнице, а коса на улице." to "морковь",
                     "Стоит в лесу кудряшка — белая рубашка, сердечко золотое." to "ромашка",
                     "Сидит дед во сто шуб одет." to "лук",
-                    "Висит груша — нельзя скушать." to "лампочка"
+                    "Висит груша — нельзя скушать." to "лампочка",
+                    "Шесть ног, а не паук; летает, а не птица." to "муха",
+                    "Висит на ноге, обтянута кожей." to "барабан"
                 )
-                val selected = allRiddles.shuffled().take(6)
-                
-                // Страницы 2-7: только загадки, с рисунком, без ответов
-                for (i in selected.indices) {
-                    pages.add(PageContent(
-                        prompt = selected[i].first,
-                        showLines = true,
-                        showDrawingBox = true  // Включаем место для рисунка
-                    ))
+                val selected = if (config.riddleSeed == 0) allRiddles.shuffled()
+                else allRiddles.shuffled(Random(config.riddleSeed))
+                selected.take(6).forEachIndexed { i, riddle ->
+                    if (i == 0) {
+                        pages.add(PageContent(prompt = riddle.first, showLines = true, showDrawingBox = true))
+                    } else {
+                        pages.add(PageContent(
+                            prompt = riddle.first,
+                            previousAnswer = selected[i - 1].second,
+                            showLines = true,
+                            showDrawingBox = true
+                        ))
+                    }
                 }
-                
-                // Страница 8: таблица ответов + Конец
                 pages.add(PageContent(
                     isEnd = true,
                     showLines = false,
                     showDrawingBox = false,
-                    riddleAnswers = selected.map { it.second }
+                    riddleAnswers = selected.take(6).map { it.second }
                 ))
                 return pages
             }
@@ -103,6 +142,6 @@ object BookletData {
         }
 
         pages.add(PageContent(isEnd = true, showLines = false, showDrawingBox = true))
-        return pages
+        return applyDrawingRules(pages, config)
     }
 }
