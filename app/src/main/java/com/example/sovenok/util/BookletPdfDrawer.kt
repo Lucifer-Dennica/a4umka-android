@@ -155,38 +155,34 @@ object BookletPdfDrawer {
             canvas.drawText("a4umka.ru", centerX, bottom - 10f, Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.GRAY; textAlign = Paint.Align.CENTER })
         } else {
             var curY = top + 20f
-            if (page.prompt != null) {
-                val promptPaint = if (config.type == BookletType.RIDDLES) Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER } else titlePaint
-                val words = page.prompt.split(" ")
-                var line = ""
-                for (w in words) {
-                    val test = if (line.isEmpty()) w else "$line $w"
-                    if (promptPaint.measureText(test) > width - 10) {
-                        canvas.drawText(line, centerX, curY, promptPaint)
-                        curY += 15f
-                        line = w
-                    } else { line = test }
-                }
-                if (line.isNotEmpty()) {
-                    canvas.drawText(line, centerX, curY, promptPaint)
-                    curY += 15f
-                }
-                curY += 10f
-            } else if (page.title != null) {
+        
+            // Если есть заголовок темы (Про меня, Семья и т.д.) — рисуем его и сдвигаем всё чуть ниже
+            if (page.title != null) {
                 canvas.drawText(page.title, centerX, curY, titlePaint)
-                curY += 20f
+                curY += 25f // Было 20f, увеличили до 25f, чтобы поле рисунка уехало ниже
             }
+
+            // Если это "Чистая" тема (BLANK) — поле рисунка рисуем сразу вверху
+            val isBlankTheme = config.type == BookletType.BLANK
+        
             if (page.showDrawingBox) {
-                val boxHeight = height * 0.4f
+                val boxHeight = if (isBlankTheme) height * 0.45f else height * 0.35f // Для чистой темы поле чуть больше
                 val boxRect = RectF(left, curY, right, curY + boxHeight)
-                val boxPaint = Paint().apply { color = if(isBW) Color.LTGRAY else lineColor; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) }
+                val boxPaint = Paint().apply { 
+                    color = if(isBW) Color.LTGRAY else lineColor
+                    style = Paint.Style.STROKE
+                    strokeWidth = 1f
+                    pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 5f), 0f) 
+                }
                 canvas.drawRect(boxRect, boxPaint)
                 curY += boxHeight + 15f
             }
+
             if (page.showLines) {
                 when (config.ruling) {
                     BookletRuling.LINE_8MM -> {
-                        val linesCount = if (page.prompt != null || page.title != null) 3 else 4
+                        // Для тем с заголовками — 3 линии, для Своей сказки — 4, для Чистой — 5 (так как поле рисунка выше)
+                        val linesCount = if (page.title != null) 3 else if (isBlankTheme) 5 else 4
                         val step = 8f * 2.83f
                         for (i in 0 until linesCount) {
                             curY += step
@@ -194,7 +190,7 @@ object BookletPdfDrawer {
                         }
                     }
                     BookletRuling.WIDE_10MM -> {
-                        val linesCount = if (page.prompt != null || page.title != null) 2 else 3
+                        val linesCount = if (page.title != null) 2 else if (isBlankTheme) 4 else 3
                         val step = 10f * 2.83f
                         for (i in 0 until linesCount) {
                             curY += step
