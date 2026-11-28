@@ -10,8 +10,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
-import androidx.core.content.res.ResourcesCompat
-import com.example.sovenok.R
 import com.example.sovenok.data.*
 
 object BookletPdfDrawer {
@@ -19,24 +17,8 @@ object BookletPdfDrawer {
     const val PAGE_HEIGHT = 595f
     private const val INSTRUCTION_HEIGHT = 30f
     private val bitmapCache = mutableMapOf<String, Bitmap?>()
-    private var cachedCaveat: Typeface? = null
 
     fun clearCache() { bitmapCache.clear() }
-
-    private fun caveatTypeface(context: Context): Typeface {
-        if (cachedCaveat == null) {
-            cachedCaveat = try {
-                ResourcesCompat.getFont(context, R.font.caveat)
-            } catch (e: Exception) { null }
-        }
-        return cachedCaveat ?: Typeface.create(Typeface.DEFAULT_BOLD, Typeface.ITALIC)
-    }
-
-    private fun titleTypeface(context: Context, font: BookletFont): Typeface =
-        if (font == BookletFont.CAVEAT) caveatTypeface(context) else Typeface.DEFAULT_BOLD
-
-    private fun ts(font: BookletFont, baseSize: Float): Float =
-        if (font == BookletFont.CAVEAT) baseSize * 1.15f else baseSize
 
     fun generatePreview(config: BookletConfig, context: Context): List<Bitmap> {
         val scale = 1f
@@ -94,27 +76,6 @@ object BookletPdfDrawer {
         canvas.drawText("✂ Отрежьте полоску. Сложите пополам 3 раза, надрежьте по жирной линии, разверните, сложите вдоль и сдвиньте края — книжка соберётся сама.", 10f, cutLineY + 12f, instructionPaint)
     }
 
-    private fun drawWrappedCenter(canvas: Canvas, text: String, cx: Float, startY: Float, paint: Paint, maxWidth: Float, lineH: Float): Float {
-        val words = text.split(" ")
-        var line = ""
-        var y = startY
-        for (w in words) {
-            val test = if (line.isEmpty()) w else "$line $w"
-            if (paint.measureText(test) > maxWidth) {
-                canvas.drawText(line, cx, y, paint)
-                y += lineH
-                line = w
-            } else {
-                line = test
-            }
-        }
-        if (line.isNotEmpty()) {
-            canvas.drawText(line, cx, y, paint)
-            y += lineH
-        }
-        return y
-    }
-
     private fun drawCell(
         canvas: Canvas, page: PageContent, config: BookletConfig,
         col: Int, row: Int, cellW: Float, cellH: Float,
@@ -134,23 +95,36 @@ object BookletPdfDrawer {
         val height = bottom - top
         val centerX = left + width / 2f
         val isBW = config.isBlackAndWhite
-        val tf = titleTypeface(context, config.titleFont)
-        val titlePaint = Paint().apply { isAntiAlias = true; textSize = ts(config.titleFont, 14f); color = mainColor; typeface = tf; textAlign = Paint.Align.CENTER }
+        val titlePaint = Paint().apply { isAntiAlias = true; textSize = 14f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
         val bodyPaint = Paint().apply { isAntiAlias = true; textSize = 10f; color = Color.DKGRAY; typeface = Typeface.DEFAULT; textAlign = Paint.Align.CENTER }
         val linePaint = Paint().apply { color = lineColor; strokeWidth = 1f }
 
         if (page.isCover) {
-            val coverTitlePaint = Paint().apply { isAntiAlias = true; textSize = ts(config.titleFont, 18f); color = mainColor; typeface = tf; textAlign = Paint.Align.CENTER }
+            val coverTitlePaint = Paint().apply { isAntiAlias = true; textSize = 18f; color = mainColor; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER }
             canvas.drawText("МОЯ ПЕРВАЯ КНИГА", centerX, top + 20f, Paint().apply { isAntiAlias = true; textSize = 8f; color = Color.GRAY; textAlign = Paint.Align.CENTER })
             val titleStr = if (config.title.isNotBlank()) config.title else "Моя книжка"
-            val endY = drawWrappedCenter(canvas, titleStr, centerX, top + 50f, coverTitlePaint, width - 20f, 20f)
+            val words = titleStr.split(" ")
+            var line = ""
+            var curY = top + 50f
+            for (w in words) {
+                val test = if (line.isEmpty()) w else "$line $w"
+                if (coverTitlePaint.measureText(test) > width - 20) {
+                    canvas.drawText(line, centerX, curY, coverTitlePaint)
+                    curY += 20f
+                    line = w
+                } else { line = test }
+            }
+            if (line.isNotEmpty()) {
+                canvas.drawText(line, centerX, curY, coverTitlePaint)
+                curY += 20f
+            }
             val charFile = when (config.character) {
                 BookletCharacter.BOY -> "1"
                 BookletCharacter.GIRL -> "2"
                 else -> null
             }
             if (charFile == null) {
-                val boxRect = RectF(left + 10f, endY + 10f, right - 10f, bottom - 50f)
+                val boxRect = RectF(left + 10f, curY + 10f, right - 10f, bottom - 50f)
                 val boxPaint = Paint().apply { color = if (isBW) Color.LTGRAY else lineColor; style = Paint.Style.STROKE; strokeWidth = 1f; pathEffect = DashPathEffect(floatArrayOf(5f, 5f), 0f) }
                 canvas.drawRect(boxRect, boxPaint)
             }
@@ -160,8 +134,7 @@ object BookletPdfDrawer {
                     val imgSize = width * 0.6f
                     val imgLeft = centerX - imgSize / 2f
                     val imgTop = bottom - 50f - imgSize
-                    val imgRect = RectF(imgLeft, imgTop, imgLeft + imgSize, bottom - 50f)
-                    canvas.drawBitmap(bmp, null, imgRect, null)
+                    canvas.drawBitmap(bmp, null, RectF(imgLeft, imgTop, imgLeft + imgSize, bottom - 50f), null)
                 }
             }
             val authorStr = if (config.author.isNotBlank()) config.author else "Автор:"
@@ -185,25 +158,28 @@ object BookletPdfDrawer {
             }
         } else {
             var curY = top + 20f
-            if (page.previousAnswer != null) {
-                val answerPaint = Paint().apply {
-                    isAntiAlias = true
-                    textSize = 10f
-                    color = Color.GRAY
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
-                    textAlign = Paint.Align.LEFT
-                }
-                canvas.drawText("Отгадка: ${page.previousAnswer}", left, curY, answerPaint)
-                curY += 20f
-            }
             if (page.prompt != null) {
                 val promptPaint = if (config.type == BookletType.RIDDLES) Paint().apply { isAntiAlias = true; textSize = 12f; color = Color.DKGRAY; typeface = Typeface.DEFAULT_BOLD; textAlign = Paint.Align.CENTER } else titlePaint
-                curY = drawWrappedCenter(canvas, page.prompt, centerX, curY, promptPaint, width - 10f, 15f)
+                val words = page.prompt.split(" ")
+                var line = ""
+                for (w in words) {
+                    val test = if (line.isEmpty()) w else "$line $w"
+                    if (promptPaint.measureText(test) > width - 10) {
+                        canvas.drawText(line, centerX, curY, promptPaint)
+                        curY += 15f
+                        line = w
+                    } else { line = test }
+                }
+                if (line.isNotEmpty()) {
+                    canvas.drawText(line, centerX, curY, promptPaint)
+                    curY += 15f
+                }
                 curY += 10f
             } else if (page.title != null) {
-                curY = drawWrappedCenter(canvas, page.title, centerX, curY, titlePaint, width - 6f, 16f)
-                curY += 6f
+                canvas.drawText(page.title, centerX, curY, titlePaint)
+                curY += 20f
             }
+
             if (page.showDrawingBox) {
                 val boxHeight = height * 0.4f
                 val boxRect = RectF(left, curY, right, curY + boxHeight)
@@ -211,7 +187,12 @@ object BookletPdfDrawer {
                 canvas.drawRect(boxRect, boxPaint)
                 curY += boxHeight + 15f
             }
+
             if (page.showLines) {
+                // ★ ГЛАВНАЯ ПРАВКА: нижняя граница разлиновки — выше номера страницы
+                val numberReserve = 16f
+                val linesBottom = bottom - numberReserve
+
                 if (page.fullPageLines) {
                     val step = when (config.ruling) {
                         BookletRuling.LINE_8MM -> 8f * 2.83f
@@ -222,7 +203,7 @@ object BookletPdfDrawer {
                     if (step > 0f) {
                         if (config.ruling == BookletRuling.GRID_5MM) {
                             var y = curY
-                            while (y + step <= bottom - 12f) {
+                            while (y + step <= linesBottom) {
                                 canvas.drawLine(left, y, right, y, linePaint)
                                 var x = left
                                 while (x <= right) {
@@ -233,7 +214,7 @@ object BookletPdfDrawer {
                             }
                         } else {
                             var y = curY
-                            while (y + step <= bottom - 12f) {
+                            while (y + step <= linesBottom) {
                                 y += step
                                 canvas.drawLine(left, y, right, y, linePaint)
                             }
@@ -246,6 +227,7 @@ object BookletPdfDrawer {
                             val step = 8f * 2.83f
                             for (i in 0 until linesCount) {
                                 curY += step
+                                if (curY > linesBottom) break   // ★ не лезем под номер страницы
                                 canvas.drawLine(left, curY, right, curY, linePaint)
                             }
                         }
@@ -254,21 +236,24 @@ object BookletPdfDrawer {
                             val step = 10f * 2.83f
                             for (i in 0 until linesCount) {
                                 curY += step
+                                if (curY > linesBottom) break   // ★ не лезем под номер страницы
                                 canvas.drawLine(left, curY, right, curY, linePaint)
                             }
                         }
                         BookletRuling.GRID_5MM -> {
+                            // ★ ПРАВКА: клетка начинается сразу после поля рисунка (curY),
+                            // а не привязана к низу листа — больше не налезает на рамку рисунка,
+                            // и обрывается выше номера страницы
                             val step = 5f * 2.83f
-                            val gridTop = bottom - step * 8
-                            var y = gridTop
-                            while (y <= bottom) {
+                            var y = curY
+                            while (y <= linesBottom) {
                                 canvas.drawLine(left, y, right, y, linePaint)
+                                var x = left
+                                while (x <= right) {
+                                    canvas.drawLine(x, y, x, (y + step).coerceAtMost(linesBottom), linePaint)
+                                    x += step
+                                }
                                 y += step
-                            }
-                            var x = left
-                            while (x <= right) {
-                                canvas.drawLine(x, gridTop, x, bottom, linePaint)
-                                x += step
                             }
                         }
                         BookletRuling.NONE -> {}
